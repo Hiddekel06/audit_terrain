@@ -29,4 +29,12 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Un utilisateur a plusieurs choix de région.
+     */
+    public function regionChoices()
+    {
+        return $this->hasMany(UserRegionChoice::class);
+    }
 }
