@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class UserRegionChoice extends Model
 {
+    protected $fillable = ['user_id', 'region_id', 'ordre'];
     /**
      * Ce choix appartient à un utilisateur.
      */

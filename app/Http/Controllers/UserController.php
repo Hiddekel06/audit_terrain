@@ -43,18 +43,24 @@ class UserController extends Controller
                 'telephone' => $validated['telephone'] ?? null,
             ]);
         } else {
-            $user = \App\Models\User::firstOrCreate(
-                ['telephone' => $validated['telephone']],
-                [
-                    'prenom' => $validated['prenom'],
-                    'nom' => $validated['nom'],
-                ]
-            );
+            // Générer un matricule fictif unique pour satisfaire la contrainte DB
+            $fakeMatricule = 'T' . str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT) . chr(mt_rand(65, 90));
+            while (\App\Models\User::where('matricule', $fakeMatricule)->exists()) {
+                $fakeMatricule = 'T' . str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT) . chr(mt_rand(65, 90));
+            }
+            $user = \App\Models\User::create([
+                'telephone' => $validated['telephone'],
+                'prenom' => $validated['prenom'],
+                'nom' => $validated['nom'],
+                'matricule' => $fakeMatricule,
+            ]);
         }
 
         // Authentifier l'utilisateur (optionnel selon logique)
         // Auth::login($user);
 
+        // Stocker l'id utilisateur en session pour la suite
+        session(['user_id' => $user->id]);
         // Rediriger vers la suite (ex: choix des régions)
         return redirect()->route('user_region_choice.create');
     }

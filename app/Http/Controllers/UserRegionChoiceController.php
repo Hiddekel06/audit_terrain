@@ -28,7 +28,18 @@ class UserRegionChoiceController extends Controller
             'choix_3' => 'required|different:choix_1,choix_2|exists:regions,id',
         ]);
 
-        $user = auth()->user();
+        // Récupérer l'utilisateur depuis la session (par téléphone ou matricule)
+        $user = null;
+        if (session()->has('user_id')) {
+            $user = \App\Models\User::find(session('user_id'));
+        } elseif ($request->has('telephone')) {
+            $user = \App\Models\User::where('telephone', $request->input('telephone'))->first();
+        } elseif ($request->has('matricule')) {
+            $user = \App\Models\User::where('matricule', $request->input('matricule'))->first();
+        }
+        if (!$user) {
+            return redirect()->route('utilisateur.form')->withErrors(['user' => 'Utilisateur introuvable. Veuillez vous identifier.']);
+        }
         // On supprime les anciens choix si besoin
         $user->regionChoices()->delete();
 
@@ -41,6 +52,6 @@ class UserRegionChoiceController extends Controller
             ]);
         }
 
-        return redirect()->route('home')->with('success', 'Vos choix de régions ont été enregistrés.');
+        return view('merci');
     }
 }

@@ -147,7 +147,12 @@
 
             <div class="mb-4" id="telephone_block" style="display:none;">
                 <label for="telephone" class="form-label">Téléphone <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="telephone" name="telephone" value="{{ old('telephone') }}" placeholder="Votre numéro de téléphone">
+                <div class="input-group">
+                    <span class="input-group-text" style="background:#f3f3f3; min-width:70px; border-radius:12px 0 0 12px; border:1px solid #e2e8e0;">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/f/fd/Flag_of_Senegal.svg" alt="SN" style="width:22px; height:15px; margin-right:6px; border-radius:2px;"> +221
+                    </span>
+                    <input type="text" class="form-control" id="telephone" name="telephone" value="{{ old('telephone') }}" placeholder="Votre numéro de téléphone" style="border-radius:0 12px 12px 0;" inputmode="numeric" pattern="[0-9]*" maxlength="9">
+                </div>
             </div>
 
             <button type="submit" class="btn-modern mt-2">Valider</button>
@@ -179,6 +184,11 @@
         }
         noMatricule.addEventListener('change', toggleMatricule);
         toggleMatricule();
+
+        // Empêche la saisie de caractères non numériques dans le champ téléphone
+        telInput.addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
     });
 </script>
 @endsection
