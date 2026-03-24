@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Motivation extends Model
 {
+    protected $fillable = ['libelle'];
     /**
      * Une motivation peut appartenir à plusieurs choix utilisateur.
      */

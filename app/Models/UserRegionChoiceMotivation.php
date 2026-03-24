@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class UserRegionChoiceMotivation extends Model
 {
+    protected $table = 'user_region_choice_motivation';
+    protected $fillable = ['user_region_choice_id', 'motivation_id', 'motivation_libre'];
     /**
      * Ce lien appartient à un choix utilisateur.
      */

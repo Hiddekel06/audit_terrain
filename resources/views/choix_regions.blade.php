@@ -47,9 +47,27 @@
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         </div>
                     </div>
-                    <div class="motivation-wrapper">
-                        <textarea class="form-control modern-textarea" id="motivation_{{ $i }}" name="motivation_{{ $i }}" rows="2" maxlength="200" placeholder="Pourquoi ce choix ? (optionnel)"></textarea>
-                        <div class="char-counter"><span id="counter_{{ $i }}">0</span>/200</div>
+                    <div class="motivation-wrapper mt-2">
+                        <label class="form-label mb-1">Motivation(s) pour ce choix :</label>
+                        <div class="row g-2 align-items-center">
+                            @foreach($motivations as $motivation)
+                                <div class="col-auto">
+                                    <div class="form-check">
+                                        <input class="form-check-input motivation-type" type="checkbox" name="motivations_{{ $i }}[]" value="{{ $motivation->id }}" id="motivation_{{ $i }}_{{ $motivation->id }}">
+                                        <label class="form-check-label" for="motivation_{{ $i }}_{{ $motivation->id }}">{{ $motivation->libelle }}</label>
+                                    </div>
+                                </div>
+                            @endforeach
+                            <div class="col-auto">
+                                <div class="form-check">
+                                    <input class="form-check-input motivation-autre" type="checkbox" id="motivation_{{ $i }}_autre" data-choice="{{ $i }}">
+                                    <label class="form-check-label" for="motivation_{{ $i }}_autre">Autre</label>
+                                </div>
+                            </div>
+                            <div class="col-12 mt-2" id="autre_motivation_block_{{ $i }}" style="display:none;">
+                                <input type="text" class="form-control" name="motivation_autre_{{ $i }}" id="motivation_autre_{{ $i }}" maxlength="100" placeholder="Votre motivation personnalisée">
+                            </div>
+                        </div>
                     </div>
                     <small class="input-hint">Plus votre motivation est pertinente, plus vous avez de chances d'être sélectionné.</small>
                 </div>
@@ -394,5 +412,18 @@
         select.addEventListener('change', updateStepIndicator);
     });
     updateStepIndicator();
+
+    // Affichage dynamique du champ "Autre" motivation
+    document.addEventListener('DOMContentLoaded', function() {
+        for (let i = 1; i <= 3; i++) {
+            const autreCheckbox = document.getElementById('motivation_' + i + '_autre');
+            const autreBlock = document.getElementById('autre_motivation_block_' + i);
+            if (autreCheckbox && autreBlock) {
+                autreCheckbox.addEventListener('change', function() {
+                    autreBlock.style.display = this.checked ? '' : 'none';
+                });
+            }
+        }
+    });
 </script>
 @endsection

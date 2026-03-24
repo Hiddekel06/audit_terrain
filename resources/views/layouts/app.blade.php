@@ -6,19 +6,27 @@
     <title>Plateforme</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* Ensure body uses full width and no unexpected margins */
         body {
             margin: 0;
             padding: 0;
-            background-color: #e6f4ea;
+            background-color: @yield('body-bg', '#e6f4ea');
         }
     </style>
 </head>
 <body>
-    @include('partials.header')
+    @hasSection('no-header')
+        {{-- Pas de header --}}
+    @else
+        @include('partials.header')
+    @endif
     <main>
         @yield('content')
     </main>
-    @include('partials.footer')
+    @hasSection('no-footer')
+        {{-- Pas de footer --}}
+    @else
+        @include('partials.footer')
+    @endif
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
