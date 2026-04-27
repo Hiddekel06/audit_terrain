@@ -10,6 +10,9 @@
         --primary-light: #eaf6f1;
         --accent-blue: #2563eb;
         --accent-green: #10b981;
+        --senegal-green: #00853f;
+        --senegal-yellow: #fdef42;
+        --senegal-red: #e31b23;
         --gray-soft: #6b7b72;
         --border-light: rgba(0, 0, 0, 0.05);
     }
@@ -232,6 +235,7 @@
     .welcome-action__btn {
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 0.55rem;
         text-decoration: none;
         color: #ffffff;
@@ -243,6 +247,63 @@
         letter-spacing: 0.01em;
         box-shadow: 0 12px 24px -14px rgba(12, 52, 37, 0.65);
         transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    }
+
+    .welcome-action__btn span {
+        text-align: center;
+        line-height: 1.2;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+    }
+
+    .modal-btn {
+        font-weight: 600;
+        border-radius: 999px;
+        padding: 0.7rem 1.3rem;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .modal-flag-wrap {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    .modal-flag {
+        width: 120px;
+        height: 78px;
+        border-radius: 6px;
+        background: linear-gradient(90deg, var(--senegal-green) 0 33.33%, var(--senegal-yellow) 33.33% 66.66%, var(--senegal-red) 66.66% 100%);
+        border: 1px solid rgba(0, 0, 0, 0.16);
+        box-shadow: 0 8px 20px -12px rgba(0, 0, 0, 0.28);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .modal-flag::after {
+        content: '★';
+        color: var(--senegal-green);
+        font-size: 1rem;
+        line-height: 1;
+        font-weight: 800;
+        filter: drop-shadow(0 1px 0 rgba(255,255,255,0.2));
+    }
+
+    .modal-medallion-label {
+        text-align: center;
+        color: #1b5a45;
+        font-weight: 600;
+        font-size: 0.84rem;
+        letter-spacing: 0.02em;
+        margin-bottom: 1rem;
     }
 
     .welcome-action__btn:hover {
@@ -269,6 +330,51 @@
 
         .profile-card__body {
             padding: 0.25rem 1.25rem 1.25rem;
+        }
+
+        .welcome-action__btn {
+            width: 100%;
+            max-width: 320px;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            white-space: normal;
+        }
+
+        #modalAvertissement > div {
+            padding: 1.4rem 1rem !important;
+            width: 92vw !important;
+        }
+
+        #modalAvertissement h2 {
+            font-size: 1.2rem !important;
+            line-height: 1.35;
+        }
+
+        #modalAvertissement p {
+            font-size: 0.96rem !important;
+        }
+
+        .modal-actions {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.7rem;
+        }
+
+        .modal-btn {
+            width: 100%;
+            white-space: normal;
+            line-height: 1.3;
+            padding: 0.72rem 0.95rem;
+        }
+
+        .modal-flag {
+            width: 100px;
+            height: 64px;
+            border-radius: 5px;
+        }
+
+        .modal-medallion-label {
+            font-size: 0.8rem;
         }
     }
 
@@ -359,10 +465,44 @@
     </div>
 
     <div class="welcome-action">
-        <a href="{{ route('utilisateur.form') }}" class="welcome-action__btn">
+        <button type="button" class="welcome-action__btn" id="openModalBtn">
             <i class="bi bi-arrow-right-circle"></i>
             <span>Faire mon choix</span>
-        </a>
+        </button>
     </div>
+
+    <!-- Modal -->
+    <div id="modalAvertissement" style="display:none;position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);justify-content:center;align-items:center;">
+        <div style="background:white;max-width:540px;width:90vw;border-radius:18px;padding:2.5rem 2rem;box-shadow:0 8px 32px rgba(0,0,0,0.18);position:relative;">
+            <div class="modal-flag-wrap">
+                <div class="modal-flag" aria-hidden="true"></div>
+            </div>
+            <div class="modal-medallion-label">République du Sénégal</div>
+            <h2 style="font-size:1.5rem;font-weight:700;margin-bottom:1.2rem;color:#1b5a45;">Mission d'État – Engagement requis</h2>
+            <p style="color:#334155;font-size:1.08rem;line-height:1.6;margin-bottom:2.2rem;">
+                Vous allez participer à une mission officielle d'État. Il est impératif d'agir avec rigueur, honnêteté et professionnalisme. Toute fausse déclaration ou négligence pourrait avoir des conséquences graves. Merci de lire attentivement et de vous engager à respecter ces principes avant de continuer.
+            </p>
+            <div class="modal-actions">
+                <button type="button" id="closeModalBtn" class="modal-btn" style="background:#e2e8f0;color:#334155;border:none;">Refuser</button>
+                <a href="{{ route('utilisateur.form') }}" id="acceptModalBtn" class="modal-btn" style="background:linear-gradient(135deg,#1b5a45 0%,#2a7a5c 100%);color:#fff;border:none;">Accepter et continuer</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const openModalBtn = document.getElementById('openModalBtn');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const modal = document.getElementById('modalAvertissement');
+        openModalBtn.addEventListener('click', () => {
+            modal.style.display = 'flex';
+        });
+        closeModalBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+        // Fermer la modale si on clique en dehors du contenu
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.style.display = 'none';
+        });
+    </script>
 </div>
 @endsection

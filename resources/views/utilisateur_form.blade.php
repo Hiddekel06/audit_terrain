@@ -326,6 +326,21 @@
                 </div>
 
                 <div class="field-group">
+                    <label for="ministere_id" class="id-label">Ministère d'appartenance <span class="text-danger">*</span></label>
+                    <select class="id-select @error('ministere_id') is-invalid @enderror" id="ministere_id" name="ministere_id" required>
+                        <option value="">— Sélectionner votre ministère —</option>
+                        @foreach(($ministeres ?? collect()) as $ministere)
+                            <option value="{{ $ministere->id }}" @selected(old('ministere_id') == $ministere->id)>
+                                {{ $ministere->nom }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('ministere_id')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="field-group">
                     <label for="matricule" class="id-label">Matricule <span class="text-danger">*</span></label>
                     <input type="text" class="id-input" id="matricule" name="matricule"
                            value="{{ old('matricule') }}" placeholder="Entrez votre matricule" required>

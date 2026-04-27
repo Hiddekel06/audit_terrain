@@ -59,6 +59,7 @@ class UserRegionChoiceController extends Controller
                 'nom' => $pendingUser['nom'],
                 'telephone' => $pendingUser['telephone'] ?? null,
                 'matricule' => $matricule,
+                'ministere_id' => $pendingUser['ministere_id'] ?? null,
             ]);
 
             foreach ($pendingAnswers as $answer) {

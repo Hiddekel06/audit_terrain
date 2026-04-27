@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\DynamicQuestion;
+use App\Models\Ministere;
 use App\Models\User;
 
 class UserController extends Controller
@@ -19,7 +20,9 @@ class UserController extends Controller
             ->orderBy('id')
             ->get();
 
-        return view('utilisateur_form', compact('dynamicQuestions'));
+        $ministeres = Ministere::orderBy('nom')->get();
+
+        return view('utilisateur_form', compact('dynamicQuestions', 'ministeres'));
     }
 
     /**
@@ -37,6 +40,7 @@ class UserController extends Controller
         $rules = [
             'prenom' => 'required|string|max:255',
             'nom' => 'required|string|max:255',
+            'ministere_id' => 'required|integer|exists:ministeres,id',
             'matricule' => [
                 'nullable',
                 'string',
@@ -109,6 +113,7 @@ class UserController extends Controller
             'pending_user_payload' => [
                 'prenom' => $validated['prenom'],
                 'nom' => $validated['nom'],
+                'ministere_id' => (int) $validated['ministere_id'],
                 'matricule' => $validated['matricule'] ?? null,
                 'telephone' => $validated['telephone'] ?? null,
             ],

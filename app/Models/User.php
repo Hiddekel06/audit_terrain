@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['nom', 'prenom', 'matricule', 'telephone'])]
+#[Fillable(['nom', 'prenom', 'matricule', 'telephone', 'ministere_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -44,5 +44,13 @@ class User extends Authenticatable
     public function dynamicAnswers()
     {
         return $this->hasMany(UserDynamicAnswer::class);
+    }
+
+    /**
+     * Ministère d'appartenance de l'utilisateur.
+     */
+    public function ministere()
+    {
+        return $this->belongsTo(Ministere::class);
     }
 }
