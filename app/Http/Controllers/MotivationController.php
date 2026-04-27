@@ -20,4 +20,25 @@ class MotivationController extends Controller
         ]);
         return redirect()->route('admin.dashboard')->with('success', 'Motivation ajoutée avec succès.');
     }
+
+    /**
+     * Supprime une motivation sans l'effacer définitivement.
+     */
+    public function destroy(Motivation $motivation)
+    {
+        $motivation->delete();
+
+        return redirect()->route('admin.dashboard')->with('success', 'Motivation supprimée.');
+    }
+
+    /**
+     * Restaure une motivation supprimée.
+     */
+    public function restore(int $motivationId)
+    {
+        $motivation = Motivation::withTrashed()->findOrFail($motivationId);
+        $motivation->restore();
+
+        return redirect()->route('admin.dashboard')->with('success', 'Motivation restaurée.');
+    }
 }

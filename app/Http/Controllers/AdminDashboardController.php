@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\UserRegionChoice;
 use App\Models\Region;
+use App\Models\Motivation;
+use App\Models\DynamicQuestion;
+use App\Models\UserDynamicAnswer;
 use App\Models\UserRegionChoiceMotivation;
 
 class AdminDashboardController extends Controller
@@ -16,6 +19,8 @@ class AdminDashboardController extends Controller
     public function index()
     {
         $totalUsers = User::count();
+        $totalDynamicAnswers = UserDynamicAnswer::count();
+        $dynamicRespondents = UserDynamicAnswer::distinct('user_id')->count('user_id');
         // Tendances globales (tous choix confondus)
         $tendances = UserRegionChoice::selectRaw('region_id, count(*) as total')
             ->groupBy('region_id')
@@ -43,6 +48,13 @@ class AdminDashboardController extends Controller
             ->get();
         $motivationStats = \App\Models\UserRegionChoice::statsMotivations();
         $motivationsLibres = UserRegionChoiceMotivation::whereNotNull('motivation_libre')->orderByDesc('id')->get();
-        return view('admin.dashboard', compact('totalUsers', 'tendances', 'tendancesChoix1', 'tendancesChoix2', 'tendancesChoix3', 'motivationStats', 'motivationsLibres'));
+        $motivations = Motivation::withTrashed()->orderBy('libelle')->get();
+        $dynamicQuestions = DynamicQuestion::with('options')
+            ->withCount('answers')
+            ->orderBy('ordre')
+            ->orderBy('id')
+            ->get();
+
+        return view('admin.dashboard', compact('totalUsers', 'totalDynamicAnswers', 'dynamicRespondents', 'tendances', 'tendancesChoix1', 'tendancesChoix2', 'tendancesChoix3', 'motivationStats', 'motivationsLibres', 'motivations', 'dynamicQuestions'));
     }
 }

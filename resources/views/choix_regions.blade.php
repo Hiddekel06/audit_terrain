@@ -69,7 +69,6 @@
                             </div>
                         </div>
                     </div>
-                    <small class="input-hint">Plus votre motivation est pertinente, plus vous avez de chances d'être sélectionné.</small>
                 </div>
             @endfor
             <button type="submit" class="btn-modern">

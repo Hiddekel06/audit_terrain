@@ -1,0 +1,74 @@
+@php
+    $currentRoute = request()->route()?->getName();
+@endphp
+
+<aside class="admin-sidebar">
+    <div class="admin-sidebar__brand">
+        <a href="{{ route('admin.dashboard') }}" class="admin-sidebar__brand-link">
+            <div class="admin-sidebar__brand-logo">
+                <img src="/images/auditlogo.png" alt="Logo">
+            </div>
+            <div class="admin-sidebar__brand-text">
+                <p class="admin-sidebar__brand-title">Plateforme Audit</p>
+                <p class="admin-sidebar__brand-subtitle">Espace administrateur</p>
+            </div>
+        </a>
+    </div>
+
+    <nav class="admin-sidebar__nav">
+        <div class="admin-sidebar__section-title">Navigation</div>
+        <a href="{{ route('admin.dashboard') }}" class="admin-sidebar__link {{ $currentRoute === 'admin.dashboard' ? 'active' : '' }}">
+            <i class="bi bi-speedometer2"></i>
+            <span class="admin-sidebar__link-label">Dashboard</span>
+        </a>
+
+        <a
+            href="{{ route('admin.regions.priorities') }}"
+            class="admin-sidebar__link {{ $currentRoute === 'admin.regions.priorities' ? 'active' : '' }}"
+            title="Utilisateurs par région"
+            aria-label="Utilisateurs par région"
+        >
+            <i class="bi bi-people-fill"></i>
+            <span class="admin-sidebar__link-label d-flex align-items-center justify-content-between w-100">
+                <span>Utilisateurs par région</span>
+                <span class="badge rounded-pill text-bg-light ms-2">Nouveau</span>
+            </span>
+        </a>
+
+        <div class="admin-sidebar__section-title">Dashboard</div>
+        <a href="{{ route('admin.dashboard') }}#metrics-section" class="admin-sidebar__link">
+            <i class="bi bi-ui-checks-grid"></i>
+            <span class="admin-sidebar__link-label">Indicateurs</span>
+        </a>
+
+        <a href="{{ route('admin.dashboard') }}#motivations-section" class="admin-sidebar__link">
+            <i class="bi bi-journal-text"></i>
+            <span class="admin-sidebar__link-label">Motivations</span>
+        </a>
+
+        <a href="{{ route('admin.dashboard') }}#questions-section" class="admin-sidebar__link">
+            <i class="bi bi-patch-question"></i>
+            <span class="admin-sidebar__link-label">Questions dynamiques</span>
+        </a>
+
+        <a href="{{ route('admin.dashboard') }}#regions-section" class="admin-sidebar__link">
+            <i class="bi bi-geo-alt"></i>
+            <span class="admin-sidebar__link-label">Tendances régions</span>
+        </a>
+    </nav>
+
+    <div class="admin-sidebar__footer">
+        <button type="button" class="admin-sidebar__collapse-btn" data-admin-sidebar-toggle aria-label="Réduire ou étendre la sidebar">
+            <i class="bi bi-layout-sidebar" data-admin-collapse-icon></i>
+            <span class="admin-sidebar__collapse-label">Réduire le menu</span>
+        </button>
+
+        <form action="{{ route('admin.logout') }}" method="POST" class="d-grid">
+            @csrf
+            <button type="submit" class="btn btn-outline-light btn-sm d-flex align-items-center justify-content-center gap-2">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Déconnexion</span>
+            </button>
+        </form>
+    </div>
+</aside>

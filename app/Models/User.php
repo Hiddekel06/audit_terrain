@@ -37,4 +37,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserRegionChoice::class);
     }
+
+    /**
+     * Réponses dynamiques liées au formulaire utilisateur.
+     */
+    public function dynamicAnswers()
+    {
+        return $this->hasMany(UserDynamicAnswer::class);
+    }
 }

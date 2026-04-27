@@ -155,6 +155,55 @@
                 </div>
             </div>
 
+            @if(isset($dynamicQuestions) && $dynamicQuestions->count())
+                <div class="mt-4 mb-2">
+                    <h5 class="form-title mb-3" style="font-size:1.1rem;">Questions complémentaires</h5>
+                </div>
+
+                @foreach($dynamicQuestions as $question)
+                    @php
+                        $fieldName = 'question_' . $question->id;
+                    @endphp
+
+                    <div class="mb-4">
+                        <label for="{{ $fieldName }}" class="form-label">
+                            {{ $question->libelle }}
+                            @if($question->is_required)
+                                <span class="text-danger">*</span>
+                            @endif
+                        </label>
+
+                        @if($question->type === 'select')
+                            <select
+                                class="form-control @error($fieldName) is-invalid @enderror"
+                                id="{{ $fieldName }}"
+                                name="{{ $fieldName }}"
+                                @if($question->is_required) required @endif
+                            >
+                                <option value="">-- Sélectionner --</option>
+                                @foreach($question->options as $option)
+                                    <option value="{{ $option->id }}" @selected(old($fieldName) == $option->id)>{{ $option->libelle }}</option>
+                                @endforeach
+                            </select>
+                        @else
+                            <input
+                                type="text"
+                                class="form-control @error($fieldName) is-invalid @enderror"
+                                id="{{ $fieldName }}"
+                                name="{{ $fieldName }}"
+                                value="{{ old($fieldName) }}"
+                                placeholder="{{ $question->placeholder ?: 'Votre réponse' }}"
+                                @if($question->is_required) required @endif
+                            >
+                        @endif
+
+                        @error($fieldName)
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+                @endforeach
+            @endif
+
             <button type="submit" class="btn-modern mt-2">Valider</button>
         </form>
     </div>
