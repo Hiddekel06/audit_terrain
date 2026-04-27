@@ -223,6 +223,35 @@
         filter: brightness(0.98);
     }
 
+    .welcome-action {
+        margin-top: 2.2rem;
+        display: flex;
+        justify-content: center;
+    }
+
+    .welcome-action__btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        text-decoration: none;
+        color: #ffffff;
+        background: linear-gradient(135deg, #1b5a45 0%, #2a7a5c 100%);
+        border: 1px solid rgba(24, 76, 58, 0.45);
+        border-radius: 999px;
+        padding: 0.85rem 1.4rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        box-shadow: 0 12px 24px -14px rgba(12, 52, 37, 0.65);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    }
+
+    .welcome-action__btn:hover {
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 14px 28px -14px rgba(12, 52, 37, 0.75);
+        filter: brightness(1.02);
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
         .profile-grid {
@@ -327,6 +356,13 @@
                 </span>
             </div>
         </article>
+    </div>
+
+    <div class="welcome-action">
+        <a href="{{ route('utilisateur.form') }}" class="welcome-action__btn">
+            <i class="bi bi-arrow-right-circle"></i>
+            <span>Faire mon choix</span>
+        </a>
     </div>
 </div>
 @endsection

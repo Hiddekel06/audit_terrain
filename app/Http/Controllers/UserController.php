@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\DynamicQuestion;
 use App\Models\User;
-use App\Models\UserDynamicAnswer;
 
 class UserController extends Controller
 {
@@ -24,7 +23,8 @@ class UserController extends Controller
     }
 
     /**
-     * Enregistre ou identifie un utilisateur selon les règles métier.
+        * Valide les informations utilisateur et les conserve temporairement en session.
+        * L'inscription en base est finalisée uniquement après le formulaire de choix des régions.
      */
     public function store(Request $request)
     {
@@ -75,60 +75,46 @@ class UserController extends Controller
             return back()->withErrors(['matricule' => 'Le matricule ou le téléphone est obligatoire.'])->withInput();
         }
 
-        // Si matricule fourni, vérifier unicité stricte
+        // Si matricule fourni, vérifier unicité stricte avant de poursuivre
         if (!empty($validated['matricule'])) {
             $existing = User::where('matricule', $validated['matricule'])->first();
             if ($existing) {
                 return back()->withErrors(['matricule' => 'Ce matricule a déjà été utilisé. Vous avez déjà choisi.'])->withInput();
             }
-            $user = User::create([
-                'matricule' => $validated['matricule'],
-                'prenom' => $validated['prenom'],
-                'nom' => $validated['nom'],
-                'telephone' => $validated['telephone'] ?? null,
-            ]);
-        } else {
-            // Générer un matricule fictif unique pour satisfaire la contrainte DB
-            $fakeMatricule = 'T' . str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT) . chr(mt_rand(65, 90));
-            while (User::where('matricule', $fakeMatricule)->exists()) {
-                $fakeMatricule = 'T' . str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT) . chr(mt_rand(65, 90));
-            }
-            $user = User::create([
-                'telephone' => $validated['telephone'],
-                'prenom' => $validated['prenom'],
-                'nom' => $validated['nom'],
-                'matricule' => $fakeMatricule,
-            ]);
         }
 
+        $dynamicAnswersPayload = [];
         foreach ($dynamicQuestions as $question) {
             $field = 'question_' . $question->id;
             $value = $request->input($field);
 
             if ($question->type === 'text') {
                 if (filled($value)) {
-                    UserDynamicAnswer::create([
-                        'user_id' => $user->id,
+                    $dynamicAnswersPayload[] = [
                         'dynamic_question_id' => $question->id,
                         'answer_text' => trim((string) $value),
-                    ]);
+                    ];
                 }
             }
 
             if ($question->type === 'select' && filled($value)) {
-                UserDynamicAnswer::create([
-                    'user_id' => $user->id,
+                $dynamicAnswersPayload[] = [
                     'dynamic_question_id' => $question->id,
                     'dynamic_question_option_id' => (int) $value,
-                ]);
+                ];
             }
         }
 
-        // Authentifier l'utilisateur (optionnel selon logique)
-        // Auth::login($user);
+        session([
+            'pending_user_payload' => [
+                'prenom' => $validated['prenom'],
+                'nom' => $validated['nom'],
+                'matricule' => $validated['matricule'] ?? null,
+                'telephone' => $validated['telephone'] ?? null,
+            ],
+            'pending_dynamic_answers' => $dynamicAnswersPayload,
+        ]);
 
-        // Stocker l'id utilisateur en session pour la suite
-        session(['user_id' => $user->id]);
         // Rediriger vers la suite (ex: choix des régions)
         return redirect()->route('user_region_choice.create');
     }

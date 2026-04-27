@@ -54,8 +54,9 @@
                         <i class="bi bi-people text-primary fs-3"></i>
                     </div>
                     <div>
-                        <h6 class="text-muted mb-1 small uppercase fw-bold">Total Inscrits</h6>
-                        <h3 class="fw-bold mb-0">{{ $totalUsers }}</h3>
+                        <h6 class="text-muted mb-1 small uppercase fw-bold">Soumissions complètes</h6>
+                        <h3 class="fw-bold mb-0">{{ $completedUsers }}</h3>
+                        <small class="text-muted">Parcours terminé</small>
                     </div>
                 </div>
             </div>
@@ -122,8 +123,9 @@
                         <i class="bi bi-person-check text-success fs-3"></i>
                     </div>
                     <div>
-                        <h6 class="text-muted mb-1 small fw-bold">Utilisateurs répondants</h6>
+                        <h6 class="text-muted mb-1 small fw-bold">Répondants (questions dyn.)</h6>
                         <h3 class="fw-bold mb-0">{{ $dynamicRespondents }}</h3>
+                        <small class="text-muted">{{ $dynamicRespondentsRate }}% des soumissions</small>
                     </div>
                 </div>
             </div>

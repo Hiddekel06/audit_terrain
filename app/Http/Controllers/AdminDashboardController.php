@@ -19,8 +19,12 @@ class AdminDashboardController extends Controller
     public function index()
     {
         $totalUsers = User::count();
+        $completedUsers = UserRegionChoice::distinct('user_id')->count('user_id');
         $totalDynamicAnswers = UserDynamicAnswer::count();
         $dynamicRespondents = UserDynamicAnswer::distinct('user_id')->count('user_id');
+        $dynamicRespondentsRate = $completedUsers > 0
+            ? (int) round(($dynamicRespondents / $completedUsers) * 100)
+            : 0;
         // Tendances globales (tous choix confondus)
         $tendances = UserRegionChoice::selectRaw('region_id, count(*) as total')
             ->groupBy('region_id')
@@ -55,6 +59,6 @@ class AdminDashboardController extends Controller
             ->orderBy('id')
             ->get();
 
-        return view('admin.dashboard', compact('totalUsers', 'totalDynamicAnswers', 'dynamicRespondents', 'tendances', 'tendancesChoix1', 'tendancesChoix2', 'tendancesChoix3', 'motivationStats', 'motivationsLibres', 'motivations', 'dynamicQuestions'));
+        return view('admin.dashboard', compact('totalUsers', 'completedUsers', 'totalDynamicAnswers', 'dynamicRespondents', 'dynamicRespondentsRate', 'tendances', 'tendancesChoix1', 'tendancesChoix2', 'tendancesChoix3', 'motivationStats', 'motivationsLibres', 'motivations', 'dynamicQuestions'));
     }
 }

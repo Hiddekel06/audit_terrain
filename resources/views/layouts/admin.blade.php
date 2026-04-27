@@ -96,6 +96,7 @@
             padding: 1rem 0.75rem 1.25rem;
             overflow-y: auto;
             flex: 1 1 auto;
+                scrollbar-width: none;
         }
 
         .admin-sidebar__section-title {

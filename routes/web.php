@@ -26,6 +26,10 @@ Route::middleware('admin.auth')->group(function () {
     Route::get('/admin/dashboard', [App\Http\Controllers\AdminDashboardController::class, 'index'])
         ->name('admin.dashboard');
 
+    // Recherche operationnelle (admin)
+    Route::view('/admin/recherche-operationnelle', 'admin.operations-research')
+        ->name('admin.operations.research');
+
     // Vue admin des utilisateurs par région et ordre de priorité
     Route::get('/admin/regions-priorites', [App\Http\Controllers\AdminRegionPriorityController::class, 'index'])
         ->name('admin.regions.priorities');

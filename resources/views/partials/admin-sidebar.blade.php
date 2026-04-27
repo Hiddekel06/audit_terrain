@@ -22,6 +22,11 @@
             <span class="admin-sidebar__link-label">Dashboard</span>
         </a>
 
+        <a href="{{ route('admin.operations.research') }}" class="admin-sidebar__link {{ $currentRoute === 'admin.operations.research' ? 'active' : '' }}">
+            <i class="bi bi-diagram-3"></i>
+            <span class="admin-sidebar__link-label">Recherche opérationnelle</span>
+        </a>
+
         <a
             href="{{ route('admin.regions.priorities') }}"
             class="admin-sidebar__link {{ $currentRoute === 'admin.regions.priorities' ? 'active' : '' }}"
