@@ -3,8 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\DynamicQuestion;
-use App\Models\Ministere;
+use App\Models\Profil;
 use App\Models\User;
 
 class UserController extends Controller
@@ -14,15 +13,15 @@ class UserController extends Controller
      */
     public function create()
     {
-        $dynamicQuestions = DynamicQuestion::where('is_active', true)
-            ->with('options')
+        $profils = Profil::where('is_active', true)
             ->orderBy('ordre')
             ->orderBy('id')
             ->get();
 
-        $ministeres = Ministere::orderBy('nom')->get();
+        $selectedProfileId = (int) request()->query('profil_id', old('profil_id'));
+        $selectedProfile = $profils->firstWhere('id', $selectedProfileId) ?? $profils->first();
 
-        return view('utilisateur_form', compact('dynamicQuestions', 'ministeres'));
+        return view('utilisateur_form', compact('profils', 'selectedProfile'));
     }
 
     /**
@@ -31,93 +30,62 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $dynamicQuestions = DynamicQuestion::where('is_active', true)
-            ->with('options')
-            ->orderBy('ordre')
-            ->orderBy('id')
-            ->get();
-
         $rules = [
             'prenom' => 'required|string|max:255',
             'nom' => 'required|string|max:255',
-            'ministere_id' => 'required|integer|exists:ministeres,id',
-            'matricule' => [
-                'nullable',
-                'string',
-                'max:255',
-                'regex:/^\\d{6}[A-Za-z]$/', // 6 chiffres + 1 lettre
-            ],
-            'telephone' => ['nullable', 'string', 'regex:/^\\d{9}$/'],
+            'telephone' => ['required', 'digits:9'],
+            'email' => ['required', 'email:rfc', 'max:255'],
+            'region_localite' => ['required', 'string', 'max:255'],
+            'disponibilite' => ['required', 'in:immediate,sous_7_jours,sous_15_jours,selon_calendrier'],
+            'no_matricule' => ['nullable', 'boolean'],
+            'matricule' => ['required_without:no_matricule', 'nullable', 'regex:/^\d{6}[A-Za-z]$/'],
+            'cin' => ['required_if:no_matricule,1', 'nullable', 'digits:13'],
+            'profil_id' => ['required', 'integer', 'exists:profil,id'],
+            'niveau_numerique' => ['required', 'in:debutant,intermediaire,avance,expert'],
+            'experiences' => ['required', 'array', 'min:1'],
+            'experiences.*' => ['in:audit_recensement,biometrie,projets_it,aucune'],
+            'competences_techniques' => ['required', 'array', 'min:1'],
+            'competences_techniques.*' => ['in:tablette_smartphone,kit_biometrique,reseau_4g_hotspot,support_technique,excel_donnees,aucune'],
         ];
-
-        foreach ($dynamicQuestions as $question) {
-            $field = 'question_' . $question->id;
-
-            if ($question->type === 'select') {
-                $optionIds = $question->options->pluck('id')->all();
-                if (count($optionIds) === 0) {
-                    $rules[$field] = 'nullable';
-                } else {
-                    $rules[$field] = [
-                        $question->is_required ? 'required' : 'nullable',
-                        'integer',
-                        'in:' . implode(',', $optionIds),
-                    ];
-                }
-            } else {
-                $rules[$field] = ($question->is_required ? 'required' : 'nullable') . '|string|max:1000';
-            }
-        }
-
         $validated = $request->validate($rules, [
-            'matricule.regex' => 'Le matricule doit être composé de 6 chiffres suivis d\'une lettre (ex : 000000A).',
-            'telephone.regex' => 'Le numéro de téléphone doit contenir exactement 9 chiffres.',
+            'telephone.digits' => 'Le numéro de téléphone doit contenir exactement 9 chiffres.',
+            'matricule.required_without' => 'Le matricule est obligatoire si vous ne cochez pas la case "Pas de matricule".',
+            'matricule.regex' => 'Le matricule doit contenir 6 chiffres suivis d’une lettre.',
+            'cin.digits' => 'Le CIN doit contenir exactement 13 chiffres.',
+            'cin.required_if' => 'Le CIN est obligatoire lorsque vous cochez "Pas de matricule".',
+            'experiences.required' => 'Veuillez sélectionner au moins une expérience.',
+            'competences_techniques.required' => 'Veuillez sélectionner au moins une compétence technique.',
         ]);
 
-        // Vérifier qu'au moins matricule ou téléphone est présent
-        if (empty($validated['matricule']) && empty($validated['telephone'])) {
-            return back()->withErrors(['matricule' => 'Le matricule ou le téléphone est obligatoire.'])->withInput();
-        }
+        $hasNoMatricule = $request->boolean('no_matricule');
+        $identityNumber = $hasNoMatricule
+            ? $validated['cin']
+            : strtoupper(trim($validated['matricule']));
 
-        // Si matricule fourni, vérifier unicité stricte avant de poursuivre
-        if (!empty($validated['matricule'])) {
-            $existing = User::where('matricule', $validated['matricule'])->first();
-            if ($existing) {
-                return back()->withErrors(['matricule' => 'Ce matricule a déjà été utilisé. Vous avez déjà choisi.'])->withInput();
-            }
-        }
-
-        $dynamicAnswersPayload = [];
-        foreach ($dynamicQuestions as $question) {
-            $field = 'question_' . $question->id;
-            $value = $request->input($field);
-
-            if ($question->type === 'text') {
-                if (filled($value)) {
-                    $dynamicAnswersPayload[] = [
-                        'dynamic_question_id' => $question->id,
-                        'answer_text' => trim((string) $value),
-                    ];
-                }
-            }
-
-            if ($question->type === 'select' && filled($value)) {
-                $dynamicAnswersPayload[] = [
-                    'dynamic_question_id' => $question->id,
-                    'dynamic_question_option_id' => (int) $value,
-                ];
-            }
+        if (User::where('matricule', $identityNumber)->exists()) {
+            return back()->withErrors([
+                $hasNoMatricule ? 'cin' : 'matricule' => $hasNoMatricule
+                    ? 'Ce CIN a déjà été utilisé. Vous avez déjà choisi.'
+                    : 'Ce matricule a déjà été utilisé. Vous avez déjà choisi.',
+            ])->withInput();
         }
 
         session([
             'pending_user_payload' => [
                 'prenom' => $validated['prenom'],
                 'nom' => $validated['nom'],
-                'ministere_id' => (int) $validated['ministere_id'],
-                'matricule' => $validated['matricule'] ?? null,
-                'telephone' => $validated['telephone'] ?? null,
+                'matricule' => $identityNumber,
+                'telephone' => $validated['telephone'],
+                'email' => $validated['email'],
+                'region_localite' => $validated['region_localite'],
+                'disponibilite' => $validated['disponibilite'],
+                'profil_id' => (int) $validated['profil_id'],
+                'niveau_numerique' => $validated['niveau_numerique'],
+                'experiences' => array_values(array_unique($validated['experiences'] ?? [])),
+                'competences_techniques' => array_values(array_unique($validated['competences_techniques'] ?? [])),
+                'ministere_id' => null,
             ],
-            'pending_dynamic_answers' => $dynamicAnswersPayload,
+            'pending_dynamic_answers' => [],
         ]);
 
         // Rediriger vers la suite (ex: choix des régions)

@@ -23,7 +23,7 @@
         border-radius: 20px;
         border: 0.5px solid #e3e8e3;
         width: 100%;
-        max-width: 480px;
+        max-width: 860px;
         overflow: hidden;
     }
 
@@ -156,29 +156,6 @@
         border-color: #d9534f;
     }
 
-    .check-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 7px;
-    }
-
-    .check-row input[type="checkbox"] {
-        width: 15px;
-        height: 15px;
-        accent-color: #4a8c5c;
-        cursor: pointer;
-        flex-shrink: 0;
-    }
-
-    .check-row label {
-        font-size: 12.5px;
-        color: #5a6e5a;
-        cursor: pointer;
-        font-weight: 400;
-        margin: 0;
-    }
-
     .phone-wrap {
         display: flex;
         height: 42px;
@@ -223,10 +200,36 @@
         box-shadow: none !important;
     }
 
-    .id-divider {
-        border: none;
-        border-top: 0.5px solid #e5ece5;
-        margin: 1.4rem 0 1.1rem;
+    .wizard-progress {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 1.25rem;
+    }
+
+    .wizard-progress__item {
+        border: 1px solid #dce8dc;
+        border-radius: 999px;
+        padding: 0.75rem 1rem;
+        font-size: 12px;
+        font-weight: 600;
+        color: #5a6e5a;
+        background: #f7faf7;
+        text-align: center;
+    }
+
+    .wizard-progress__item.is-active {
+        background: #4a8c5c;
+        border-color: #4a8c5c;
+        color: #fff;
+    }
+
+    .wizard-step {
+        display: none;
+    }
+
+    .wizard-step.is-active {
+        display: block;
     }
 
     .section-label {
@@ -246,6 +249,107 @@
         flex: 1;
         height: 0.5px;
         background: #dce8dc;
+    }
+
+    .wizard-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 1.4rem;
+    }
+
+    .wizard-actions > * {
+        flex: 1;
+    }
+
+    .profile-choice-grid {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 1rem;
+    }
+
+    .profile-choice {
+        display: block;
+        position: relative;
+        border: 1px solid #dde5dd;
+        border-radius: 14px;
+        background: #fafcfa;
+        padding: 1rem 1rem 0.95rem;
+        cursor: pointer;
+        transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+    }
+
+    .profile-choice:hover {
+        border-color: #b9cdb9;
+        transform: translateY(-1px);
+    }
+
+    .profile-choice.is-selected {
+        border-color: #4a8c5c;
+        box-shadow: 0 0 0 3px rgba(74, 140, 92, 0.12);
+    }
+
+    .profile-choice input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .profile-choice__title {
+        display: block;
+        font-size: 14px;
+        font-weight: 700;
+        color: #1a2e1a;
+        margin-bottom: 0.25rem;
+    }
+
+    .profile-choice__description {
+        display: block;
+        font-size: 12.5px;
+        line-height: 1.5;
+        color: #5a6e5a;
+    }
+
+    .check-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 0.5rem;
+    }
+
+    .check-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid #dde5dd;
+        border-radius: 10px;
+        background: #fafcfa;
+        padding: 0.65rem 0.75rem;
+    }
+
+    .check-item input[type="checkbox"] {
+        width: 15px;
+        height: 15px;
+        accent-color: #4a8c5c;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    .check-item label {
+        margin: 0;
+        font-size: 13px;
+        color: #344734;
+        cursor: pointer;
+    }
+
+    .check-item--subtle {
+        border: none;
+        background: transparent;
+        padding: 0.5rem 0;
+    }
+
+    .check-item--subtle label {
+        font-size: 12px;
+        color: #8a9a8a;
     }
 
     .invalid-feedback {
@@ -273,22 +377,53 @@
         gap: 8px;
     }
 
-    .id-btn:hover { background: #3a7048; transform: translateY(-1px); }
-    .id-btn:active { transform: translateY(1px); }
+    .id-btn:hover {
+        background: #3a7048;
+        transform: translateY(-1px);
+    }
+
+    .id-btn:active {
+        transform: translateY(1px);
+    }
+
+    .id-btn--secondary {
+        background: #eef5ee;
+        color: #2f5f3d;
+        border: 1px solid #dce8dc;
+    }
+
+    .id-btn--secondary:hover {
+        background: #e5eee5;
+    }
 
     .id-btn svg {
         width: 16px;
         height: 16px;
     }
 
+    @media (max-width: 700px) {
+        .wizard-progress {
+            grid-template-columns: 1fr;
+        }
+    }
+
     @media (max-width: 480px) {
-        .field-row { grid-template-columns: 1fr; }
+        .field-row {
+            grid-template-columns: 1fr;
+        }
+
+        .check-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .wizard-actions {
+            flex-direction: column;
+        }
     }
 </style>
 
 <div class="id-wrap">
     <div class="id-card">
-
         <div class="id-card__top">
             <div class="id-eyebrow">
                 <span class="id-eyebrow__dot"></span>
@@ -298,7 +433,6 @@
         </div>
 
         <div class="id-card__body">
-
             @if ($errors->any())
                 <div class="id-alert">
                     <ul class="mb-0">
@@ -309,111 +443,238 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('utilisateur.store') }}">
+            @php
+                $initialStep = 1;
+                if ($errors->hasAny([
+                    'niveau_numerique',
+                    'experiences',
+                    'experiences.*',
+                    'competences_techniques',
+                    'competences_techniques.*',
+                ])) {
+                    $initialStep = 2;
+                }
+
+                $availabilityOptions = [
+                    'immediate' => 'Immédiate',
+                    'sous_7_jours' => 'Sous 7 jours',
+                    'sous_15_jours' => 'Sous 15 jours',
+                    'selon_calendrier' => 'Selon le calendrier',
+                ];
+
+                $showCinField = old('no_matricule');
+                $oldExperiences = old('experiences', []);
+                $oldCompetences = old('competences_techniques', []);
+            @endphp
+
+            <form method="POST" action="{{ route('utilisateur.store') }}" id="userWizardForm" data-initial-step="{{ $initialStep }}">
                 @csrf
 
-                <div class="field-row">
-                    <div>
-                        <label for="prenom" class="id-label">Prénom <span class="text-danger">*</span></label>
-                        <input type="text" class="id-input" id="prenom" name="prenom"
-                               value="{{ old('prenom') }}" required placeholder="Votre prénom">
+                @if($selectedProfile)
+                    <input type="hidden" name="profil_id" value="{{ old('profil_id', $selectedProfile->id) }}">
+                    <div class="field-group" style="margin-bottom: 1rem;">
+                        <div style="border: 1px solid #dce8dc; background: #f7faf7; border-radius: 12px; padding: 0.85rem 1rem;">
+                            <div class="id-label" style="margin-bottom: 0.2rem;">Profil choisi</div>
+                            <div style="font-weight: 700; color: #1a2e1a;">{{ $selectedProfile->libelle }}</div>
+                        </div>
                     </div>
-                    <div>
-                        <label for="nom" class="id-label">Nom <span class="text-danger">*</span></label>
-                        <input type="text" class="id-input" id="nom" name="nom"
-                               value="{{ old('nom') }}" required placeholder="Votre nom">
-                    </div>
+                @endif
+
+                <div class="wizard-progress">
+                    <div class="wizard-progress__item" data-step-indicator="1">1. Informations générales</div>
+                    <div class="wizard-progress__item" data-step-indicator="2">2. Compétences</div>
                 </div>
 
-                <div class="field-group">
-                    <label for="ministere_id" class="id-label">Ministère d'appartenance <span class="text-danger">*</span></label>
-                    <select class="id-select @error('ministere_id') is-invalid @enderror" id="ministere_id" name="ministere_id" required>
-                        <option value="">— Sélectionner votre ministère —</option>
-                        @foreach(($ministeres ?? collect()) as $ministere)
-                            <option value="{{ $ministere->id }}" @selected(old('ministere_id') == $ministere->id)>
-                                {{ $ministere->nom }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('ministere_id')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="field-group">
-                    <label for="matricule" class="id-label">Matricule <span class="text-danger">*</span></label>
-                    <input type="text" class="id-input" id="matricule" name="matricule"
-                           value="{{ old('matricule') }}" placeholder="Entrez votre matricule" required>
-                    <div class="check-row">
-                        <input class="form-check-input" type="checkbox" value="1"
-                               id="no_matricule" name="no_matricule">
-                        <label for="no_matricule">Je n'ai pas de matricule</label>
-                    </div>
-                </div>
-
-                <div class="field-group" id="telephone_block" style="display:none;">
-                    <label for="telephone" class="id-label">Téléphone <span class="text-danger">*</span></label>
-                    <div class="phone-wrap">
-                        <span class="phone-prefix">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/f/fd/Flag_of_Senegal.svg" alt="SN">
-                            +221
-                        </span>
-                        <input type="text" class="id-input" id="telephone" name="telephone"
-                               value="{{ old('telephone') }}" placeholder="7X XXX XX XX"
-                               inputmode="numeric" pattern="[0-9]*" maxlength="9">
-                    </div>
-                </div>
-
-                @if(isset($dynamicQuestions) && $dynamicQuestions->count())
-                    <hr class="id-divider">
-                    <div class="section-label">Questions complémentaires</div>
-
-                    @foreach($dynamicQuestions as $question)
-                        @php $fieldName = 'question_' . $question->id; @endphp
-                        <div class="field-group">
-                            <label for="{{ $fieldName }}" class="id-label">
-                                {{ $question->libelle }}
-                                @if($question->is_required)
-                                    <span class="text-danger">*</span>
-                                @endif
-                            </label>
-
-                            @if($question->type === 'select')
-                                <select class="id-select @error($fieldName) is-invalid @enderror"
-                                        id="{{ $fieldName }}" name="{{ $fieldName }}"
-                                        @if($question->is_required) required @endif>
-                                    <option value="">— Sélectionner —</option>
-                                    @foreach($question->options as $option)
-                                        <option value="{{ $option->id }}"
-                                            @selected(old($fieldName) == $option->id)>
-                                            {{ $option->libelle }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            @else
-                                <input type="text"
-                                       class="id-input @error($fieldName) is-invalid @enderror"
-                                       id="{{ $fieldName }}" name="{{ $fieldName }}"
-                                       value="{{ old($fieldName) }}"
-                                       placeholder="{{ $question->placeholder ?: 'Votre réponse' }}"
-                                       @if($question->is_required) required @endif>
-                            @endif
-
-                            @error($fieldName)
+                <div class="wizard-step is-active" data-step="1">
+                    <div class="field-row">
+                        <div>
+                            <label for="nom" class="id-label">Nom <span class="text-danger">*</span></label>
+                            <input type="text" class="id-input @error('nom') is-invalid @enderror" id="nom" name="nom" value="{{ old('nom') }}" required placeholder="Votre nom">
+                            @error('nom')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
-                    @endforeach
-                @endif
+                        <div>
+                            <label for="prenom" class="id-label">Prénom <span class="text-danger">*</span></label>
+                            <input type="text" class="id-input @error('prenom') is-invalid @enderror" id="prenom" name="prenom" value="{{ old('prenom') }}" required placeholder="Votre prénom">
+                            @error('prenom')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
 
-                <button type="submit" class="id-btn">
-                    Valider
-                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor"
-                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 8h10M9 4l4 4-4 4"/>
-                    </svg>
-                </button>
+                    <div class="field-group">
+                        <label for="telephone" class="id-label">Téléphone <span class="text-danger">*</span></label>
+                        <div class="phone-wrap">
+                            <span class="phone-prefix">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/f/fd/Flag_of_Senegal.svg" alt="SN">
+                                +221
+                            </span>
+                            <input type="text" class="id-input @error('telephone') is-invalid @enderror" id="telephone" name="telephone" value="{{ old('telephone') }}" placeholder="7X XXX XX XX" inputmode="numeric" pattern="[0-9]*" maxlength="9" required>
+                        </div>
+                        @error('telephone')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
 
+                    <div class="field-group">
+                        <label for="email" class="id-label">Email <span class="text-danger">*</span></label>
+                        <input type="email" class="id-input @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" placeholder="profil@gmail.com" required>
+                        @error('email')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="field-group">
+                        <label for="region_localite" class="id-label">Région / Localité <span class="text-danger">*</span></label>
+                        <input type="text" class="id-input @error('region_localite') is-invalid @enderror" id="region_localite" name="region_localite" value="{{ old('region_localite') }}" placeholder="Votre région ou localité" required>
+                        @error('region_localite')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="field-row">
+                        <div>
+                            <label for="disponibilite" class="id-label">Disponibilité <span class="text-danger">*</span></label>
+                            <select class="id-select @error('disponibilite') is-invalid @enderror" id="disponibilite" name="disponibilite" required>
+                                <option value="">— Sélectionner —</option>
+                                @foreach($availabilityOptions as $value => $label)
+                                    <option value="{{ $value }}" @selected(old('disponibilite') === $value)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            @error('disponibilite')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div>
+                            <label for="matricule" class="id-label">Matricule <span class="text-danger">*</span></label>
+                            <input type="text" class="id-input @error('matricule') is-invalid @enderror" id="matricule" name="matricule" value="{{ old('matricule') }}" placeholder="123456A" inputmode="text" maxlength="7" pattern="[0-9]{6}[A-Za-z]{1}">
+                            
+                            @error('matricule')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="field-group mt-2">
+                        <div class="check-item check-item--subtle">
+                            <input type="checkbox" id="no_matricule" name="no_matricule" value="1" @checked((bool) $showCinField)>
+                            <label for="no_matricule">Pas de matricule</label>
+                        </div>
+                    </div>
+
+                    <div class="field-group {{ $showCinField ? '' : 'd-none' }}" data-cin-wrapper>
+                        <label for="cin" class="id-label">CIN <span class="text-danger">*</span></label>
+                        <input type="text" class="id-input @error('cin') is-invalid @enderror" id="cin" name="cin" value="{{ old('cin') }}" placeholder="13 chiffres" inputmode="numeric" pattern="[0-9]{13}" maxlength="13" {{ $showCinField ? 'required' : '' }}>
+                        @error('cin')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                        <small class="text-muted d-block mt-1">Renseignez ce champ uniquement si vous n’avez pas de matricule.</small>
+                    </div>
+
+                    <div class="wizard-actions">
+                        <div></div>
+                        <button type="button" class="id-btn id-btn--secondary" data-next-step-one>
+                            Suivant
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 8h10M9 4l4 4-4 4"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="wizard-step" data-step="2">
+                    <div class="section-label">Section 3 : Niveau numérique</div>
+                    <div class="field-group">
+                        <label for="niveau_numerique" class="id-label">Niveau numérique <span class="text-danger">*</span></label>
+                        <select class="id-select @error('niveau_numerique') is-invalid @enderror" id="niveau_numerique" name="niveau_numerique" required>
+                            <option value="">— Sélectionner —</option>
+                            <option value="debutant" @selected(old('niveau_numerique') === 'debutant')>Débutant</option>
+                            <option value="intermediaire" @selected(old('niveau_numerique') === 'intermediaire')>Intermédiaire</option>
+                            <option value="avance" @selected(old('niveau_numerique') === 'avance')>Avancé</option>
+                            <option value="expert" @selected(old('niveau_numerique') === 'expert')>Expert</option>
+                        </select>
+                        @error('niveau_numerique')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="section-label mt-3">Section 4 : Expérience</div>
+                    <div class="field-group">
+                        <p class="id-label mb-2">Sélectionnez une ou plusieurs options <span class="text-danger">*</span></p>
+                        <div class="check-grid">
+                            <div class="check-item">
+                                <input type="checkbox" id="experience_audit" name="experiences[]" value="audit_recensement" @checked(in_array('audit_recensement', $oldExperiences))>
+                                <label for="experience_audit">Audit / recensement</label>
+                            </div>
+                            <div class="check-item">
+                                <input type="checkbox" id="experience_biometrie" name="experiences[]" value="biometrie" @checked(in_array('biometrie', $oldExperiences))>
+                                <label for="experience_biometrie">Biométrie</label>
+                            </div>
+                            <div class="check-item">
+                                <input type="checkbox" id="experience_it" name="experiences[]" value="projets_it" @checked(in_array('projets_it', $oldExperiences))>
+                                <label for="experience_it">Projets IT</label>
+                            </div>
+                            <div class="check-item">
+                                <input type="checkbox" id="experience_aucune" name="experiences[]" value="aucune" @checked(in_array('aucune', $oldExperiences))>
+                                <label for="experience_aucune">Aucune</label>
+                            </div>
+                        </div>
+                        @error('experiences')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                        @error('experiences.*')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="section-label mt-3">Section 5 : Compétences techniques</div>
+                    <div class="field-group">
+                        <p class="id-label mb-2">Sélectionnez une ou plusieurs options <span class="text-danger">*</span></p>
+                        <div class="check-grid">
+                            <div class="check-item">
+                                <input type="checkbox" id="competence_tablette" name="competences_techniques[]" value="tablette_smartphone" @checked(in_array('tablette_smartphone', $oldCompetences))>
+                                <label for="competence_tablette">Tablette / smartphone</label>
+                            </div>
+                            <div class="check-item">
+                                <input type="checkbox" id="competence_kit" name="competences_techniques[]" value="kit_biometrique" @checked(in_array('kit_biometrique', $oldCompetences))>
+                                <label for="competence_kit">Kit biométrique</label>
+                            </div>
+                            <div class="check-item">
+                                <input type="checkbox" id="competence_reseau" name="competences_techniques[]" value="reseau_4g_hotspot" @checked(in_array('reseau_4g_hotspot', $oldCompetences))>
+                                <label for="competence_reseau">Réseau (4G / hotspot)</label>
+                            </div>
+                            <div class="check-item">
+                                <input type="checkbox" id="competence_support" name="competences_techniques[]" value="support_technique" @checked(in_array('support_technique', $oldCompetences))>
+                                <label for="competence_support">Support technique</label>
+                            </div>
+                            <div class="check-item">
+                                <input type="checkbox" id="competence_excel" name="competences_techniques[]" value="excel_donnees" @checked(in_array('excel_donnees', $oldCompetences))>
+                                <label for="competence_excel">Excel / données</label>
+                            </div>
+                            <div class="check-item">
+                                <input type="checkbox" id="competence_aucune" name="competences_techniques[]" value="aucune" @checked(in_array('aucune', $oldCompetences))>
+                                <label for="competence_aucune">Aucune</label>
+                            </div>
+                        </div>
+                        @error('competences_techniques')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                        @error('competences_techniques.*')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="wizard-actions">
+                        <button type="button" class="id-btn id-btn--secondary" data-prev-step-two>Précédent</button>
+                        <button type="submit" class="id-btn">
+                            Valider et continuer
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 8h10M9 4l4 4-4 4"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
             </form>
         </div>
     </div>
@@ -421,33 +682,120 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const noMatricule = document.getElementById('no_matricule');
+        const form = document.getElementById('userWizardForm');
+        const steps = Array.from(document.querySelectorAll('.wizard-step'));
+        const indicators = Array.from(document.querySelectorAll('[data-step-indicator]'));
+        const nextButtonOne = document.querySelector('[data-next-step-one]');
         const matriculeInput = document.getElementById('matricule');
-        const telBlock = document.getElementById('telephone_block');
+        const noMatriculeInput = document.getElementById('no_matricule');
+        const cinInput = document.getElementById('cin');
+        const cinWrapper = document.querySelector('[data-cin-wrapper]');
         const telInput = document.getElementById('telephone');
+        const initialStep = Number(form?.dataset.initialStep || 1);
 
-        function toggleMatricule() {
-            if (noMatricule.checked) {
-                matriculeInput.value = '';
-                matriculeInput.setAttribute('disabled', 'disabled');
-                matriculeInput.removeAttribute('required');
-                telBlock.style.display = '';
-                telInput.setAttribute('required', 'required');
-            } else {
-                matriculeInput.removeAttribute('disabled');
-                matriculeInput.setAttribute('required', 'required');
-                telBlock.style.display = 'none';
-                telInput.value = '';
-                telInput.removeAttribute('required');
+        function showStep(stepNumber) {
+            steps.forEach((step, index) => {
+                step.classList.toggle('is-active', index + 1 === stepNumber);
+            });
+
+            indicators.forEach((indicator, index) => {
+                indicator.classList.toggle('is-active', index + 1 === stepNumber);
+            });
+        }
+
+        function validateRequiredInStep(stepSelector) {
+            const step = document.querySelector(stepSelector);
+            if (!step) {
+                return true;
+            }
+
+            const requiredFields = Array.from(step.querySelectorAll('input[required], select[required]'));
+            for (const field of requiredFields) {
+                if (!field.checkValidity()) {
+                    field.reportValidity();
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function syncIdentityFields() {
+            const useCin = Boolean(noMatriculeInput?.checked);
+
+            cinWrapper?.classList.toggle('d-none', !useCin);
+
+            if (cinInput) {
+                cinInput.required = useCin;
+                cinInput.disabled = !useCin;
+
+                if (!useCin) {
+                    cinInput.value = '';
+                }
+            }
+
+            if (matriculeInput) {
+                matriculeInput.required = !useCin;
+                matriculeInput.disabled = useCin;
+                if (useCin) {
+                    matriculeInput.value = '';
+                }
             }
         }
 
-        noMatricule.addEventListener('change', toggleMatricule);
-        toggleMatricule();
+        function setupExclusiveNone(groupName) {
+            const noneInput = form?.querySelector('input[name="' + groupName + '[]"][value="aucune"]');
+            const allInputs = Array.from(form?.querySelectorAll('input[name="' + groupName + '[]"]') || []);
+            const otherInputs = allInputs.filter((input) => input.value !== 'aucune');
 
-        telInput.addEventListener('input', function () {
+            function normalizeOnLoad() {
+                if (noneInput?.checked) {
+                    otherInputs.forEach((input) => {
+                        input.checked = false;
+                    });
+                }
+            }
+
+            noneInput?.addEventListener('change', function () {
+                if (this.checked) {
+                    otherInputs.forEach((input) => {
+                        input.checked = false;
+                    });
+                }
+            });
+
+            otherInputs.forEach((input) => {
+                input.addEventListener('change', function () {
+                    if (this.checked && noneInput) {
+                        noneInput.checked = false;
+                    }
+                });
+            });
+
+            normalizeOnLoad();
+        }
+
+        nextButtonOne?.addEventListener('click', function () {
+            if (validateRequiredInStep('[data-step="1"]')) {
+                showStep(2);
+            }
+        });
+
+        telInput?.addEventListener('input', function () {
             this.value = this.value.replace(/[^0-9]/g, '');
         });
+
+        matriculeInput?.addEventListener('input', function () {
+            this.value = this.value.toUpperCase().replace(/[^0-9A-Z]/g, '');
+        });
+
+        noMatriculeInput?.addEventListener('change', syncIdentityFields);
+
+        setupExclusiveNone('experiences');
+        setupExclusiveNone('competences_techniques');
+
+        syncIdentityFields();
+        showStep(initialStep);
     });
 </script>
 @endsection

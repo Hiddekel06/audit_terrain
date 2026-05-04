@@ -103,7 +103,7 @@
 
     .profiles-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 1.5rem;
         margin-bottom: 2.5rem;
     }
@@ -375,6 +375,28 @@
         background: var(--primary-light);
     }
 
+    .btn-select-profile {
+        background: #00853f;
+        color: #fff;
+        border: none;
+        border-radius: 0.8rem;
+        padding: 0.7rem 1.25rem;
+        font-size: 0.9rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-width: 190px;
+    }
+
+    .btn-select-profile:hover,
+    .btn-select-profile:focus {
+        background: #065f46;
+        color: #fff;
+    }
+
     .btn-continue,
     .btn-cta {
         background: var(--primary-dark);
@@ -454,6 +476,7 @@
         }
 
         .btn-close-modal,
+        .btn-select-profile,
         .btn-continue,
         .btn-cta {
             width: 100%;
@@ -467,8 +490,8 @@
 </style>
 
 <div class="audit-container">
-    <div style="width:100%;margin-bottom:1.7rem;">
-        <div style="width:180px;height:4px;display:flex;align-items:center;justify-content:center;position:relative;margin:0 auto;">
+    <div style="width:100%;margin-bottom:1.1rem;">
+        <div style="width:180px;height:4px;display:flex;align-items:center;justify-content:center;position:relative;margin:0 auto 0.5rem auto;">
             <div style="flex:1;background:#00853f;height:100%;border-radius:2px 0 0 2px;"></div>
             <div style="flex:1;background:#fdef42;height:100%;display:flex;align-items:center;justify-content:center;position:relative;">
                 <svg width="16" height="16" viewBox="0 0 28 28" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;" xmlns="http://www.w3.org/2000/svg">
@@ -477,11 +500,15 @@
             </div>
             <div style="flex:1;background:#e31b23;height:100%;border-radius:0 2px 2px 0;"></div>
         </div>
-        <div style="text-align:center;margin-top:2.2rem;margin-bottom:1.2rem;">
-            <h1 style="font-family:Arial, Helvetica, sans-serif;font-size:clamp(2.1rem,4vw,2.7rem);font-weight:700;color:#222;letter-spacing:-0.03em;margin-bottom:0.7rem;">Audit Physique &amp; Biométrique</h1>
+        <div style="text-align:center;margin-top:1.2rem;margin-bottom:0.7rem;">
+            <h1 style="font-family:Arial, Helvetica, sans-serif;font-size:clamp(2.1rem,4vw,2.7rem);font-weight:700;color:#222;letter-spacing:-0.03em;margin-bottom:0.5rem;">Audit Physique &amp; Biométrique</h1>
             <div style="font-size:1.13rem;color:#222;font-weight:500;max-width:700px;margin:0 auto;line-height:1.7;">
-                Appel à manifestation d’intérêt pour la constitution des équipes terrain de l’État du Sénégal.
+                Appel à manifestation d’intérêt pour la constitution des équipes chargées de l'audit physique et biométrique.
             </div>
+             <div style="font-size:1rem;color:#1e3a8a;font-weight:500;max-width:600px;margin:12px auto 0;line-height:1.6;text-align:center;background:#f5f7fa;padding:12px 18px;border-radius:8px;">
+               Veuillez choisir le profil qui correspond le mieux à votre expérience et à vos compétences.
+            </div>
+
         </div>
     </div>
 
@@ -499,7 +526,7 @@
                     <li><i class="bi bi-database-check"></i> Validation des données</li>
                 </ul>
             </div>
-            <button class="btn-details" onclick="openModal('chef')">
+            <button class="btn-details" onclick="openModal('chef', 1)">
                 <i class="bi bi-eye"></i> Voir les détails
             </button>
         </div>
@@ -517,7 +544,7 @@
                     <li><i class="bi bi-fingerprint"></i> Enrôlement biométrique</li>
                 </ul>
             </div>
-            <button class="btn-details" onclick="openModal('auditeur')">
+            <button class="btn-details" onclick="openModal('auditeur', 2)">
                 <i class="bi bi-eye"></i> Voir les détails
             </button>
         </div>
@@ -535,35 +562,18 @@
                     <li><i class="bi bi-fingerprint"></i> Contrôle qualité biométrique</li>
                 </ul>
             </div>
-            <button class="btn-details" onclick="openModal('support')">
+            <button class="btn-details" onclick="openModal('support', 3)">
                 <i class="bi bi-eye"></i> Voir les détails
             </button>
         </div>
 
-        <div class="profile-card">
-            <div class="card-icon icon-superviseur">
-                <span><i class="bi bi-diagram-3"></i></span>
-            </div>
-            <div class="card-content">
-                <h3>Superviseur Technique Régional</h3>
-                <div class="card-mission">Superviser plusieurs équipes terrain</div>
-                <ul class="card-preview">
-                    <li><i class="bi bi-cpu"></i> Support technique avancé</li>
-                    <li><i class="bi bi-exclamation-triangle"></i> Gestion incidents majeurs</li>
-                    <li><i class="bi bi-broadcast"></i> Coordination avec le QG</li>
-                </ul>
-            </div>
-            <button class="btn-details" onclick="openModal('superviseur')">
-                <i class="bi bi-eye"></i> Voir les détails
-            </button>
-        </div>
     </div>
 
-    <div class="action-section">
+    <!--  <div class="action-section">
         <button type="button" class="btn-cta" id="openEngagementModal">
             <i class="bi bi-check2-circle"></i> Faire mon choix
         </button>
-    </div>
+    </div> -->
 </div>
 
 <div id="engagementModal" class="modal">
@@ -573,7 +583,7 @@
                 <div style="width: 80px; height: 52px; margin: 0 auto 1rem; background: linear-gradient(90deg, #00853f 0% 33.33%, #fdef42 33.33% 66.66%, #e31b23 66.66% 100%); border-radius: 6px; position: relative; box-shadow: var(--shadow-sm);">
                     <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1rem;">★</div>
                 </div>
-                <h3 style="font-size: 1.15rem; color: var(--primary-dark); margin-bottom: 0.25rem;">Engagement républicain</h3>
+                <h3 style="font-size: 1.15rem; color: var(--primary-dark); margin-bottom: 0.25rem;">Engagement administratif</h3>
                 <p style="font-size: 0.8rem; color: var(--gray-soft);">République du Sénégal – Mission d'État</p>
             </div>
         </div>
@@ -586,7 +596,7 @@
         </div>
         <div class="modal-footer">
             <button class="btn-close-modal" onclick="closeEngagementModal()">Refuser</button>
-            <a href="{{ route('utilisateur.form') }}" class="btn-continue">J'accepte et je continue</a>
+            <a href="{{ route('utilisateur.form') }}" class="btn-continue" id="continueFormLink" data-form-url="{{ route('utilisateur.form') }}">J'accepte et je continue</a>
         </div>
     </div>
 </div>
@@ -599,6 +609,7 @@
 <script>
     const profiles = {
         chef: {
+            id: 1,
             icon: 'bi-people-fill',
             iconBg: '#dbeafe',
             iconColor: '#2563eb',
@@ -622,6 +633,7 @@
             badges: ['Coordination', 'Management', 'Indicateurs']
         },
         auditeur: {
+            id: 2,
             icon: 'bi-person-badge',
             iconBg: '#d1fae5',
             iconColor: '#0f766e',
@@ -642,6 +654,7 @@
             badges: ['Collecte terrain', 'Fiabilité', 'Rigueur']
         },
         support: {
+            id: 3,
             icon: 'bi-tools',
             iconBg: '#fef3c7',
             iconColor: '#b45309',
@@ -693,9 +706,31 @@
         }
     };
 
-    function openModal(profileKey) {
+    let selectedProfileId = null;
+
+    function updateContinueLink() {
+        const continueLink = document.getElementById('continueFormLink');
+        if (!continueLink) {
+            return;
+        }
+
+        const baseUrl = continueLink.dataset.formUrl || continueLink.href;
+        if (!selectedProfileId) {
+            continueLink.href = baseUrl;
+            return;
+        }
+
+        const url = new URL(baseUrl, window.location.origin);
+        url.searchParams.set('profil_id', String(selectedProfileId));
+        continueLink.href = url.toString();
+    }
+
+    function openModal(profileKey, profileId) {
         const p = profiles[profileKey];
         if (!p) return;
+
+        selectedProfileId = profileId || p.id || null;
+        updateContinueLink();
 
         const modalContent = document.getElementById('detailModalContent');
 
@@ -781,7 +816,10 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer" style="justify-content: space-between;">
+                <button class="btn-select-profile" onclick="closeDetailModalAndOpenEngagement()">
+                    <i class="bi bi-check2-circle"></i> Sélectionner ce profil
+                </button>
                 <button class="btn-close-modal" onclick="closeDetailModal()">Fermer</button>
             </div>
         `;
@@ -799,6 +837,7 @@
     }
 
     function openEngagementModal() {
+        updateContinueLink();
         document.getElementById('engagementModal').style.display = 'flex';
     }
 

@@ -48,17 +48,18 @@ class UserRegionChoiceController extends Controller
         }
 
         DB::transaction(function () use ($request, $pendingUser, $pendingAnswers) {
-            $matricule = $pendingUser['matricule'] ?? null;
-
-            if (empty($matricule)) {
-                $matricule = $this->generateUniqueTemporaryMatricule();
-            }
-
             $user = User::create([
                 'prenom' => $pendingUser['prenom'],
                 'nom' => $pendingUser['nom'],
                 'telephone' => $pendingUser['telephone'] ?? null,
-                'matricule' => $matricule,
+                'email' => $pendingUser['email'] ?? null,
+                'region_localite' => $pendingUser['region_localite'] ?? null,
+                'disponibilite' => $pendingUser['disponibilite'] ?? null,
+                'matricule' => $pendingUser['matricule'],
+                'profil_id' => $pendingUser['profil_id'] ?? null,
+                'niveau_numerique' => $pendingUser['niveau_numerique'] ?? null,
+                'experiences' => $pendingUser['experiences'] ?? null,
+                'competences_techniques' => $pendingUser['competences_techniques'] ?? null,
                 'ministere_id' => $pendingUser['ministere_id'] ?? null,
             ]);
 
@@ -107,16 +108,5 @@ class UserRegionChoiceController extends Controller
         ]);
 
         return view('merci');
-    }
-
-    private function generateUniqueTemporaryMatricule(): string
-    {
-        $fakeMatricule = 'T' . str_pad((string) mt_rand(0, 999999), 6, '0', STR_PAD_LEFT) . chr(mt_rand(65, 90));
-
-        while (User::where('matricule', $fakeMatricule)->exists()) {
-            $fakeMatricule = 'T' . str_pad((string) mt_rand(0, 999999), 6, '0', STR_PAD_LEFT) . chr(mt_rand(65, 90));
-        }
-
-        return $fakeMatricule;
     }
 }
