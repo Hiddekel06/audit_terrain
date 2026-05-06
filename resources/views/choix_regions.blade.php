@@ -8,8 +8,8 @@
             <div class="step"></div>
             <div class="step"></div>
         </div>
-        <h2 class="form-title">Choisissez vos 3 régions préférées</h2>
-        <p class="form-subtitle">Sélectionnez vos destinations idéales et motivez vos choix pour maximiser vos chances.</p>
+        <h2 class="form-title">Choisissez vos zones de preferences</h2>
+        <p class="form-subtitle">Sélectionnez la zone où vous souhaitez être déployé pour l’audit </p>
 
         @if ($errors->any())
             <div class="alert-custom" role="alert">

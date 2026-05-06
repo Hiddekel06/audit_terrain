@@ -523,9 +523,9 @@
                     </div>
 
                     <div class="field-group">
-                        <label for="ministere_id" class="id-label">Ministère <span class="text-danger">*</span></label>
+                        <label for="ministere_id" class="id-label">Strucutre <span class="text-danger">*</span></label>
                         <select class="id-select @error('ministere_id') is-invalid @enderror" id="ministere_id" name="ministere_id" required>
-                            <option value="">— Sélectionner un ministère —</option>
+                            <option value="">— Sélectionner la structure dans laquelle vous êtes —</option>
                             @foreach($ministeres as $ministere)
                                 <option value="{{ $ministere->id }}" @selected(old('ministere_id') == $ministere->id)>{{ $ministere->nom }}</option>
                             @endforeach
@@ -588,7 +588,7 @@
                 <div class="wizard-step" data-step="2">
                     <div class="section-label">Section 3 : Niveau numérique</div>
                     <div class="field-group">
-                        <label for="niveau_numerique" class="id-label">Quelle est votre niveau en competence numerique ? <span class="text-danger">*</span></label>
+                        <label for="niveau_numerique" class="id-label">Quel est votre niveau en compétences numériques ? <span class="text-danger">*</span></label>
                         <select class="id-select @error('niveau_numerique') is-invalid @enderror" id="niveau_numerique" name="niveau_numerique" required>
                             <option value="">— Sélectionner —</option>
                             <option value="debutant" @selected(old('niveau_numerique') === 'debutant')>Débutant</option>
@@ -603,7 +603,7 @@
 
                     <div class="section-label mt-3">Section 4 : Expérience</div>
                     <div class="field-group">
-                        <p class="id-label mb-2">Sélectionnez un projet dans lequel vous avez dejà travaillé<span class="text-danger">*</span></p>
+                        <p class="id-label mb-2">Sélectionnez les projets dans lequels vous avez dejà travaillé<span class="text-danger">*</span></p>
                         <div class="check-grid">
                             <div class="check-item">
                                 <input type="checkbox" id="experience_audit" name="experiences[]" value="audit_recensement" @checked(in_array('audit_recensement', $oldExperiences))>
@@ -636,7 +636,7 @@
                         <div class="check-grid">
                             <div class="check-item">
                                 <input type="checkbox" id="competence_tablette" name="competences_techniques[]" value="tablette_smartphone" @checked(in_array('tablette_smartphone', $oldCompetences))>
-                                <label for="competence_tablette">Tablette / smartphone</label>
+                                <label for="competence_tablette">Systemes Android / iOS</label>
                             </div>
                             <div class="check-item">
                                 <input type="checkbox" id="competence_kit" name="competences_techniques[]" value="kit_biometrique" @checked(in_array('kit_biometrique', $oldCompetences))>
