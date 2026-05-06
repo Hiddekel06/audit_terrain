@@ -591,7 +591,7 @@
                 <div class="wizard-step" data-step="2">
                     <div class="section-label">Section 3 : Niveau numérique</div>
                     <div class="field-group">
-                        <label for="niveau_numerique" class="id-label">Niveau numérique <span class="text-danger">*</span></label>
+                        <label for="niveau_numerique" class="id-label">Quelle est votre niveau en competence numerique ? <span class="text-danger">*</span></label>
                         <select class="id-select @error('niveau_numerique') is-invalid @enderror" id="niveau_numerique" name="niveau_numerique" required>
                             <option value="">— Sélectionner —</option>
                             <option value="debutant" @selected(old('niveau_numerique') === 'debutant')>Débutant</option>
@@ -606,7 +606,7 @@
 
                     <div class="section-label mt-3">Section 4 : Expérience</div>
                     <div class="field-group">
-                        <p class="id-label mb-2">Sélectionnez une ou plusieurs options <span class="text-danger">*</span></p>
+                        <p class="id-label mb-2">Sélectionnez un projet dans lequel vous avez dejà travaillé<span class="text-danger">*</span></p>
                         <div class="check-grid">
                             <div class="check-item">
                                 <input type="checkbox" id="experience_audit" name="experiences[]" value="audit_recensement" @checked(in_array('audit_recensement', $oldExperiences))>
@@ -635,7 +635,7 @@
 
                     <div class="section-label mt-3">Section 5 : Compétences techniques</div>
                     <div class="field-group">
-                        <p class="id-label mb-2">Sélectionnez une ou plusieurs options <span class="text-danger">*</span></p>
+                        <p class="id-label mb-2">Sélectionnez vos competences techniques <span class="text-danger">*</span></p>
                         <div class="check-grid">
                             <div class="check-item">
                                 <input type="checkbox" id="competence_tablette" name="competences_techniques[]" value="tablette_smartphone" @checked(in_array('tablette_smartphone', $oldCompetences))>
