@@ -456,10 +456,8 @@
                 }
 
                 $availabilityOptions = [
-                    'immediate' => 'Immédiate',
-                    'sous_7_jours' => 'Sous 7 jours',
-                    'sous_15_jours' => 'Sous 15 jours',
-                    'selon_calendrier' => 'Selon le calendrier',
+                    'immediate' => 'Tout au long de l'audit',
+',
                 ];
 
                 $showCinField = old('no_matricule');
