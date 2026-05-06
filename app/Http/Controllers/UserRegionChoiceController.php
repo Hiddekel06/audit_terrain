@@ -53,7 +53,6 @@ class UserRegionChoiceController extends Controller
                 'nom' => $pendingUser['nom'],
                 'telephone' => $pendingUser['telephone'] ?? null,
                 'email' => $pendingUser['email'] ?? null,
-                'region_localite' => $pendingUser['region_localite'] ?? null,
                 'disponibilite' => $pendingUser['disponibilite'] ?? null,
                 'matricule' => $pendingUser['matricule'],
                 'profil_id' => $pendingUser['profil_id'] ?? null,

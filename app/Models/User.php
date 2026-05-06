@@ -18,7 +18,6 @@ class User extends Authenticatable
         'matricule',
         'telephone',
         'email',
-        'region_localite',
         'disponibilite',
         'profil_id',
         'niveau_numerique',

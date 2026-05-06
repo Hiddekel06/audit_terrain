@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Profil;
+use App\Models\Ministere;
 use App\Models\User;
 
 class UserController extends Controller
@@ -18,10 +19,12 @@ class UserController extends Controller
             ->orderBy('id')
             ->get();
 
+        $ministeres = Ministere::orderBy('nom')->get();
+
         $selectedProfileId = (int) request()->query('profil_id', old('profil_id'));
         $selectedProfile = $profils->firstWhere('id', $selectedProfileId) ?? $profils->first();
 
-        return view('utilisateur_form', compact('profils', 'selectedProfile'));
+        return view('utilisateur_form', compact('profils', 'selectedProfile', 'ministeres'));
     }
 
     /**
@@ -35,7 +38,7 @@ class UserController extends Controller
             'nom' => 'required|string|max:255',
             'telephone' => ['required', 'digits:9'],
             'email' => ['required', 'email:rfc', 'max:255'],
-            'region_localite' => ['required', 'string', 'max:255'],
+            'ministere_id' => ['required', 'integer', 'exists:ministeres,id'],
             'disponibilite' => ['required', 'in:immediate,sous_7_jours,sous_15_jours,selon_calendrier'],
             'no_matricule' => ['nullable', 'boolean'],
             'matricule' => ['required_without:no_matricule', 'nullable', 'regex:/^\d{6}[A-Za-z]$/'],
@@ -48,8 +51,8 @@ class UserController extends Controller
             'competences_techniques.*' => ['in:tablette_smartphone,kit_biometrique,reseau_4g_hotspot,support_technique,excel_donnees,aucune'],
         ];
         $validated = $request->validate($rules, [
-            'telephone.digits' => 'Le numéro de téléphone doit contenir exactement 9 chiffres.',
-            'matricule.required_without' => 'Le matricule est obligatoire si vous ne cochez pas la case "Pas de matricule".',
+            'telephone.digits' => 'Le numéro de téléphone doit contenir exactement 9 chiffres.',            'ministere_id.required' => 'Veuillez sélectionner un ministère.',
+            'ministere_id.exists' => 'Le ministère sélectionné est invalide.',            'matricule.required_without' => 'Le matricule est obligatoire si vous ne cochez pas la case "Pas de matricule".',
             'matricule.regex' => 'Le matricule doit contenir 6 chiffres suivis d’une lettre.',
             'cin.digits' => 'Le CIN doit contenir exactement 13 chiffres.',
             'cin.required_if' => 'Le CIN est obligatoire lorsque vous cochez "Pas de matricule".',
@@ -77,13 +80,12 @@ class UserController extends Controller
                 'matricule' => $identityNumber,
                 'telephone' => $validated['telephone'],
                 'email' => $validated['email'],
-                'region_localite' => $validated['region_localite'],
+                'ministere_id' => (int) $validated['ministere_id'],
                 'disponibilite' => $validated['disponibilite'],
                 'profil_id' => (int) $validated['profil_id'],
                 'niveau_numerique' => $validated['niveau_numerique'],
                 'experiences' => array_values(array_unique($validated['experiences'] ?? [])),
                 'competences_techniques' => array_values(array_unique($validated['competences_techniques'] ?? [])),
-                'ministere_id' => null,
             ],
             'pending_dynamic_answers' => [],
         ]);

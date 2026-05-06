@@ -149,13 +149,15 @@
 
     .card-content {
         padding: 0 1.5rem 1rem;
+         overflow: hidden;
     }
-
+    
     .card-content h3 {
         font-size: 1.1rem;
         font-weight: 700;
         color: var(--primary-dark);
         margin-bottom: 0.5rem;
+         overflow: hidden;
     }
 
     .card-mission {

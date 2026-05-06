@@ -526,9 +526,14 @@
                     </div>
 
                     <div class="field-group">
-                        <label for="region_localite" class="id-label">Région / Localité <span class="text-danger">*</span></label>
-                        <input type="text" class="id-input @error('region_localite') is-invalid @enderror" id="region_localite" name="region_localite" value="{{ old('region_localite') }}" placeholder="Votre région ou localité" required>
-                        @error('region_localite')
+                        <label for="ministere_id" class="id-label">Ministère <span class="text-danger">*</span></label>
+                        <select class="id-select @error('ministere_id') is-invalid @enderror" id="ministere_id" name="ministere_id" required>
+                            <option value="">— Sélectionner un ministère —</option>
+                            @foreach($ministeres as $ministere)
+                                <option value="{{ $ministere->id }}" @selected(old('ministere_id') == $ministere->id)>{{ $ministere->nom }}</option>
+                            @endforeach
+                        </select>
+                        @error('ministere_id')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>

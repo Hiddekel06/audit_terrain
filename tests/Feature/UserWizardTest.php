@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Profil;
+use App\Models\Ministere;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -17,6 +18,7 @@ class UserWizardTest extends TestCase
     public function test_formulaire_affiche_le_matricule_et_les_profils(): void
     {
         $this->seedProfiles();
+        $this->seedMinisteres();
 
         $response = $this->get(route('utilisateur.form', ['profil_id' => 1]));
 
@@ -26,6 +28,7 @@ class UserWizardTest extends TestCase
         $response->assertSeeText("Chef d'équipe");
         $response->assertSeeText('Matricule');
         $response->assertSeeText('Pas de matricule');
+        $response->assertSeeText('Ministère');
         $response->assertSeeText('1. Informations générales');
         $response->assertSeeText('2. Compétences');
         $response->assertSeeText('Section 3 : Niveau numérique');
@@ -36,13 +39,14 @@ class UserWizardTest extends TestCase
     public function test_le_matricule_doit_avoir_le_format_attendu(): void
     {
         $this->seedProfiles();
+        $this->seedMinisteres();
 
         $response = $this->post(route('utilisateur.store'), [
             'nom' => 'Diallo',
             'prenom' => 'Awa',
             'telephone' => '771234567',
             'email' => 'awa@example.com',
-            'region_localite' => 'Dakar',
+            'ministere_id' => 1,
             'disponibilite' => 'immediate',
             'matricule' => '12345',
             'profil_id' => 1,
@@ -57,13 +61,14 @@ class UserWizardTest extends TestCase
     public function test_le_cin_est_accepté_si_aucun_matricule_nest_disponible(): void
     {
         $this->seedProfiles();
+        $this->seedMinisteres();
 
         $response = $this->post(route('utilisateur.store'), [
             'nom' => 'Diallo',
             'prenom' => 'Awa',
             'telephone' => '771234567',
             'email' => 'awa@example.com',
-            'region_localite' => 'Dakar',
+            'ministere_id' => 1,
             'disponibilite' => 'immediate',
             'no_matricule' => 1,
             'cin' => '1234567890123',
@@ -82,6 +87,7 @@ class UserWizardTest extends TestCase
     public function test_le_flux_complet_persiste_lutilisateur_avec_profil(): void
     {
         $this->seedProfiles();
+        $this->seedMinisteres();
         $this->seedRegionsTable();
 
         $this->withSession([
@@ -91,13 +97,12 @@ class UserWizardTest extends TestCase
                 'matricule' => '123456A',
                 'telephone' => '771234567',
                 'email' => 'awa@example.com',
-                'region_localite' => 'Dakar',
                 'disponibilite' => 'immediate',
                 'profil_id' => 1,
                 'niveau_numerique' => 'intermediaire',
                 'experiences' => ['audit_recensement', 'biometrie'],
                 'competences_techniques' => ['tablette_smartphone', 'excel_donnees'],
-                'ministere_id' => null,
+                'ministere_id' => 1,
             ],
             'pending_dynamic_answers' => [],
         ]);
@@ -115,10 +120,10 @@ class UserWizardTest extends TestCase
             'matricule' => '123456A',
             'telephone' => '771234567',
             'email' => 'awa@example.com',
-            'region_localite' => 'Dakar',
             'disponibilite' => 'immediate',
             'profil_id' => 1,
             'niveau_numerique' => 'intermediaire',
+            'ministere_id' => 1,
         ]);
 
         $createdUser = User::where('matricule', '123456A')->firstOrFail();
@@ -176,6 +181,33 @@ class UserWizardTest extends TestCase
             ['id' => 1, 'nom' => 'Dakar'],
             ['id' => 2, 'nom' => 'Thiès'],
             ['id' => 3, 'nom' => 'Saint-Louis'],
+        ]);
+    }
+
+    private function seedMinisteres(): void
+    {
+        Ministere::insert([
+            [
+                'id' => 1,
+                'nom' => 'Ministère de l\'Intérieur',
+                'code' => 'MI',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => 2,
+                'nom' => 'Ministère de l\'Économie',
+                'code' => 'ME',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => 3,
+                'nom' => 'Ministère de l\'Éducation',
+                'code' => 'MED',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ]);
     }
 }
