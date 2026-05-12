@@ -14,7 +14,7 @@
                 <div class="step"></div>
             @endif
         </div>
-        <h2 class="form-title">Choisissez vos zones de preferences</h2>
+        <h2 class="form-title">Choisissez votre région</h2>
         <p class="form-subtitle">
             {{ $singleRegionSelection ? 'Sélectionnez la région de votre choix pour l’audit.' : 'Sélectionnez la zone où vous souhaitez être déployé pour l’audit.' }}
         </p>
