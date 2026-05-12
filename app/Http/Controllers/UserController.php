@@ -90,7 +90,6 @@ class UserController extends Controller
             'pending_dynamic_answers' => [],
         ]);
 
-        // Rediriger vers la suite (ex: choix des régions)
-        return redirect()->route('user_region_choice.create');
+        return redirect()->route('user_region_choice.decision');
     }
 }

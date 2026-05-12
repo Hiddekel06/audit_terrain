@@ -3,13 +3,21 @@
 @section('content')
 <div class="d-flex justify-content-center align-items-center min-vh-100 py-5" style="background: linear-gradient(135deg, #eef5e8 0%, #e0f0e0 100%);">
     <div class="modern-card">
+        @php
+            $singleRegionSelection = (bool) ($singleRegionSelection ?? false);
+        @endphp
+
         <div class="step-indicator">
             <div class="step active"></div>
-            <div class="step"></div>
-            <div class="step"></div>
+            @if(!$singleRegionSelection)
+                <div class="step"></div>
+                <div class="step"></div>
+            @endif
         </div>
         <h2 class="form-title">Choisissez vos zones de preferences</h2>
-        <p class="form-subtitle">Sélectionnez la zone où vous souhaitez être déployé pour l’audit </p>
+        <p class="form-subtitle">
+            {{ $singleRegionSelection ? 'Sélectionnez la région de votre choix pour l’audit.' : 'Sélectionnez la zone où vous souhaitez être déployé pour l’audit.' }}
+        </p>
 
         @if ($errors->any())
             <div class="alert-custom" role="alert">
@@ -28,16 +36,16 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('user_region_choice.store') }}" id="regionForm">
+        <form method="POST" action="{{ route('user_region_choice.store') }}" id="regionForm" data-single-region-selection="{{ $singleRegionSelection ? 1 : 0 }}">
             @csrf
-            @for ($i = 1; $i <= 3; $i++)
-                <div class="choice-group" data-choice="{{ $i }}">
+            @if($singleRegionSelection)
+                <div class="choice-group" data-choice="1">
                     <div class="choice-header">
-                        <label for="choix_{{ $i }}" class="form-label">Choix {{ $i }} <span class="required-star">*</span></label>
-                        <span class="choice-badge">{{ $i }}/3</span>
+                        <label for="choix_1" class="form-label">Région <span class="required-star">*</span></label>
+                        <span class="choice-badge">1/1</span>
                     </div>
                     <div class="custom-select-wrapper">
-                        <select class="form-select modern-select" id="choix_{{ $i }}" name="choix_{{ $i }}" required>
+                        <select class="form-select modern-select" id="choix_1" name="choix_1" required data-region-select>
                             <option value="">Sélectionnez une région</option>
                             @foreach($regions as $region)
                                 <option value="{{ $region->id }}">{{ $region->nom }}</option>
@@ -53,20 +61,56 @@
                             @foreach($motivations as $motivation)
                                 <div class="col-auto">
                                     <div class="form-check">
-                                        <input class="form-check-input motivation-type" type="checkbox" name="motivations_{{ $i }}[]" value="{{ $motivation->id }}" id="motivation_{{ $i }}_{{ $motivation->id }}">
-                                        <label class="form-check-label" for="motivation_{{ $i }}_{{ $motivation->id }}">{{ $motivation->libelle }}</label>
+                                        <input class="form-check-input motivation-type" type="checkbox" name="motivations_1[]" value="{{ $motivation->id }}" id="motivation_1_{{ $motivation->id }}">
+                                        <label class="form-check-label" for="motivation_1_{{ $motivation->id }}">{{ $motivation->libelle }}</label>
                                     </div>
                                 </div>
                             @endforeach
                             <div class="col-12 mt-2">
-                                <input type="text" class="form-control" name="motivation_autre_{{ $i }}" id="motivation_autre_{{ $i }}" maxlength="100" placeholder="Ajoutez une motivation personnalisée (optionnel)" value="{{ old('motivation_autre_' . $i) }}">
+                                <input type="text" class="form-control" name="motivation_autre_1" id="motivation_autre_1" maxlength="100" placeholder="Ajoutez une motivation personnalisée (optionnel)" value="{{ old('motivation_autre_1') }}">
                             </div>
                         </div>
                     </div>
                 </div>
-            @endfor
+            @else
+                @for ($i = 1; $i <= 3; $i++)
+                    <div class="choice-group" data-choice="{{ $i }}">
+                        <div class="choice-header">
+                            <label for="choix_{{ $i }}" class="form-label">Choix {{ $i }} <span class="required-star">*</span></label>
+                            <span class="choice-badge">{{ $i }}/3</span>
+                        </div>
+                        <div class="custom-select-wrapper">
+                            <select class="form-select modern-select" id="choix_{{ $i }}" name="choix_{{ $i }}" required data-region-select>
+                                <option value="">Sélectionnez une région</option>
+                                @foreach($regions as $region)
+                                    <option value="{{ $region->id }}">{{ $region->nom }}</option>
+                                @endforeach
+                            </select>
+                            <div class="select-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </div>
+                        </div>
+                        <div class="motivation-wrapper mt-2">
+                            <label class="form-label mb-1">Motivation(s) pour ce choix :</label>
+                            <div class="row g-2 align-items-center">
+                                @foreach($motivations as $motivation)
+                                    <div class="col-auto">
+                                        <div class="form-check">
+                                            <input class="form-check-input motivation-type" type="checkbox" name="motivations_{{ $i }}[]" value="{{ $motivation->id }}" id="motivation_{{ $i }}_{{ $motivation->id }}">
+                                            <label class="form-check-label" for="motivation_{{ $i }}_{{ $motivation->id }}">{{ $motivation->libelle }}</label>
+                                        </div>
+                                    </div>
+                                @endforeach
+                                <div class="col-12 mt-2">
+                                    <input type="text" class="form-control" name="motivation_autre_{{ $i }}" id="motivation_autre_{{ $i }}" maxlength="100" placeholder="Ajoutez une motivation personnalisée (optionnel)" value="{{ old('motivation_autre_' . $i) }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endfor
+            @endif
             <button type="submit" class="btn-modern">
-                <span>Valider mes choix</span>
+                <span>{{ $singleRegionSelection ? 'Valider mon choix' : 'Valider mes choix' }}</span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </button>
         </form>
@@ -342,15 +386,15 @@
 
 <script>
     // Prevent duplicate region selection
-    const selects = [
-        document.getElementById('choix_1'),
-        document.getElementById('choix_2'),
-        document.getElementById('choix_3')
-    ];
+    const selects = Array.from(document.querySelectorAll('[data-region-select]'));
 
     function updateOptions() {
+        if (selects.length < 2) {
+            return;
+        }
+
         const values = selects.map(s => s.value);
-        selects.forEach((select, idx) => {
+        selects.forEach((select) => {
             Array.from(select.options).forEach(option => {
                 if (option.value === "") return;
                 option.disabled = values.includes(option.value) && select.value !== option.value;
@@ -394,6 +438,10 @@
 
     // Step indicator - simple visual feedback on selection completion
     function updateStepIndicator() {
+        if (selects.length < 2) {
+            return;
+        }
+
         const filled = selects.filter(s => s.value !== "").length;
         const steps = document.querySelectorAll('.step');
         steps.forEach((step, idx) => {

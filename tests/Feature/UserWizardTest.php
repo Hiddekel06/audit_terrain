@@ -84,7 +84,99 @@ class UserWizardTest extends TestCase
         });
     }
 
-    public function test_le_flux_complet_persiste_lutilisateur_avec_profil(): void
+    public function test_le_formulaire_redirige_vers_la_question_de_deploiement(): void
+    {
+        $this->seedProfiles();
+        $this->seedMinisteres();
+
+        $response = $this->post(route('utilisateur.store'), [
+            'nom' => 'Diallo',
+            'prenom' => 'Awa',
+            'telephone' => '771234567',
+            'email' => 'awa@example.com',
+            'ministere_id' => 1,
+            'disponibilite' => 'immediate',
+            'matricule' => '123456A',
+            'profil_id' => 1,
+            'niveau_numerique' => 'intermediaire',
+            'experiences' => ['audit_recensement'],
+            'competences_techniques' => ['tablette_smartphone'],
+        ]);
+
+        $response->assertRedirect(route('user_region_choice.decision'));
+        $response->assertSessionHas('pending_user_payload', function ($payload) {
+            return ($payload['matricule'] ?? null) === '123456A';
+        });
+    }
+
+    public function test_le_choix_oui_termine_le_flux_sans_choix_region(): void
+    {
+        $this->seedProfiles();
+        $this->seedMinisteres();
+
+        $this->withSession([
+            'pending_user_payload' => [
+                'prenom' => 'Awa',
+                'nom' => 'Diallo',
+                'matricule' => '123456A',
+                'telephone' => '771234567',
+                'email' => 'awa@example.com',
+                'disponibilite' => 'immediate',
+                'profil_id' => 1,
+                'niveau_numerique' => 'intermediaire',
+                'experiences' => ['audit_recensement', 'biometrie'],
+                'competences_techniques' => ['tablette_smartphone', 'excel_donnees'],
+                'ministere_id' => 1,
+            ],
+            'pending_dynamic_answers' => [],
+        ]);
+
+        $response = $this->post(route('user_region_choice.decision.store'), [
+            'ready_to_deploy' => 'yes',
+        ]);
+
+        $response->assertOk();
+        $this->assertDatabaseHas('users', [
+            'matricule' => '123456A',
+            'profil_id' => 1,
+            'ready_to_deploy_all_regions' => 1,
+        ]);
+        $this->assertDatabaseMissing('user_region_choices', [
+            'user_id' => User::where('matricule', '123456A')->firstOrFail()->id,
+        ]);
+    }
+
+    public function test_le_choix_non_ouvre_une_region_unique(): void
+    {
+        $this->seedProfiles();
+        $this->seedMinisteres();
+
+        $this->withSession([
+            'pending_user_payload' => [
+                'prenom' => 'Awa',
+                'nom' => 'Diallo',
+                'matricule' => '123456A',
+                'telephone' => '771234567',
+                'email' => 'awa@example.com',
+                'disponibilite' => 'immediate',
+                'profil_id' => 1,
+                'niveau_numerique' => 'intermediaire',
+                'experiences' => ['audit_recensement', 'biometrie'],
+                'competences_techniques' => ['tablette_smartphone', 'excel_donnees'],
+                'ministere_id' => 1,
+            ],
+            'pending_dynamic_answers' => [],
+        ]);
+
+        $response = $this->post(route('user_region_choice.decision.store'), [
+            'ready_to_deploy' => 'no',
+        ]);
+
+        $response->assertRedirect(route('user_region_choice.create'));
+        $response->assertSessionHas('region_choice_mode', 'single');
+    }
+
+    public function test_le_flux_complet_persiste_lutilisateur_avec_region_unique(): void
     {
         $this->seedProfiles();
         $this->seedMinisteres();
@@ -105,12 +197,11 @@ class UserWizardTest extends TestCase
                 'ministere_id' => 1,
             ],
             'pending_dynamic_answers' => [],
+            'region_choice_mode' => 'single',
         ]);
 
         $response = $this->post(route('user_region_choice.store'), [
             'choix_1' => 1,
-            'choix_2' => 2,
-            'choix_3' => 3,
         ]);
 
         $response->assertOk();
@@ -124,11 +215,18 @@ class UserWizardTest extends TestCase
             'profil_id' => 1,
             'niveau_numerique' => 'intermediaire',
             'ministere_id' => 1,
+            'ready_to_deploy_all_regions' => 0,
         ]);
 
         $createdUser = User::where('matricule', '123456A')->firstOrFail();
         $this->assertSame(['audit_recensement', 'biometrie'], $createdUser->experiences);
         $this->assertSame(['tablette_smartphone', 'excel_donnees'], $createdUser->competences_techniques);
+        $this->assertDatabaseHas('user_region_choices', [
+            'user_id' => $createdUser->id,
+            'region_id' => 1,
+            'ordre' => 1,
+        ]);
+        $this->assertDatabaseCount('user_region_choices', 1);
     }
 
     private function seedProfiles(): void

@@ -19,6 +19,7 @@ class User extends Authenticatable
         'telephone',
         'email',
         'disponibilite',
+        'ready_to_deploy_all_regions',
         'profil_id',
         'niveau_numerique',
         'experiences',
@@ -43,6 +44,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'experiences' => 'array',
             'competences_techniques' => 'array',
+            'ready_to_deploy_all_regions' => 'boolean',
         ];
     }
 

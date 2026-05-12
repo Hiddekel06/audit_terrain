@@ -13,6 +13,8 @@ Route::get('/utilisateur', [App\Http\Controllers\UserController::class, 'create'
 Route::post('/utilisateur', [App\Http\Controllers\UserController::class, 'store'])->name('utilisateur.store');
 
 // Choix des régions (affichage et enregistrement)
+Route::get('/choix-deploiement', [App\Http\Controllers\UserRegionChoiceController::class, 'decision'])->name('user_region_choice.decision');
+Route::post('/choix-deploiement', [App\Http\Controllers\UserRegionChoiceController::class, 'decisionStore'])->name('user_region_choice.decision.store');
 Route::get('/choix-regions', [App\Http\Controllers\UserRegionChoiceController::class, 'create'])->name('user_region_choice.create');
 Route::post('/choix-regions', [App\Http\Controllers\UserRegionChoiceController::class, 'store'])->name('user_region_choice.store');
 
