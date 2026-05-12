@@ -54,9 +54,8 @@
                         <i class="bi bi-people text-primary fs-3"></i>
                     </div>
                     <div>
-                        <h6 class="text-muted mb-1 small uppercase fw-bold">Soumissions complètes</h6>
-                        <h3 class="fw-bold mb-0">{{ $completedUsers }}</h3>
-                        <small class="text-muted">Parcours terminé</small>
+                        <h6 class="text-muted mb-1 small uppercase fw-bold">Total candidats</h6>
+                        <h3 class="fw-bold mb-0">{{ $totalUsers }}</h3>
                     </div>
                 </div>
             </div>
@@ -65,11 +64,11 @@
             <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
                 <div class="d-flex align-items-center gap-3">
                     <div class="bg-success bg-opacity-10 p-3 rounded-3">
-                        <i class="bi bi-journal-check text-success fs-3"></i>
+                        <i class="bi bi-check-circle text-success fs-3"></i>
                     </div>
                     <div>
-                        <h6 class="text-muted mb-1 small fw-bold">Motivations Types</h6>
-                        <h3 class="fw-bold mb-0">{{ $motivationStats['types'] ?? 0 }}</h3>
+                        <h6 class="text-muted mb-1 small fw-bold">Soumissions complètes</h6>
+                        <h3 class="fw-bold mb-0">{{ $completedUsers }}</h3>
                     </div>
                 </div>
             </div>
@@ -78,11 +77,12 @@
             <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
                 <div class="d-flex align-items-center gap-3">
                     <div class="bg-warning bg-opacity-10 p-3 rounded-3">
-                        <i class="bi bi-chat-dots text-warning fs-3"></i>
+                        <i class="bi bi-journal-check text-warning fs-3"></i>
                     </div>
                     <div>
-                        <h6 class="text-muted mb-1 small fw-bold">Personnalisées</h6>
-                        <h3 class="fw-bold mb-0">{{ $motivationStats['libres'] ?? 0 }}</h3>
+                        <h6 class="text-muted mb-1 small fw-bold">Répondants (Q. dyn.)</h6>
+                        <h3 class="fw-bold mb-0">{{ $dynamicRespondents }}</h3>
+                        <small class="text-muted">{{ $dynamicRespondentsRate }}%</small>
                     </div>
                 </div>
             </div>
@@ -96,6 +96,83 @@
                     <div>
                         <h6 class="text-muted mb-1 small fw-bold">Régions Actives</h6>
                         <h3 class="fw-bold mb-0">{{ $tendances->count() }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== SECTION CANDIDATS (Analyse des profils) ===== --}}
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold mb-1">Analyse des Candidats</h5>
+                        <p class="text-muted mb-0 small">Distribution par profil, niveau numérique et disponibilité</p>
+                    </div>
+                    <a href="{{ route('admin.candidates.index') }}" class="btn btn-sm btn-outline-primary">Voir tous les candidats</a>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <div class="row g-3">
+                        {{-- Distribution par profil --}}
+                        <div class="col-md-4">
+                            <h6 class="fw-bold text-dark mb-3">Par Profil</h6>
+                            <div class="list-group list-group-flush">
+                                @forelse($candidatesByProfil as $item)
+                                    <div class="list-group-item px-0 border-0 py-2 d-flex justify-content-between align-items-center">
+                                        @if($item->profil_id)
+                                            <a href="{{ route('admin.candidates.profil', $item->profil_id) }}" style="color: #4a8c5c; text-decoration: none; font-weight: 600;">
+                                                {{ $item->libelle ?? 'Non assigné' }}
+                                            </a>
+                                        @else
+                                            <span style="color: #6c757d; font-weight: 600;">{{ $item->libelle ?? 'Non assigné' }}</span>
+                                        @endif
+                                        <span class="badge bg-primary rounded-pill">{{ $item->total }}</span>
+                                    </div>
+                                @empty
+                                    <p class="text-muted small">Aucun candidat</p>
+                                @endforelse
+                            </div>
+                        </div>
+
+                        {{-- Distribution par niveau --}}
+                        <div class="col-md-4">
+                            <h6 class="fw-bold text-dark mb-3">Par Niveau Numérique</h6>
+                            <div class="list-group list-group-flush">
+                                @forelse($candidatesByNiveau as $niveau => $count)
+                                    <div class="list-group-item px-0 border-0 py-2 d-flex justify-content-between align-items-center">
+                                        <span class="text-dark">{{ ucfirst(str_replace('_', ' ', $niveau)) }}</span>
+                                        <span class="badge bg-success rounded-pill">{{ $count }}</span>
+                                    </div>
+                                @empty
+                                    <p class="text-muted small">Aucune donnée</p>
+                                @endforelse
+                            </div>
+                        </div>
+
+                        {{-- Distribution par disponibilité --}}
+                        <div class="col-md-4">
+                            <h6 class="fw-bold text-dark mb-3">Par Disponibilité</h6>
+                            <div class="list-group list-group-flush">
+                                <div class="list-group-item px-0 border-0 py-2 d-flex justify-content-between align-items-center">
+                                    <span class="text-dark">Immédiate</span>
+                                    <span class="badge bg-warning rounded-pill">{{ $candidatesByDisponibilite->get('immediate', 0) }}</span>
+                                </div>
+                                <div class="list-group-item px-0 border-0 py-2 d-flex justify-content-between align-items-center">
+                                    <span class="text-dark">Sous 7 jours</span>
+                                    <span class="badge bg-info rounded-pill">{{ $candidatesByDisponibilite->get('sous_7_jours', 0) }}</span>
+                                </div>
+                                <div class="list-group-item px-0 border-0 py-2 d-flex justify-content-between align-items-center">
+                                    <span class="text-dark">Sous 15 jours</span>
+                                    <span class="badge bg-secondary rounded-pill">{{ $candidatesByDisponibilite->get('sous_15_jours', 0) }}</span>
+                                </div>
+                                <div class="list-group-item px-0 border-0 py-2 d-flex justify-content-between align-items-center">
+                                    <span class="text-dark">Selon calendrier</span>
+                                    <span class="badge bg-dark rounded-pill">{{ $candidatesByDisponibilite->get('selon_calendrier', 0) }}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

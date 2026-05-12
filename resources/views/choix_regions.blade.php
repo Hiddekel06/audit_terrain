@@ -58,14 +58,8 @@
                                     </div>
                                 </div>
                             @endforeach
-                            <div class="col-auto">
-                                <div class="form-check">
-                                    <input class="form-check-input motivation-autre" type="checkbox" id="motivation_{{ $i }}_autre" data-choice="{{ $i }}">
-                                    <label class="form-check-label" for="motivation_{{ $i }}_autre">Autre</label>
-                                </div>
-                            </div>
-                            <div class="col-12 mt-2" id="autre_motivation_block_{{ $i }}" style="display:none;">
-                                <input type="text" class="form-control" name="motivation_autre_{{ $i }}" id="motivation_autre_{{ $i }}" maxlength="100" placeholder="Votre motivation personnalisée">
+                            <div class="col-12 mt-2">
+                                <input type="text" class="form-control" name="motivation_autre_{{ $i }}" id="motivation_autre_{{ $i }}" maxlength="100" placeholder="Ajoutez une motivation personnalisée (optionnel)" value="{{ old('motivation_autre_' . $i) }}">
                             </div>
                         </div>
                     </div>
@@ -412,17 +406,5 @@
     });
     updateStepIndicator();
 
-    // Affichage dynamique du champ "Autre" motivation
-    document.addEventListener('DOMContentLoaded', function() {
-        for (let i = 1; i <= 3; i++) {
-            const autreCheckbox = document.getElementById('motivation_' + i + '_autre');
-            const autreBlock = document.getElementById('autre_motivation_block_' + i);
-            if (autreCheckbox && autreBlock) {
-                autreCheckbox.addEventListener('change', function() {
-                    autreBlock.style.display = this.checked ? '' : 'none';
-                });
-            }
-        }
-    });
 </script>
 @endsection

@@ -26,6 +26,14 @@ Route::middleware('admin.auth')->group(function () {
     Route::get('/admin/dashboard', [App\Http\Controllers\AdminDashboardController::class, 'index'])
         ->name('admin.dashboard');
 
+    // Gestion candidats
+    Route::get('/admin/candidates', [App\Http\Controllers\AdminCandidateController::class, 'index'])
+        ->name('admin.candidates.index');
+    Route::get('/admin/candidates/{user}', [App\Http\Controllers\AdminCandidateController::class, 'show'])
+        ->name('admin.candidates.show');
+    Route::get('/admin/candidates/profil/{profil}', [App\Http\Controllers\AdminCandidateController::class, 'profilDetail'])
+        ->name('admin.candidates.profil');
+
     // Recherche operationnelle (admin)
     Route::view('/admin/recherche-operationnelle', 'admin.operations-research')
         ->name('admin.operations.research');
