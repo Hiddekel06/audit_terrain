@@ -13,6 +13,7 @@
             background-color: @yield('body-bg', '#e6f4ea');
         }
     </style>
+    @stack('styles')
 </head>
 <body>
     @hasSection('no-header')

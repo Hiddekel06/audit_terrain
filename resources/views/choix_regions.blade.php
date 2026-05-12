@@ -66,9 +66,7 @@
                                     </div>
                                 </div>
                             @endforeach
-                            <div class="col-12 mt-2">
-                                <input type="text" class="form-control" name="motivation_autre_1" id="motivation_autre_1" maxlength="100" placeholder="Ajoutez une motivation personnalisée (optionnel)" value="{{ old('motivation_autre_1') }}">
-                            </div>
+                            {{-- Champ de motivation libre retiré (non requis) --}}
                         </div>
                     </div>
                 </div>
@@ -101,9 +99,7 @@
                                         </div>
                                     </div>
                                 @endforeach
-                                <div class="col-12 mt-2">
-                                    <input type="text" class="form-control" name="motivation_autre_{{ $i }}" id="motivation_autre_{{ $i }}" maxlength="100" placeholder="Ajoutez une motivation personnalisée (optionnel)" value="{{ old('motivation_autre_' . $i) }}">
-                                </div>
+                                {{-- Champ de motivation libre retiré (non requis) --}}
                             </div>
                         </div>
                     </div>
