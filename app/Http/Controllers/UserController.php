@@ -39,7 +39,7 @@ class UserController extends Controller
             'telephone' => ['required', 'digits:9'],
             'email' => ['required', 'email:rfc', 'max:255'],
             'ministere_id' => ['required', 'integer', 'exists:ministeres,id'],
-            'disponibilite' => ['required', 'in:immediate,sous_7_jours,sous_15_jours,selon_calendrier'],
+
             'no_matricule' => ['nullable', 'boolean'],
             'matricule' => ['required_without:no_matricule', 'nullable', 'regex:/^\d{6}[A-Za-z]$/'],
             'cin' => ['required_if:no_matricule,1', 'nullable', 'digits:13'],
@@ -81,7 +81,7 @@ class UserController extends Controller
                 'telephone' => $validated['telephone'],
                 'email' => $validated['email'],
                 'ministere_id' => (int) $validated['ministere_id'],
-                'disponibilite' => $validated['disponibilite'],
+
                 'profil_id' => (int) $validated['profil_id'],
                 'niveau_numerique' => $validated['niveau_numerique'],
                 'experiences' => array_values(array_unique($validated['experiences'] ?? [])),

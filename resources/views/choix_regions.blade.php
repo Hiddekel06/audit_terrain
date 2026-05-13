@@ -3,6 +3,11 @@
 @section('content')
 <div class="d-flex justify-content-center align-items-center min-vh-100 py-5" style="background: linear-gradient(135deg, #eef5e8 0%, #e0f0e0 100%);">
     <div class="modern-card">
+        <button type="button" class="back-btn-regions" data-back-button aria-label="Retour">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3L4 8l6 5"/></svg>
+            Retour
+        </button>
+
         @php
             $singleRegionSelection = (bool) ($singleRegionSelection ?? false);
         @endphp
@@ -378,6 +383,30 @@
             font-size: 1.5rem;
         }
     }
+
+    .back-btn-regions {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        background: #ffffff;
+        color: #2f5f3d;
+        border: 2px solid #2f5f3d;
+        font-weight: 700;
+        font-size: 14px;
+        z-index: 100;
+        box-shadow: 0 4px 12px rgba(31,63,31,0.15);
+        cursor: pointer;
+        margin-bottom: 12px;
+        transition: all 0.2s ease;
+    }
+
+    .back-btn-regions:hover {
+        background: #f0f7f0;
+        border-color: #1d3a1f;
+        transform: translateX(-2px);
+    }
 </style>
 
 <script>
@@ -450,5 +479,14 @@
     });
     updateStepIndicator();
 
+    // Back button handler
+    const backBtn = document.querySelector('[data-back-button]');
+    backBtn?.addEventListener('click', function () {
+        if (window.history.length > 1) {
+            window.history.back();
+        } else {
+            window.location.href = '{{ url("/") }}';
+        }
+    });
 </script>
 @endsection

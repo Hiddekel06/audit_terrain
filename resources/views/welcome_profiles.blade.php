@@ -556,12 +556,12 @@
                 <span><i class="bi bi-tools"></i></span>
             </div>
             <div class="card-content">
-                <h3>Support Technique</h3>
+                <h3>Support</h3>
                 <div class="card-mission">Fiabilité technique et qualité des données</div>
                 <ul class="card-preview">
-                    <li><i class="bi bi-gear"></i> Configuration équipements</li>
+                    <li><i class="bi bi-gear"></i> Gestion des équipements</li>
                     <li><i class="bi bi-headset"></i> Assistance aux auditeurs</li>
-                    <li><i class="bi bi-fingerprint"></i> Contrôle qualité biométrique</li>
+                    <li><i class="bi bi-fingerprint"></i> Contrôle des données</li>
                 </ul>
             </div>
             <button class="btn-details" onclick="openModal('support', 3)">
@@ -594,8 +594,9 @@
                 L'audit physique et biométrique constitue une opération importante de l’État, visant à garantir la fiabilité des données et la bonne gestion des ressources publiques.
                 Elle s’inscrit dans une démarche de transparence et d’efficacité de l’Administration.
                 À ce titre, elle requiert de la part de chacun sérieux, rigueur et sincérité dans les informations fournies.
-            </p>
-        </div>
+            </p>            <p style="font-size: 0.98rem; line-height: 1.8; color: var(--primary-mid); margin-top: 1rem; font-weight: 600;">
+                ⚠️ Vous devez être disponible tout au long de la mission d'audit.
+            </p>        </div>
         <div class="modal-footer">
             <button class="btn-close-modal" onclick="closeEngagementModal()">Refuser</button>
             <a href="{{ route('utilisateur.form') }}" class="btn-continue" id="continueFormLink" data-form-url="{{ route('utilisateur.form') }}">J'accepte et je continue</a>
@@ -660,32 +661,28 @@
             icon: 'bi-tools',
             iconBg: '#fef3c7',
             iconColor: '#b45309',
-            title: 'Auditeur – Support Technique',
+            title: 'Auditeur – Support ',
             mission: 'Garantir la fiabilité technique et la qualité des données.',
             activities: [
-                'Configuration équipements',
+                'Gestion équipements',
                 'Assistance aux auditeurs',
-                'Contrôle qualité biométrique',
-                'Gestion incidents techniques',
-                'Synchronisation des données'
+                'Gestion des données'
             ],
             technicalSkills: [
-                'Android / tablettes',
+                'Téléphones / tablettes',
                 'Réseaux (4G, partage connexion)',
                 'Biométrie (empreintes, photo)',
                 'Synchronisation données'
             ],
             security: [
-                'Protection des données',
                 'Gestion accès',
                 'Respect des normes'
             ],
             indicators: [
-                'Taux de synchronisation',
-                'Incidents résolus',
-                'Qualité biométrique'
+                'Synchronisation des données',
+                'Demandes traitées'
             ],
-            badges: ['Support IT', 'Sécurité', 'Qualité']
+            badges: ['Support IT', 'Fiabilité', 'Qualité']
         },
         superviseur: {
             icon: 'bi-diagram-3',

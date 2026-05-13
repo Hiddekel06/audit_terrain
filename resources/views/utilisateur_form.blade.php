@@ -537,18 +537,6 @@
 
                     <div class="field-row">
                         <div>
-                            <label for="disponibilite" class="id-label">Disponibilité <span class="text-danger">*</span></label>
-                            <select class="id-select @error('disponibilite') is-invalid @enderror" id="disponibilite" name="disponibilite" required>
-                                <option value="">— Sélectionner —</option>
-                                @foreach($availabilityOptions as $value => $label)
-                                    <option value="{{ $value }}" @selected(old('disponibilite') === $value)>{{ $label }}</option>
-                                @endforeach
-                            </select>
-                            @error('disponibilite')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div>
                             <label for="matricule" class="id-label">Matricule <span class="text-danger">*</span></label>
                             <input type="text" class="id-input @error('matricule') is-invalid @enderror" id="matricule" name="matricule" value="{{ old('matricule') }}" placeholder="123456A" inputmode="text" maxlength="7" pattern="[0-9]{6}[A-Za-z]{1}">
                             
@@ -781,6 +769,12 @@
             if (validateRequiredInStep('[data-step="1"]')) {
                 showStep(2);
             }
+        });
+
+        const prevButtonTwo = document.querySelector('[data-prev-step-two]');
+        prevButtonTwo?.addEventListener('click', function () {
+            // Retour à l'étape 1 sans validation supplémentaire
+            showStep(1);
         });
 
         telInput?.addEventListener('input', function () {
