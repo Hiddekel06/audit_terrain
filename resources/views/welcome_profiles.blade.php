@@ -585,14 +585,14 @@
                 <div style="width: 80px; height: 52px; margin: 0 auto 1rem; background: linear-gradient(90deg, #00853f 0% 33.33%, #fdef42 33.33% 66.66%, #e31b23 66.66% 100%); border-radius: 6px; position: relative; box-shadow: var(--shadow-sm);">
                     <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1rem;">★</div>
                 </div>
-                <h3 style="font-size: 1.15rem; color: var(--primary-dark); margin-bottom: 0.25rem;">Engagement administratif</h3>
+                <h3 style="font-size: 1.15rem; color: var(--primary-dark); margin-bottom: 0.25rem;">Engagement Administratif</h3>
                 <p style="font-size: 0.8rem; color: var(--gray-soft);">République du Sénégal – Mission d'État</p>
             </div>
         </div>
         <div class="modal-body">
             <p style="font-size: 0.98rem; line-height: 1.8; color: var(--primary-mid);">
                 L'audit physique et biométrique constitue une opération importante de l’État, visant à garantir la fiabilité des données et la bonne gestion des ressources publiques.
-                Elle s’inscrit dans une démarche de transparence et d’efficacité de l’administration.
+                Elle s’inscrit dans une démarche de transparence et d’efficacité de l’Administration.
                 À ce titre, elle requiert de la part de chacun sérieux, rigueur et sincérité dans les informations fournies.
             </p>
         </div>

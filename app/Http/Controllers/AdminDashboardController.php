@@ -20,8 +20,9 @@ class AdminDashboardController extends Controller
      */
     public function index()
     {
-        $totalUsers = User::count();
         $completedUsers = UserRegionChoice::distinct('user_id')->count('user_id');
+        // 'totalUsers' veut maintenant représenter les soumissions complètes
+        $totalUsers = $completedUsers;
         $totalDynamicAnswers = UserDynamicAnswer::count();
         $dynamicRespondents = UserDynamicAnswer::distinct('user_id')->count('user_id');
         $dynamicRespondentsRate = $completedUsers > 0
@@ -95,6 +96,10 @@ class AdminDashboardController extends Controller
 
         $profils = Profil::where('is_active', true)->get();
 
+        // Comptes pour le déploiement global (Oui / Non)
+        $readyYes = User::where('ready_to_deploy_all_regions', true)->count();
+        $readyNo = User::where('ready_to_deploy_all_regions', false)->count();
+
         return view('admin.dashboard', compact(
             'totalUsers',
             'completedUsers',
@@ -114,6 +119,7 @@ class AdminDashboardController extends Controller
             'motivations',
             'dynamicQuestions',
             'profils'
+            , 'readyYes', 'readyNo'
         ));
     }
 }

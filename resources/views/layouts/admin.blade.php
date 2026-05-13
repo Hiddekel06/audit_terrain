@@ -10,14 +10,17 @@
         :root {
             --admin-sidebar-width: 280px;
             --admin-sidebar-collapsed-width: 88px;
-            --admin-sidebar-bg: #173127;
-            --admin-sidebar-bg-soft: #1f3a2f;
-            --admin-sidebar-border: rgba(255, 255, 255, 0.08);
-            --admin-sidebar-text: #edf7f1;
-            --admin-sidebar-muted: #a8c5b3;
-            --admin-content-bg: #f4f7f6;
-            --admin-sidebar-active: rgba(115, 184, 142, 0.22);
-            --admin-sidebar-hover: rgba(115, 184, 142, 0.14);
+            --admin-sidebar-bg: #2f5f3d;
+            --admin-sidebar-bg-soft: #3e7750;
+            --admin-sidebar-border: rgba(255, 255, 255, 0.10);
+            --admin-sidebar-text: #f6fbf7;
+            --admin-sidebar-muted: #d7eadc;
+            --admin-content-bg: #f7faf8;
+            --admin-sidebar-active: rgba(255, 255, 255, 0.16);
+            --admin-sidebar-hover: rgba(255, 255, 255, 0.10);
+            --admin-card-bg: #ffffff;
+            --admin-card-border: rgba(47, 95, 61, 0.08);
+            --admin-surface: #ffffff;
         }
 
         body.admin-layout {
@@ -62,7 +65,7 @@
             width: 44px;
             height: 44px;
             border-radius: 14px;
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.18);
             display: grid;
             place-items: center;
             overflow: hidden;
@@ -124,8 +127,8 @@
 
         .admin-sidebar__link:hover,
         .admin-sidebar__link.active {
-            background: var(--admin-sidebar-active);
-            color: #fff;
+            background: rgba(255, 255, 255, 0.14);
+            color: #ffffff;
             transform: translateX(2px);
         }
 
@@ -154,8 +157,8 @@
         .admin-sidebar__collapse-btn {
             width: 100%;
             border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            background: rgba(255, 255, 255, 0.12);
             color: var(--admin-sidebar-text);
             padding: 0.6rem 0.75rem;
             display: flex;
@@ -167,8 +170,30 @@
         }
 
         .admin-sidebar__collapse-btn:hover {
-            background: rgba(255, 255, 255, 0.14);
+            background: rgba(255, 255, 255, 0.18);
             border-color: rgba(255, 255, 255, 0.35);
+        }
+
+        .admin-card,
+        .card {
+            background: var(--admin-card-bg);
+            border-color: var(--admin-card-border);
+        }
+
+        .admin-topbar {
+            background: rgba(255, 255, 255, 0.92);
+            border-bottom: 1px solid rgba(47, 95, 61, 0.08);
+        }
+
+        .admin-sidebar__footer .btn-outline-light {
+            border-color: rgba(255, 255, 255, 0.35);
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .admin-sidebar__footer .btn-outline-light:hover {
+            background: rgba(255, 255, 255, 0.16);
+            border-color: rgba(255, 255, 255, 0.5);
         }
 
         .admin-sidebar__collapse-label {

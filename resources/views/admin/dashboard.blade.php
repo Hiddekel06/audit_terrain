@@ -13,16 +13,7 @@
             <h1 class="h3 fw-bold text-dark mb-0">Tableau de Bord Analytique</h1>
             <p class="text-muted mb-0">Suivi des inscriptions et des motivations en temps réel.</p>
         </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-outline-primary shadow-sm d-flex align-items-center gap-2 px-4 py-2" data-bs-toggle="modal" data-bs-target="#addQuestionModal">
-                <i class="bi bi-patch-question"></i>
-                <span class="fw-medium">Nouvelle Question</span>
-            </button>
-            <button class="btn btn-primary shadow-sm d-flex align-items-center gap-2 px-4 py-2" data-bs-toggle="modal" data-bs-target="#addMotivationModal">
-                <i class="bi bi-plus-lg"></i>
-                <span class="fw-medium">Nouvelle Motivation</span>
-            </button>
-        </div>
+        {{-- Actions admin retirées (boutons d'ajout supprimés) --}}
     </div>
 
     @if(session('success'))
@@ -45,57 +36,72 @@
         </div>
     @endif
 
+    {{-- ===== KPI PAR PROFIL (placé en haut) ===== --}}
+    <div class="row g-3 mb-4">
+        @forelse($candidatesByProfil as $profilKpi)
+            <div class="col-sm-6 col-md-3">
+                <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-primary bg-opacity-10 p-3 rounded-3">
+                            <i class="bi bi-person-badge text-primary fs-3"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1 small fw-bold">{{ $profilKpi->libelle ?? 'Non assigné' }}</h6>
+                            <h3 class="fw-bold mb-0">{{ $profilKpi->total }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @empty
+            <div class="col-12">
+                <div class="text-muted small">Aucun profil actif.</div>
+            </div>
+        @endforelse
+    </div>
+
     {{-- ===== KPI CARDS (Haut de page) ===== --}}
     <div class="row g-4 mb-4">
-        <div class="col-md-3">
+        <div class="col-12 col-md-4">
             <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
                 <div class="d-flex align-items-center gap-3">
                     <div class="bg-primary bg-opacity-10 p-3 rounded-3">
                         <i class="bi bi-people text-primary fs-3"></i>
                     </div>
                     <div>
-                        <h6 class="text-muted mb-1 small uppercase fw-bold">Total candidats</h6>
+                        <h6 class="text-muted mb-1 small uppercase fw-bold">Total candidats (soumissions complètes)</h6>
                         <h3 class="fw-bold mb-0">{{ $totalUsers }}</h3>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+    </div>
+
+    {{-- ===== KPI DEPLOIEMENT OUI / NON ===== --}}
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
             <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
                 <div class="d-flex align-items-center gap-3">
                     <div class="bg-success bg-opacity-10 p-3 rounded-3">
-                        <i class="bi bi-check-circle text-success fs-3"></i>
+                        <i class="bi bi-hand-thumbs-up text-success fs-3"></i>
                     </div>
                     <div>
-                        <h6 class="text-muted mb-1 small fw-bold">Soumissions complètes</h6>
-                        <h3 class="fw-bold mb-0">{{ $completedUsers }}</h3>
+                        <h6 class="text-muted mb-1 small fw-bold">Prêts à déployer (Oui)</h6>
+                        <h3 class="fw-bold mb-0">{{ $readyYes }}</h3>
+                        <small class="text-muted">Nombre d'utilisateurs ayant confirmé "Oui"</small>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-6">
             <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="bg-warning bg-opacity-10 p-3 rounded-3">
-                        <i class="bi bi-journal-check text-warning fs-3"></i>
+                    <div class="bg-danger bg-opacity-10 p-3 rounded-3">
+                        <i class="bi bi-hand-thumbs-down text-danger fs-3"></i>
                     </div>
                     <div>
-                        <h6 class="text-muted mb-1 small fw-bold">Répondants (Q. dyn.)</h6>
-                        <h3 class="fw-bold mb-0">{{ $dynamicRespondents }}</h3>
-                        <small class="text-muted">{{ $dynamicRespondentsRate }}%</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="bg-info bg-opacity-10 p-3 rounded-3">
-                        <i class="bi bi-geo-alt text-info fs-3"></i>
-                    </div>
-                    <div>
-                        <h6 class="text-muted mb-1 small fw-bold">Régions Actives</h6>
-                        <h3 class="fw-bold mb-0">{{ $tendances->count() }}</h3>
+                        <h6 class="text-muted mb-1 small fw-bold">Prêts à déployer (Non)</h6>
+                        <h3 class="fw-bold mb-0">{{ $readyNo }}</h3>
+                        <small class="text-muted">Nombre d'utilisateurs ayant répondu "Non"</small>
                     </div>
                 </div>
             </div>
@@ -103,6 +109,7 @@
     </div>
 
     {{-- ===== SECTION CANDIDATS (Analyse des profils) ===== --}}
+    {{-- KPI PAR PROFIL (déplacé en haut) --}}
     <div class="row g-4 mb-4">
         <div class="col-12">
             <div class="card border-0 shadow-sm rounded-4">
@@ -179,61 +186,7 @@
         </div>
     </div>
 
-    <div id="metrics-section" class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="bg-dark bg-opacity-10 p-3 rounded-3">
-                        <i class="bi bi-ui-checks-grid text-dark fs-3"></i>
-                    </div>
-                    <div>
-                        <h6 class="text-muted mb-1 small fw-bold">Réponses dynamiques</h6>
-                        <h3 class="fw-bold mb-0">{{ $totalDynamicAnswers }}</h3>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="bg-success bg-opacity-10 p-3 rounded-3">
-                        <i class="bi bi-person-check text-success fs-3"></i>
-                    </div>
-                    <div>
-                        <h6 class="text-muted mb-1 small fw-bold">Répondants (questions dyn.)</h6>
-                        <h3 class="fw-bold mb-0">{{ $dynamicRespondents }}</h3>
-                        <small class="text-muted">{{ $dynamicRespondentsRate }}% des soumissions</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="bg-info bg-opacity-10 p-3 rounded-3">
-                        <i class="bi bi-question-circle text-info fs-3"></i>
-                    </div>
-                    <div>
-                        <h6 class="text-muted mb-1 small fw-bold">Questions actives</h6>
-                        <h3 class="fw-bold mb-0">{{ $dynamicQuestions->where('is_active', true)->count() }}</h3>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="bg-warning bg-opacity-10 p-3 rounded-3">
-                        <i class="bi bi-pencil-square text-warning fs-3"></i>
-                    </div>
-                    <div>
-                        <h6 class="text-muted mb-1 small fw-bold">Soumissions régions</h6>
-                        <h3 class="fw-bold mb-0">{{ $tendances->sum('total') }}</h3>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    {{-- KPI 'Répondants', 'Questions actives' et 'Soumissions régions' retirés par demande produit --}}
 
     <div id="motivations-section" class="row g-4 mb-4">
         {{-- ===== GRAPHIQUE DES TENDANCES ===== --}}
@@ -557,98 +510,5 @@
     });
 </script>
 
-<div class="modal fade" id="addMotivationModal" tabindex="-1" aria-labelledby="addMotivationModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <form action="{{ route('admin.motivations.store') }}" method="POST">
-                @csrf
-                <div class="modal-header border-0 px-4 pt-4 pb-2">
-                    <div>
-                        <h5 class="modal-title fw-bold mb-1" id="addMotivationModalLabel">Ajouter une motivation</h5>
-                        <p class="text-muted mb-0 small">Créer une nouvelle motivation disponible dans les formulaires utilisateurs.</p>
-                    </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
-                </div>
-                <div class="modal-body px-4 py-3">
-                    <label for="motivation-libelle" class="form-label fw-medium">Libellé</label>
-                    <input
-                        type="text"
-                        class="form-control form-control-lg @error('libelle') is-invalid @enderror"
-                        id="motivation-libelle"
-                        name="libelle"
-                        value="{{ old('libelle') }}"
-                        placeholder="Ex. Proximité familiale"
-                        maxlength="255"
-                        required
-                    >
-                    @error('libelle')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-                <div class="modal-footer border-0 px-4 pb-4 pt-0">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-primary px-4">Enregistrer</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="addQuestionModal" tabindex="-1" aria-labelledby="addQuestionModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <form action="{{ route('admin.questions.store') }}" method="POST">
-                @csrf
-                <div class="modal-header border-0 px-4 pt-4 pb-2">
-                    <div>
-                        <h5 class="modal-title fw-bold mb-1" id="addQuestionModalLabel">Ajouter une question dynamique</h5>
-                        <p class="text-muted mb-0 small">Types disponibles à cette étape: texte et liste déroulante.</p>
-                    </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
-                </div>
-                <div class="modal-body px-4 py-3">
-                    <div class="mb-3">
-                        <label for="question-libelle" class="form-label fw-medium">Libellé</label>
-                        <input type="text" id="question-libelle" name="libelle" class="form-control" maxlength="255" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="question-type" class="form-label fw-medium">Type</label>
-                        <select id="question-type" name="type" class="form-control" required>
-                            <option value="text">Texte</option>
-                            <option value="select">Liste déroulante</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="question-placeholder" class="form-label fw-medium">Placeholder (optionnel)</label>
-                        <input type="text" id="question-placeholder" name="placeholder" class="form-control" maxlength="255">
-                    </div>
-                    <div class="mb-3">
-                        <label for="question-options" class="form-label fw-medium">Options (si type = liste, séparées par des virgules)</label>
-                        <input type="text" id="question-options" name="options_text" class="form-control" placeholder="Oui, Non, Peut-être">
-                    </div>
-                    <div class="mb-3">
-                        <label for="question-ordre" class="form-label fw-medium">Ordre</label>
-                        <input type="number" id="question-ordre" name="ordre" class="form-control" min="0" value="0">
-                    </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" value="1" id="question-required" name="is_required">
-                        <label class="form-check-label" for="question-required">
-                            Question obligatoire
-                        </label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="1" id="question-active" name="is_active" checked>
-                        <label class="form-check-label" for="question-active">
-                            Active dès maintenant
-                        </label>
-                    </div>
-                </div>
-                <div class="modal-footer border-0 px-4 pb-4 pt-0">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-primary px-4">Enregistrer</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+{{-- Modals d'ajout supprimés (fonctionnalité désactivée en production) --}}
 @endsection
