@@ -46,6 +46,19 @@
                     </select>
                 </div>
 
+                <!-- Expérience -->
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: #4a5e4a; margin-bottom: 0.5rem;">Expérience</label>
+                    <select name="experience" style="width: 100%; padding: 0.7rem; border: 1px solid #dde5dd; border-radius: 8px; font-size: 14px;">
+                        <option value="">— Tous —</option>
+                        @foreach($experiences as $value => $label)
+                            <option value="{{ $value }}" @selected(request('experience') == $value)>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
                 <!-- Ministère -->
                 <div>
                     <label style="display: block; font-size: 12px; font-weight: 600; color: #4a5e4a; margin-bottom: 0.5rem;">Ministère</label>
@@ -89,7 +102,7 @@
                     </button>
                 </div>
 
-                @if(request()->filled('search') || request()->filled('profil_id') || request()->filled('niveau_numerique') || request()->filled('ministere_id') || request()->filled('region_id') || request()->filled('ready_to_deploy'))
+                @if(request()->filled('search') || request()->filled('profil_id') || request()->filled('niveau_numerique') || request()->filled('experience') || request()->filled('ministere_id') || request()->filled('region_id') || request()->filled('ready_to_deploy'))
                     <div>
                         <a href="{{ route('admin.candidates.index') }}" style="width: 100%; padding: 0.7rem; background: #eef5ee; color: #2f5f3d; border: 1px solid #dce8dc; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; text-align: center; text-decoration: none; display: block;">
                             Réinitialiser

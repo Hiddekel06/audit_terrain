@@ -41,6 +41,30 @@ class AdminDashboardController extends Controller
             ->orderByDesc('total')
             ->get();
 
+        // Distribution par expérience (remplace le niveau numérique)
+        $candidatesByExperience = collect();
+        $experienceMapping = [
+            'audit_recensement' => 'Audit / recensement',
+            'biometrie' => 'Biométrie',
+            'projets_it' => 'Projets IT',
+            'aucune' => 'Aucune'
+        ];
+        
+        // Récupérer tous les utilisateurs complétés avec leurs expériences
+        $usersWithExperiences = User::whereIn('id', $completedUserIds)
+            ->whereNotNull('experiences')
+            ->get();
+        
+        // Compter chaque type d'expérience
+        foreach ($experienceMapping as $value => $label) {
+            $count = $usersWithExperiences->filter(function($user) use ($value) {
+                return is_array($user->experiences) && in_array($value, $user->experiences);
+            })->count();
+            if ($count > 0) {
+                $candidatesByExperience->put($label, $count);
+            }
+        }
+
         // Distribution par niveau numérique
         $candidatesByNiveau = User::selectRaw('niveau_numerique, COUNT(*) as total')
             ->whereNotNull('niveau_numerique')
@@ -115,6 +139,7 @@ class AdminDashboardController extends Controller
             'dynamicRespondents',
             'dynamicRespondentsRate',
             'candidatesByProfil',
+            'candidatesByExperience',
             'candidatesByNiveau',
             'candidatesByDisponibilite',
             'candidatesByMinistere',

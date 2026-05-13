@@ -31,6 +31,10 @@ class AdminCandidateController extends Controller
             $query->where('ministere_id', $request->ministere_id);
         }
 
+        if ($request->filled('experience')) {
+            $query->whereJsonContains('experiences', $request->experience);
+        }
+
         if ($request->filled('region_id')) {
             $regionId = $request->region_id;
             $query->whereHas('regionChoices', function ($q) use ($regionId) {
@@ -60,6 +64,12 @@ class AdminCandidateController extends Controller
         $ministeres = Ministere::orderBy('nom')->get();
         $regions = Region::orderBy('nom')->get();
         $niveauxNumeriques = ['debutant', 'intermediaire', 'avance', 'expert'];
+        $experiences = [
+            'audit_recensement' => 'Audit / recensement',
+            'biometrie' => 'Biométrie',
+            'projets_it' => 'Projets IT',
+            'aucune' => 'Aucune'
+        ];
         $deploymentOptions = [
             'yes' => 'Oui, toutes les régions',
             'no' => 'Non, une seule région',
@@ -71,6 +81,7 @@ class AdminCandidateController extends Controller
             'ministeres',
             'regions',
             'niveauxNumeriques',
+            'experiences',
             'deploymentOptions'
         ));
     }
@@ -78,7 +89,7 @@ class AdminCandidateController extends Controller
     /**
      * Affiche le détail d'un candidat.
      */
-    public function show(User $user)
+    public function show(Request $request, User $user)
     {
         $user->load(['profil', 'ministere', 'regionChoices.region', 'dynamicAnswers']);
 
@@ -92,11 +103,74 @@ class AdminCandidateController extends Controller
             ->orderBy('ordre')
             ->get();
 
+        // Construire la même base de filtres que dans index pour respecter le contexte
+        $baseQuery = User::query();
+        if ($request->filled('profil_id')) {
+            $baseQuery->where('profil_id', $request->profil_id);
+        }
+        if ($request->filled('niveau_numerique')) {
+            $baseQuery->where('niveau_numerique', $request->niveau_numerique);
+        }
+        if ($request->filled('ministere_id')) {
+            $baseQuery->where('ministere_id', $request->ministere_id);
+        }
+        if ($request->filled('experience')) {
+            $baseQuery->whereJsonContains('experiences', $request->experience);
+        }
+        if ($request->filled('region_id')) {
+            $regionId = $request->region_id;
+            $baseQuery->whereHas('regionChoices', function ($q) use ($regionId) {
+                $q->where('region_id', $regionId);
+            });
+        }
+        if ($request->filled('ready_to_deploy')) {
+            $readyToDeploy = $request->ready_to_deploy === 'yes';
+            $baseQuery->where('ready_to_deploy_all_regions', $readyToDeploy);
+        }
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $baseQuery->where(function ($q) use ($search) {
+                $q->where('nom', 'like', "%$search%")
+                    ->orWhere('prenom', 'like', "%$search%")
+                    ->orWhere('matricule', 'like', "%$search%")
+                    ->orWhere('email', 'like', "%$search%");
+            });
+        }
+
+        // Assurer le même ordre que la liste (created_at desc)
+        // Calculer précédent (plus récent) et suivant (plus ancien)
+        $prev = (clone $baseQuery)
+            ->where(function ($q) use ($user) {
+                $q->where('created_at', '>', $user->created_at)
+                  ->orWhere(function ($q2) use ($user) {
+                      $q2->where('created_at', $user->created_at)->where('id', '>', $user->id);
+                  });
+            })
+            ->orderBy('created_at', 'asc')
+            ->orderBy('id', 'asc')
+            ->first(['id']);
+
+        $next = (clone $baseQuery)
+            ->where(function ($q) use ($user) {
+                $q->where('created_at', '<', $user->created_at)
+                  ->orWhere(function ($q2) use ($user) {
+                      $q2->where('created_at', $user->created_at)->where('id', '<', $user->id);
+                  });
+            })
+            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
+            ->first(['id']);
+
+        $prevId = $prev->id ?? null;
+        $nextId = $next->id ?? null;
+
         return view('admin.candidates.show', compact(
             'user',
             'experiences',
             'competencesTechniques',
-            'regionalChoices'
+            'regionalChoices',
+            'prevId',
+            'nextId'
         ));
     }
 
