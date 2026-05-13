@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Profil;
 use App\Models\Ministere;
+use App\Models\Region;
 use App\Models\UserRegionChoice;
 
 class AdminCandidateController extends Controller
@@ -30,8 +31,16 @@ class AdminCandidateController extends Controller
             $query->where('ministere_id', $request->ministere_id);
         }
 
-        if ($request->filled('disponibilite')) {
-            $query->where('disponibilite', $request->disponibilite);
+        if ($request->filled('region_id')) {
+            $regionId = $request->region_id;
+            $query->whereHas('regionChoices', function ($q) use ($regionId) {
+                $q->where('region_id', $regionId);
+            });
+        }
+
+        if ($request->filled('ready_to_deploy')) {
+            $readyToDeploy = $request->ready_to_deploy === 'yes';
+            $query->where('ready_to_deploy_all_regions', $readyToDeploy);
         }
 
         if ($request->filled('search')) {
@@ -44,20 +53,25 @@ class AdminCandidateController extends Controller
             });
         }
 
-        $candidates = $query->orderBy('created_at', 'desc')->paginate(20);
+        $candidates = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
         // Données pour les filtres
         $profils = Profil::where('is_active', true)->get();
         $ministeres = Ministere::orderBy('nom')->get();
+        $regions = Region::orderBy('nom')->get();
         $niveauxNumeriques = ['debutant', 'intermediaire', 'avance', 'expert'];
-        $disponibilites = ['immediate', 'sous_7_jours', 'sous_15_jours', 'selon_calendrier'];
+        $deploymentOptions = [
+            'yes' => 'Oui, toutes les régions',
+            'no' => 'Non, une seule région',
+        ];
 
         return view('admin.candidates.index', compact(
             'candidates',
             'profils',
             'ministeres',
+            'regions',
             'niveauxNumeriques',
-            'disponibilites'
+            'deploymentOptions'
         ));
     }
 
@@ -92,27 +106,34 @@ class AdminCandidateController extends Controller
     public function stats()
     {
         // Métriques globales
-        $totalCandidates = User::count();
+        // IDs des utilisateurs complétés (ayant au moins 1 choix de région)
+        $completedUserIds = UserRegionChoice::distinct('user_id')->pluck('user_id')->toArray();
+
+        $totalCandidates = count($completedUserIds);
         $candidatesByProfil = User::selectRaw('profil_id, profil.libelle, COUNT(*) as total')
             ->leftJoin('profil', 'users.profil_id', '=', 'profil.id')
+            ->whereIn('users.id', $completedUserIds)
             ->groupBy('profil_id', 'profil.libelle')
             ->orderByDesc('total')
             ->get();
 
         $candidatesByNiveau = User::selectRaw('niveau_numerique, COUNT(*) as total')
             ->whereNotNull('niveau_numerique')
+            ->whereIn('users.id', $completedUserIds)
             ->groupBy('niveau_numerique')
             ->get()
             ->mapWithKeys(fn($item) => [$item->niveau_numerique => $item->total]);
 
         $candidatesByDisponibilite = User::selectRaw('disponibilite, COUNT(*) as total')
             ->whereNotNull('disponibilite')
+            ->whereIn('users.id', $completedUserIds)
             ->groupBy('disponibilite')
             ->get()
             ->mapWithKeys(fn($item) => [$item->disponibilite => $item->total]);
 
         $candidatesByMinistere = User::selectRaw('ministere_id, ministeres.nom, COUNT(*) as total')
             ->leftJoin('ministeres', 'users.ministere_id', '=', 'ministeres.id')
+            ->whereIn('users.id', $completedUserIds)
             ->groupBy('ministere_id', 'ministeres.nom')
             ->orderByDesc('total')
             ->limit(10)
@@ -130,6 +151,7 @@ class AdminCandidateController extends Controller
         $profilNiveauStats = User::selectRaw('profil_id, profil.libelle, niveau_numerique, COUNT(*) as total')
             ->leftJoin('profil', 'users.profil_id', '=', 'profil.id')
             ->whereNotNull('niveau_numerique')
+            ->whereIn('users.id', $completedUserIds)
             ->groupBy('profil_id', 'profil.libelle', 'niveau_numerique')
             ->get()
             ->groupBy('libelle');
@@ -150,16 +172,19 @@ class AdminCandidateController extends Controller
      */
     public function profilDetail(Profil $profil)
     {
-        $totalByProfil = User::where('profil_id', $profil->id)->count();
+        // IDs des utilisateurs complétés
+        $completedUserIds = UserRegionChoice::distinct('user_id')->pluck('user_id')->toArray();
 
-        $niveauStats = User::where('profil_id', $profil->id)
+        $totalByProfil = User::whereIn('id', $completedUserIds)->where('profil_id', $profil->id)->count();
+
+        $niveauStats = User::whereIn('id', $completedUserIds)->where('profil_id', $profil->id)
             ->selectRaw('niveau_numerique, COUNT(*) as total')
             ->groupBy('niveau_numerique')
             ->get()
             ->mapWithKeys(fn($item) => [$item->niveau_numerique => $item->total]);
 
-        // Compétences techniques les plus courantes
-        $competencesStats = User::where('profil_id', $profil->id)
+        // Compétences techniques les plus courantes (filtrées aux users complétés)
+        $competencesStats = User::whereIn('id', $completedUserIds)->where('profil_id', $profil->id)
             ->get()
             ->flatMap(function ($user) {
                 return $user->competences_techniques ?? [];
@@ -168,8 +193,8 @@ class AdminCandidateController extends Controller
             ->sortDesc()
             ->take(10);
 
-        // Expériences les plus courantes
-        $experiencesStats = User::where('profil_id', $profil->id)
+        // Expériences les plus courantes (filtrées aux users complétés)
+        $experiencesStats = User::whereIn('id', $completedUserIds)->where('profil_id', $profil->id)
             ->get()
             ->flatMap(function ($user) {
                 return $user->experiences ?? [];
@@ -178,10 +203,13 @@ class AdminCandidateController extends Controller
             ->sortDesc()
             ->take(10);
 
-        // Choix régionaux pour ce profil
+        // Choix régionaux pour ce profil (seulement utilisateurs complétés)
+        $profilUserIds = User::where('profil_id', $profil->id)->pluck('id')->toArray();
+        $profilCompletedUserIds = array_values(array_intersect($profilUserIds, $completedUserIds));
+
         $regionalChoices = UserRegionChoice::selectRaw('region_id, region.nom, ordre, COUNT(*) as total')
             ->leftJoin('regions', 'user_region_choices.region_id', '=', 'regions.id')
-            ->whereIn('user_id', User::where('profil_id', $profil->id)->pluck('id'))
+            ->whereIn('user_id', $profilCompletedUserIds)
             ->groupBy('region_id', 'region.nom', 'ordre')
             ->orderByDesc('total')
             ->get();

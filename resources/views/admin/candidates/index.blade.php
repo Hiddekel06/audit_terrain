@@ -59,15 +59,26 @@
                     </select>
                 </div>
 
-                <!-- Disponibilité -->
+                <!-- Région -->
                 <div>
-                    <label style="display: block; font-size: 12px; font-weight: 600; color: #4a5e4a; margin-bottom: 0.5rem;">Disponibilité</label>
-                    <select name="disponibilite" style="width: 100%; padding: 0.7rem; border: 1px solid #dde5dd; border-radius: 8px; font-size: 14px;">
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: #4a5e4a; margin-bottom: 0.5rem;">Région</label>
+                    <select name="region_id" style="width: 100%; padding: 0.7rem; border: 1px solid #dde5dd; border-radius: 8px; font-size: 14px;">
                         <option value="">— Tous —</option>
-                        <option value="immediate" @selected(request('disponibilite') == 'immediate')>Immédiate</option>
-                        <option value="sous_7_jours" @selected(request('disponibilite') == 'sous_7_jours')>Sous 7 jours</option>
-                        <option value="sous_15_jours" @selected(request('disponibilite') == 'sous_15_jours')>Sous 15 jours</option>
-                        <option value="selon_calendrier" @selected(request('disponibilite') == 'selon_calendrier')>Selon le calendrier</option>
+                        @foreach($regions as $region)
+                            <option value="{{ $region->id }}" @selected(request('region_id') == $region->id)>
+                                {{ $region->nom }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Engagement de déploiement -->
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: #4a5e4a; margin-bottom: 0.5rem;">Déploiement</label>
+                    <select name="ready_to_deploy" style="width: 100%; padding: 0.7rem; border: 1px solid #dde5dd; border-radius: 8px; font-size: 14px;">
+                        <option value="">— Tous —</option>
+                        <option value="yes" @selected(request('ready_to_deploy') === 'yes')>Oui, toutes les régions</option>
+                        <option value="no" @selected(request('ready_to_deploy') === 'no')>Non, une seule région</option>
                     </select>
                 </div>
 
@@ -78,7 +89,7 @@
                     </button>
                 </div>
 
-                @if(request()->filled('search') || request()->filled('profil_id') || request()->filled('niveau_numerique') || request()->filled('ministere_id') || request()->filled('disponibilite'))
+                @if(request()->filled('search') || request()->filled('profil_id') || request()->filled('niveau_numerique') || request()->filled('ministere_id') || request()->filled('region_id') || request()->filled('ready_to_deploy'))
                     <div>
                         <a href="{{ route('admin.candidates.index') }}" style="width: 100%; padding: 0.7rem; background: #eef5ee; color: #2f5f3d; border: 1px solid #dce8dc; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; text-align: center; text-decoration: none; display: block;">
                             Réinitialiser
@@ -100,14 +111,14 @@
                                 <th style="padding: 1rem; text-align: left; font-size: 12px; font-weight: 600; color: #4a5e4a;">Profil</th>
                                 <th style="padding: 1rem; text-align: left; font-size: 12px; font-weight: 600; color: #4a5e4a;">Niveau</th>
                                 <th style="padding: 1rem; text-align: left; font-size: 12px; font-weight: 600; color: #4a5e4a;">Ministère</th>
-                                <th style="padding: 1rem; text-align: left; font-size: 12px; font-weight: 600; color: #4a5e4a;">Disponibilité</th>
+                                <th style="padding: 1rem; text-align: left; font-size: 12px; font-weight: 600; color: #4a5e4a;">Région</th>
                                 <th style="padding: 1rem; text-align: left; font-size: 12px; font-weight: 600; color: #4a5e4a;">Email</th>
                                 <th style="padding: 1rem; text-align: center; font-size: 12px; font-weight: 600; color: #4a5e4a;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($candidates as $candidate)
-                                <tr style="border-bottom: 1px solid #eef5ee; hover: background: #f9fbf9;">
+                                <tr class="candidate-row" style="border-bottom: 1px solid #eef5ee;">
                                     <td style="padding: 1rem; font-size: 14px; color: #1a2e1a; font-weight: 600;">
                                         {{ $candidate->nom }} {{ $candidate->prenom }}
                                     </td>
@@ -128,7 +139,17 @@
                                         {{ $candidate->ministere->nom ?? '—' }}
                                     </td>
                                     <td style="padding: 1rem; font-size: 13px; color: #5a6e5a;">
-                                        {{ ucfirst(str_replace('_', ' ', $candidate->disponibilite ?? '—')) }}
+                                        @php
+                                            $regionLabel = '—';
+                                            if (!empty($candidate->ready_to_deploy_all_regions)) {
+                                                $regionLabel = 'Toutes les régions';
+                                            } else {
+                                                $firstChoice = $candidate->regionChoices->first();
+                                                $regionLabel = $firstChoice?->region->nom ?? '—';
+                                            }
+                                        @endphp
+
+                                        {{ $regionLabel }}
                                     </td>
                                     <td style="padding: 1rem; font-size: 13px; color: #5a6e5a;">
                                         {{ $candidate->email }}
@@ -158,6 +179,10 @@
 </div>
 
 <style>
+    .candidate-row:hover {
+        background: #f9fbf9 !important;
+    }
+
     tr:hover {
         background: #f9fbf9 !important;
     }

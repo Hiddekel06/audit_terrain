@@ -5,6 +5,184 @@
 @section('body-bg', '#f4f7f6') {{-- Un gris-bleu plus pro --}}
 
 @section('content')
+<style>
+    .admin-kpi-card {
+        background: linear-gradient(180deg, #ffffff 0%, #fbfdfb 100%);
+        border: 1px solid #dce8dc;
+        border-radius: 20px;
+        box-shadow: 0 10px 24px rgba(26, 46, 26, 0.06);
+        overflow: hidden;
+        position: relative;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+
+    .admin-kpi-card::before {
+        content: '';
+        position: absolute;
+        top: -18px;
+        right: -18px;
+        width: 72px;
+        height: 36px;
+        transform: none;
+        border-radius: 0 0 0 72px;
+        opacity: 0.95;
+        box-shadow: 0 10px 18px rgba(26, 46, 26, 0.08);
+    }
+
+    .admin-kpi-card--total::before {
+        background: linear-gradient(180deg, rgba(90, 166, 200, 0.28), rgba(90, 166, 200, 0.5));
+    }
+
+    .admin-kpi-card--profile::before {
+        background: linear-gradient(180deg, rgba(74, 140, 92, 0.26), rgba(122, 185, 138, 0.5));
+    }
+
+    .admin-kpi-card--profile-a::before {
+        background: linear-gradient(180deg, rgba(90, 166, 200, 0.26), rgba(120, 202, 221, 0.5));
+    }
+
+    .admin-kpi-card--profile-b::before {
+        background: linear-gradient(180deg, rgba(209, 108, 114, 0.24), rgba(232, 156, 161, 0.5));
+    }
+
+    .admin-kpi-card--profile-c::before {
+        background: linear-gradient(180deg, rgba(217, 164, 65, 0.24), rgba(237, 198, 108, 0.52));
+    }
+
+    .admin-kpi-card--profile-d::before {
+        background: linear-gradient(180deg, rgba(124, 109, 207, 0.24), rgba(166, 152, 236, 0.5));
+    }
+
+    .admin-kpi-card--yes::before {
+        background: linear-gradient(180deg, rgba(74, 140, 92, 0.28), rgba(122, 185, 138, 0.52));
+    }
+
+    .admin-kpi-card--no::before {
+        background: linear-gradient(180deg, rgba(209, 108, 114, 0.24), rgba(232, 156, 161, 0.5));
+    }
+
+    .admin-kpi-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 32px rgba(26, 46, 26, 0.1);
+        border-color: #c8ddc8;
+    }
+
+    .admin-kpi-card__accent {
+        height: 5px;
+        width: 100%;
+        background: linear-gradient(90deg, #4a8c5c 0%, #79b98a 100%);
+    }
+
+    .admin-kpi-card__accent--blue {
+        background: linear-gradient(90deg, #4a8c5c 0%, #5aa6c8 100%);
+    }
+
+    .admin-kpi-card__accent--amber {
+        background: linear-gradient(90deg, #4a8c5c 0%, #d9a441 100%);
+    }
+
+    .admin-kpi-card__accent--rose {
+        background: linear-gradient(90deg, #4a8c5c 0%, #d16c72 100%);
+    }
+
+    .admin-kpi-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+
+    .admin-kpi-icon--profile {
+        background: linear-gradient(135deg, rgba(74, 140, 92, 0.16), rgba(122, 185, 138, 0.28));
+        color: #2f6a40;
+    }
+
+    .admin-kpi-icon--profile-a {
+        background: linear-gradient(135deg, rgba(90, 166, 200, 0.16), rgba(120, 202, 221, 0.3));
+        color: #2f6f86;
+    }
+
+    .admin-kpi-icon--profile-b {
+        background: linear-gradient(135deg, rgba(209, 108, 114, 0.14), rgba(232, 156, 161, 0.28));
+        color: #a4444b;
+    }
+
+    .admin-kpi-icon--profile-c {
+        background: linear-gradient(135deg, rgba(217, 164, 65, 0.14), rgba(239, 206, 126, 0.3));
+        color: #91680d;
+    }
+
+    .admin-kpi-icon--profile-d {
+        background: linear-gradient(135deg, rgba(124, 109, 207, 0.14), rgba(183, 175, 239, 0.3));
+        color: #5a4ea3;
+    }
+
+    .admin-kpi-icon--total {
+        background: linear-gradient(135deg, rgba(90, 166, 200, 0.16), rgba(120, 202, 221, 0.3));
+        color: #2f6f86;
+    }
+
+    .admin-kpi-icon--yes {
+        background: linear-gradient(135deg, rgba(74, 140, 92, 0.16), rgba(122, 185, 138, 0.3));
+        color: #2f6a40;
+    }
+
+    .admin-kpi-icon--no {
+        background: linear-gradient(135deg, rgba(209, 108, 114, 0.14), rgba(232, 156, 161, 0.28));
+        color: #a4444b;
+    }
+
+    .admin-kpi-card .kpi-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #5a6e5a;
+        font-weight: 700;
+    }
+
+    .admin-kpi-card .kpi-value {
+        font-size: 2rem;
+        line-height: 1;
+        color: #1a2e1a;
+        margin: 0;
+        font-weight: 800;
+    }
+
+    .admin-kpi-card .kpi-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 11px;
+        border-radius: 999px;
+        padding: 0.42rem 0.75rem;
+        border: 1px solid rgba(74, 140, 92, 0.2);
+        background: rgba(74, 140, 92, 0.07);
+        color: #2f6a40;
+        text-decoration: none;
+        font-weight: 700;
+        transition: all 0.18s ease;
+    }
+
+    .admin-kpi-card .kpi-link:hover {
+        background: rgba(74, 140, 92, 0.12);
+        border-color: rgba(74, 140, 92, 0.3);
+        color: #245131;
+    }
+
+    .admin-kpi-card .kpi-subtitle {
+        color: #6b7e6b;
+        font-size: 12px;
+    }
+
+    .admin-kpi-section-title {
+        color: #1a2e1a;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+    }
+</style>
 <div class="container-fluid p-0">
 
     {{-- Header avec Titre et Action --}}
@@ -36,18 +214,52 @@
         </div>
     @endif
 
-    {{-- ===== KPI PAR PROFIL (placé en haut) ===== --}}
+    {{-- ===== KPI CARDS (Haut de page) ===== --}}
     <div class="row g-3 mb-4">
+        @php
+            $profilThemes = [
+                ['cardClass' => 'admin-kpi-card--profile-a', 'iconClass' => 'admin-kpi-icon--profile-a', 'icon' => 'bi-stars', 'linkClass' => 'kpi-link--profile-a'],
+                ['cardClass' => 'admin-kpi-card--profile-b', 'iconClass' => 'admin-kpi-icon--profile-b', 'icon' => 'bi-people-fill', 'linkClass' => 'kpi-link--profile-b'],
+                ['cardClass' => 'admin-kpi-card--profile-c', 'iconClass' => 'admin-kpi-icon--profile-c', 'icon' => 'bi-briefcase-fill', 'linkClass' => 'kpi-link--profile-c'],
+                ['cardClass' => 'admin-kpi-card--profile-d', 'iconClass' => 'admin-kpi-icon--profile-d', 'icon' => 'bi-graph-up-arrow', 'linkClass' => 'kpi-link--profile-d'],
+            ];
+        @endphp
+
+        <div class="col-sm-6 col-md-3">
+            <div class="admin-kpi-card admin-kpi-card--total h-100">
+                <div class="p-3 p-lg-4 h-100 d-flex align-items-center gap-3">
+                    <div class="admin-kpi-icon admin-kpi-icon--total">
+                        <i class="bi bi-people-fill fs-3"></i>
+                    </div>
+                    <div>
+                        <div class="kpi-label mb-1">Total candidats</div>
+                        <h3 class="kpi-value">{{ $totalUsers }}</h3>
+                        <div class="kpi-subtitle mb-2">Soumissions complètes</div>
+                        <a href="{{ route('admin.candidates.index') }}" class="kpi-link">
+                            Voir détails <i class="bi bi-arrow-right-short"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
         @forelse($candidatesByProfil as $profilKpi)
+            @php
+                $profilTheme = $profilThemes[$loop->index % count($profilThemes)];
+            @endphp
             <div class="col-sm-6 col-md-3">
-                <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="bg-primary bg-opacity-10 p-3 rounded-3">
-                            <i class="bi bi-person-badge text-primary fs-3"></i>
+                <div class="admin-kpi-card {{ $profilTheme['cardClass'] }} h-100">
+                    <div class="p-3 p-lg-4 h-100 d-flex align-items-center gap-3">
+                        <div class="admin-kpi-icon {{ $profilTheme['iconClass'] }}">
+                            <i class="bi {{ $profilTheme['icon'] }} fs-3"></i>
                         </div>
                         <div>
-                            <h6 class="text-muted mb-1 small fw-bold">{{ $profilKpi->libelle ?? 'Non assigné' }}</h6>
-                            <h3 class="fw-bold mb-0">{{ $profilKpi->total }}</h3>
+                            <div class="kpi-label mb-1">{{ $profilKpi->libelle ?? 'Non assigné' }}</div>
+                            <h3 class="kpi-value">{{ $profilKpi->total }}</h3>
+                            @if($profilKpi->profil_id)
+                                <a href="{{ route('admin.candidates.index', ['profil_id' => $profilKpi->profil_id]) }}" class="kpi-link mt-2 {{ $profilTheme['linkClass'] }}">
+                                    Voir détails <i class="bi bi-arrow-right-short"></i>
+                                </a>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -59,49 +271,38 @@
         @endforelse
     </div>
 
-    {{-- ===== KPI CARDS (Haut de page) ===== --}}
-    <div class="row g-4 mb-4">
-        <div class="col-12 col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="bg-primary bg-opacity-10 p-3 rounded-3">
-                        <i class="bi bi-people text-primary fs-3"></i>
+    {{-- ===== KPI DEPLOIEMENT ===== --}}
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-md-6">
+            <div class="admin-kpi-card admin-kpi-card--yes h-100">
+                <div class="p-3 p-lg-4 h-100 d-flex align-items-center gap-3">
+                    <div class="admin-kpi-icon admin-kpi-icon--yes">
+                        <i class="bi bi-check2-circle fs-3"></i>
                     </div>
                     <div>
-                        <h6 class="text-muted mb-1 small uppercase fw-bold">Total candidats (soumissions complètes)</h6>
-                        <h3 class="fw-bold mb-0">{{ $totalUsers }}</h3>
+                        <div class="kpi-label mb-1">Prêts à déployer</div>
+                        <h3 class="kpi-value">{{ $readyYes }}</h3>
+                        <div class="kpi-subtitle">Ont confirmé “Oui”</div>
+                        <a href="{{ route('admin.candidates.index', ['ready_to_deploy' => 'yes']) }}" class="kpi-link mt-2">
+                            Voir détails <i class="bi bi-arrow-right-short"></i>
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-
-    {{-- ===== KPI DEPLOIEMENT OUI / NON ===== --}}
-    <div class="row g-4 mb-4">
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="bg-success bg-opacity-10 p-3 rounded-3">
-                        <i class="bi bi-hand-thumbs-up text-success fs-3"></i>
+        <div class="col-sm-6 col-md-6">
+            <div class="admin-kpi-card admin-kpi-card--no h-100">
+                <div class="p-3 p-lg-4 h-100 d-flex align-items-center gap-3">
+                    <div class="admin-kpi-icon admin-kpi-icon--no">
+                        <i class="bi bi-x-circle fs-3"></i>
                     </div>
                     <div>
-                        <h6 class="text-muted mb-1 small fw-bold">Prêts à déployer (Oui)</h6>
-                        <h3 class="fw-bold mb-0">{{ $readyYes }}</h3>
-                        <small class="text-muted">Nombre d'utilisateurs ayant confirmé "Oui"</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="bg-danger bg-opacity-10 p-3 rounded-3">
-                        <i class="bi bi-hand-thumbs-down text-danger fs-3"></i>
-                    </div>
-                    <div>
-                        <h6 class="text-muted mb-1 small fw-bold">Prêts à déployer (Non)</h6>
-                        <h3 class="fw-bold mb-0">{{ $readyNo }}</h3>
-                        <small class="text-muted">Nombre d'utilisateurs ayant répondu "Non"</small>
+                        <div class="kpi-label mb-1">Prêts à déployer</div>
+                        <h3 class="kpi-value">{{ $readyNo }}</h3>
+                        <div class="kpi-subtitle">Ont répondu “Non”</div>
+                        <a href="{{ route('admin.candidates.index', ['ready_to_deploy' => 'no']) }}" class="kpi-link mt-2">
+                            Voir détails <i class="bi bi-arrow-right-short"></i>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -109,42 +310,20 @@
     </div>
 
     {{-- ===== SECTION CANDIDATS (Analyse des profils) ===== --}}
-    {{-- KPI PAR PROFIL (déplacé en haut) --}}
     <div class="row g-4 mb-4">
         <div class="col-12">
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                     <div>
-                        <h5 class="fw-bold mb-1">Analyse des Candidats</h5>
-                        <p class="text-muted mb-0 small">Distribution par profil, niveau numérique et disponibilité</p>
+                        <h5 class="admin-kpi-section-title mb-1">Analyse des Candidats</h5>
+                        <p class="text-muted mb-0 small">Distribution par profil, niveau numérique et région</p>
                     </div>
                     <a href="{{ route('admin.candidates.index') }}" class="btn btn-sm btn-outline-primary">Voir tous les candidats</a>
                 </div>
                 <div class="card-body px-4 pb-4">
                     <div class="row g-3">
-                        {{-- Distribution par profil --}}
-                        <div class="col-md-4">
-                            <h6 class="fw-bold text-dark mb-3">Par Profil</h6>
-                            <div class="list-group list-group-flush">
-                                @forelse($candidatesByProfil as $item)
-                                    <div class="list-group-item px-0 border-0 py-2 d-flex justify-content-between align-items-center">
-                                        @if($item->profil_id)
-                                            <a href="{{ route('admin.candidates.profil', $item->profil_id) }}" style="color: #4a8c5c; text-decoration: none; font-weight: 600;">
-                                                {{ $item->libelle ?? 'Non assigné' }}
-                                            </a>
-                                        @else
-                                            <span style="color: #6c757d; font-weight: 600;">{{ $item->libelle ?? 'Non assigné' }}</span>
-                                        @endif
-                                        <span class="badge bg-primary rounded-pill">{{ $item->total }}</span>
-                                    </div>
-                                @empty
-                                    <p class="text-muted small">Aucun candidat</p>
-                                @endforelse
-                            </div>
-                        </div>
-
                         {{-- Distribution par niveau --}}
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <h6 class="fw-bold text-dark mb-3">Par Niveau Numérique</h6>
                             <div class="list-group list-group-flush">
                                 @forelse($candidatesByNiveau as $niveau => $count)
@@ -159,24 +338,16 @@
                         </div>
 
                         {{-- Distribution par disponibilité --}}
-                        <div class="col-md-4">
-                            <h6 class="fw-bold text-dark mb-3">Par Disponibilité</h6>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold text-dark mb-3">Par Déploiement</h6>
                             <div class="list-group list-group-flush">
                                 <div class="list-group-item px-0 border-0 py-2 d-flex justify-content-between align-items-center">
-                                    <span class="text-dark">Immédiate</span>
-                                    <span class="badge bg-warning rounded-pill">{{ $candidatesByDisponibilite->get('immediate', 0) }}</span>
+                                    <span class="text-dark">Toutes les régions</span>
+                                    <span class="badge rounded-pill" style="background: rgba(74,140,92,0.14); color: #2f6a40;">{{ $readyYes }}</span>
                                 </div>
                                 <div class="list-group-item px-0 border-0 py-2 d-flex justify-content-between align-items-center">
-                                    <span class="text-dark">Sous 7 jours</span>
-                                    <span class="badge bg-info rounded-pill">{{ $candidatesByDisponibilite->get('sous_7_jours', 0) }}</span>
-                                </div>
-                                <div class="list-group-item px-0 border-0 py-2 d-flex justify-content-between align-items-center">
-                                    <span class="text-dark">Sous 15 jours</span>
-                                    <span class="badge bg-secondary rounded-pill">{{ $candidatesByDisponibilite->get('sous_15_jours', 0) }}</span>
-                                </div>
-                                <div class="list-group-item px-0 border-0 py-2 d-flex justify-content-between align-items-center">
-                                    <span class="text-dark">Selon calendrier</span>
-                                    <span class="badge bg-dark rounded-pill">{{ $candidatesByDisponibilite->get('selon_calendrier', 0) }}</span>
+                                    <span class="text-dark">Une seule région</span>
+                                    <span class="badge rounded-pill" style="background: rgba(209,108,114,0.14); color: #a4444b;">{{ $readyNo }}</span>
                                 </div>
                             </div>
                         </div>
