@@ -33,10 +33,9 @@ class AdminDashboardController extends Controller
             ? (int) round(($dynamicRespondents / $completedUsers) * 100)
             : 0;
 
-        // Distribution par profil
+        // Distribution par profil sur tous les utilisateurs inscrits
         $candidatesByProfil = User::selectRaw('profil_id, profil.libelle, COUNT(*) as total')
             ->leftJoin('profil', 'users.profil_id', '=', 'profil.id')
-            ->whereIn('users.id', $completedUserIds)
             ->groupBy('profil_id', 'profil.libelle')
             ->orderByDesc('total')
             ->get();
@@ -50,8 +49,8 @@ class AdminDashboardController extends Controller
             'aucune' => 'Aucune'
         ];
         
-        // Récupérer tous les utilisateurs complétés avec leurs expériences
-        $usersWithExperiences = User::whereIn('id', $completedUserIds)
+        // Récupérer tous les utilisateurs avec leurs expériences
+        $usersWithExperiences = User::query()
             ->whereNotNull('experiences')
             ->get();
         
@@ -65,26 +64,23 @@ class AdminDashboardController extends Controller
             }
         }
 
-        // Distribution par niveau numérique
+        // Distribution par niveau numérique sur tous les utilisateurs
         $candidatesByNiveau = User::selectRaw('niveau_numerique, COUNT(*) as total')
             ->whereNotNull('niveau_numerique')
-            ->whereIn('users.id', $completedUserIds)
             ->groupBy('niveau_numerique')
             ->get()
             ->mapWithKeys(fn($item) => [$item->niveau_numerique => $item->total]);
 
-        // Distribution par disponibilité
+        // Distribution par disponibilité sur tous les utilisateurs
         $candidatesByDisponibilite = User::selectRaw('disponibilite, COUNT(*) as total')
             ->whereNotNull('disponibilite')
-            ->whereIn('users.id', $completedUserIds)
             ->groupBy('disponibilite')
             ->get()
             ->mapWithKeys(fn($item) => [$item->disponibilite => $item->total]);
 
-        // Top ministères
+        // Top ministères sur tous les utilisateurs
         $candidatesByMinistere = User::selectRaw('ministere_id, ministeres.nom, COUNT(*) as total')
             ->leftJoin('ministeres', 'users.ministere_id', '=', 'ministeres.id')
-            ->whereIn('users.id', $completedUserIds)
             ->groupBy('ministere_id', 'ministeres.nom')
             ->orderByDesc('total')
             ->limit(10)
@@ -129,8 +125,8 @@ class AdminDashboardController extends Controller
         $profils = Profil::where('is_active', true)->get();
 
         // Comptes pour le déploiement global (Oui / Non)
-        $readyYes = User::whereIn('id', $completedUserIds)->where('ready_to_deploy_all_regions', true)->count();
-        $readyNo = User::whereIn('id', $completedUserIds)->where('ready_to_deploy_all_regions', false)->count();
+        $readyYes = User::where('ready_to_deploy_all_regions', true)->count();
+        $readyNo = User::where('ready_to_deploy_all_regions', false)->count();
 
         return view('admin.dashboard', compact(
             'totalUsers',
