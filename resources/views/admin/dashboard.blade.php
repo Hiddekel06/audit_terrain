@@ -232,9 +232,9 @@
                         <i class="bi bi-people-fill fs-3"></i>
                     </div>
                     <div>
-                        <div class="kpi-label mb-1">Total candidats</div>
+                        <div class="kpi-label mb-1">Total utilisateurs</div>
                         <h3 class="kpi-value">{{ $totalUsers }}</h3>
-                        <div class="kpi-subtitle mb-2">Soumissions complètes</div>
+                        <div class="kpi-subtitle mb-2">Tous les agents inscrits</div>
                         <a href="{{ route('admin.candidates.index') }}" class="kpi-link">
                             Voir détails <i class="bi bi-arrow-right-short"></i>
                         </a>

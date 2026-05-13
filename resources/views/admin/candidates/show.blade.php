@@ -4,15 +4,24 @@
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap');
 
+    :root{
+        --primary: #1f3c88; /* indigo dark */
+        --accent: #4c6ef5;  /* blue */
+        --muted: #6b7280;
+        --surface: #f7fbff;
+        --border: rgba(76,110,245,0.12);
+        --card: #ffffff;
+    }
+
     .candidate-dashboard {
         font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-        background: linear-gradient(135deg, #f5f8f5 0%, #eef3ee 100%);
+        background: linear-gradient(135deg, #f8fbff 0%, #f2f6ff 100%);
         min-height: 100vh;
         padding: 2rem;
     }
 
     .candidate-container {
-        max-width: 1200px;
+        max-width: 900px;
         margin: 0 auto;
     }
 
@@ -21,39 +30,39 @@
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        color: #1a5c3e;
+        color: var(--primary);
         text-decoration: none;
         font-weight: 600;
         font-size: 0.9rem;
         padding: 0.5rem 1rem;
-        background: white;
+        background: var(--card);
         border-radius: 40px;
-        transition: all 0.2s ease;
+        transition: all 0.15s ease;
         margin-bottom: 1.5rem;
-        border: 1px solid #dce8dc;
+        border: 1px solid var(--border);
     }
 
     .back-link:hover {
-        background: #2b8c5e;
+        background: var(--accent);
         color: white;
         transform: translateX(-4px);
-        border-color: #2b8c5e;
+        border-color: var(--accent);
     }
 
     /* Header Card */
     .candidate-header {
-        background: white;
+        background: var(--card);
         border-radius: 24px;
-        padding: 1.35rem 1.4rem;
-        margin-bottom: 2rem;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-        border: 1px solid rgba(46, 125, 50, 0.1);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        padding: 1.15rem 1.2rem;
+        margin-bottom: 1.6rem;
+        box-shadow: 0 6px 18px rgba(31,60,136,0.06);
+        border: 1px solid var(--border);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
 
     .candidate-header:hover {
         transform: translateY(-2px);
-        box-shadow: 0 12px 28px rgba(46, 125, 50, 0.1);
+        box-shadow: 0 12px 28px rgba(31,60,136,0.08);
     }
 
     .candidate-header-body {
@@ -64,7 +73,7 @@
 
     .header-grid {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 280px;
+        grid-template-columns: minmax(0, 1fr) 240px;
         gap: 1rem;
         align-items: start;
     }
@@ -112,11 +121,11 @@
 
     /* Profile Card Premium */
     .profile-premium-card {
-        background: linear-gradient(135deg, #1a5c3e 0%, #2b8c5e 100%);
+        background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
         border-radius: 20px;
         padding: 0;
         overflow: hidden;
-        box-shadow: 0 8px 20px rgba(26, 92, 62, 0.2);
+        box-shadow: 0 8px 20px rgba(31,60,136,0.12);
     }
 
     .profile-premium-header {
@@ -137,7 +146,7 @@
     }
 
     .profile-premium-badge {
-        background: rgba(255, 255, 255, 0.25);
+        background: rgba(255, 255, 255, 0.18);
         backdrop-filter: blur(4px);
         padding: 4px 12px;
         border-radius: 40px;
@@ -171,17 +180,17 @@
 
     /* Section Cards */
     .info-section {
-        background: white;
-        border-radius: 20px;
-        padding: 1.75rem;
-        margin-bottom: 2rem;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-        border: 1px solid rgba(46, 125, 50, 0.08);
-        transition: box-shadow 0.2s ease;
+        background: var(--card);
+        border-radius: 16px;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 10px rgba(31,60,136,0.04);
+        border: 1px solid var(--border);
+        transition: box-shadow 0.15s ease;
     }
 
     .info-section:hover {
-        box-shadow: 0 4px 20px rgba(46, 125, 50, 0.08);
+        box-shadow: 0 6px 18px rgba(31,60,136,0.06);
     }
 
     .section-title {
@@ -246,14 +255,14 @@
         transition: all 0.2s ease;
     }
 
-    .tag-green {
-        background: linear-gradient(135deg, #e8f4eb 0%, #d4ecda 100%);
-        color: #1a5c3e;
+    .tag-accent {
+        background: linear-gradient(135deg, rgba(76,110,245,0.06) 0%, rgba(76,110,245,0.03) 100%);
+        color: var(--primary);
     }
 
-    .tag-green:hover {
+    .tag-accent:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 10px rgba(26, 92, 62, 0.15);
+        box-shadow: 0 4px 10px rgba(76,110,245,0.08);
     }
 
     .tag-gray {
@@ -272,8 +281,8 @@
 
     .choice-card:hover {
         transform: translateX(4px);
-        border-color: #2b8c5e;
-        box-shadow: 0 4px 12px rgba(43, 140, 94, 0.1);
+        border-color: var(--accent);
+        box-shadow: 0 6px 14px rgba(76,110,245,0.06);
     }
 
     .choice-header {
@@ -323,10 +332,10 @@
 
     /* Footer Meta */
     .meta-footer {
-        background: linear-gradient(135deg, #f0f7f0 0%, #e8f4eb 100%);
-        border-radius: 20px;
-        padding: 1.5rem;
-        border: 1px solid #dce8dc;
+        background: linear-gradient(135deg, #f8fbff 0%, #f2f6ff 100%);
+        border-radius: 12px;
+        padding: 1rem;
+        border: 1px solid var(--border);
     }
 
     /* Responsive */
@@ -353,6 +362,41 @@
             grid-template-columns: 1fr;
         }
     }
+
+    /* Panel scrollable central pour CV / sections longues */
+    .scrollable-panel {
+        max-height: calc(72vh - 120px);
+        overflow: auto;
+        padding-right: 0.75rem;
+    }
+
+    /* Ajustements pour la grille show */
+    .show-grid {
+        display:grid;
+        grid-template-columns: 1fr 320px;
+        gap:1.5rem;
+        align-items:start;
+    }
+
+    .show-grid .main-column {
+        max-width: 860px;
+        margin: 0 auto;
+    }
+
+    @media (max-width: 900px) {
+        .show-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        .side-column {
+            position: static;
+        }
+
+        .scrollable-panel {
+            max-height: none;
+            overflow: visible;
+        }
+    }
 </style>
 
 <div class="candidate-dashboard">
@@ -375,7 +419,7 @@
                     $qs = $qs ? ('?'.$qs) : '';
                 @endphp
                 @if(!empty($prevId))
-                    <a href="{{ route('admin.candidates.show', ['user' => $prevId]) }}{{ $qs }}" class="back-link" style="background:#eef5ee; color:#2f5f3d;">
+                    <a href="{{ route('admin.candidates.show', ['user' => $prevId]) }}{{ $qs }}" class="back-link" style="background:#eef3ff; color:var(--primary);">
                         ← Précédent
                     </a>
                 @else
@@ -383,7 +427,7 @@
                 @endif
 
                 @if(!empty($nextId))
-                    <a href="{{ route('admin.candidates.show', ['user' => $nextId]) }}{{ $qs }}" class="back-link" style="background:#eef5ee; color:#2f5f3d;">
+                    <a href="{{ route('admin.candidates.show', ['user' => $nextId]) }}{{ $qs }}" class="back-link" style="background:#eef3ff; color:var(--primary);">
                         Suivant →
                     </a>
                 @else

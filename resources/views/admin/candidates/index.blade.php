@@ -179,8 +179,14 @@
                 </div>
 
                 <!-- Pagination -->
-                <div style="padding: 1.5rem; border-top: 1px solid #dce8dc; display: flex; justify-content: center;">
-                    {{ $candidates->links() }}
+                <div style="padding: 1rem 1.5rem; border-top: 1px solid #dce8dc; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                    <div style="color: #5a6e5a; font-size: 13px;">
+                        Affichage de {{ $candidates->firstItem() }} à {{ $candidates->lastItem() }} sur {{ $candidates->total() }} {{ $candidates->total() > 1 ? 'résultats' : 'résultat' }}
+                    </div>
+
+                    <div>
+                        {{ $candidates->links('pagination::bootstrap-5') }}
+                    </div>
                 </div>
             @else
                 <div style="padding: 3rem; text-align: center; color: #8a9a8a;">

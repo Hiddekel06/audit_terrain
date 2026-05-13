@@ -21,8 +21,8 @@ class AdminDashboardController extends Controller
     public function index()
     {
         $completedUsers = UserRegionChoice::distinct('user_id')->count('user_id');
-        // 'totalUsers' veut maintenant représenter les soumissions complètes
-        $totalUsers = $completedUsers;
+        // KPI principale: tous les enregistrements dans la table users
+        $totalUsers = User::count();
 
         // IDs des utilisateurs complétés (ayant au moins 1 choix de région)
         $completedUserIds = UserRegionChoice::distinct('user_id')->pluck('user_id')->toArray();

@@ -15,7 +15,7 @@
             --admin-sidebar-border: rgba(255, 255, 255, 0.10);
             --admin-sidebar-text: #f6fbf7;
             --admin-sidebar-muted: #d7eadc;
-            --admin-content-bg: #f7faf8;
+            --admin-content-bg: #ffffff;
             --admin-sidebar-active: rgba(255, 255, 255, 0.16);
             --admin-sidebar-hover: rgba(255, 255, 255, 0.10);
             --admin-card-bg: #ffffff;
