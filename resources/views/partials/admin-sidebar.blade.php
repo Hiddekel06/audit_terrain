@@ -22,6 +22,11 @@
             <span class="admin-sidebar__link-label">Dashboard</span>
         </a>
 
+        <a href="{{ route('admin.candidates.index') }}" class="admin-sidebar__link {{ str_starts_with($currentRoute, 'admin.candidates.') ? 'active' : '' }}">
+            <i class="bi bi-people"></i>
+            <span class="admin-sidebar__link-label">Gestion des candidats</span>
+        </a>
+
         <a href="{{ route('admin.operations.research') }}" class="admin-sidebar__link {{ $currentRoute === 'admin.operations.research' ? 'active' : '' }}">
             <i class="bi bi-diagram-3"></i>
             <span class="admin-sidebar__link-label">Recherche opérationnelle</span>
@@ -63,6 +68,11 @@
     </nav>
 
     <div class="admin-sidebar__footer">
+        <a href="{{ url('/') }}" class="btn btn-sm btn-outline-light w-100 mb-3 d-flex align-items-center justify-content-center gap-2">
+            <i class="bi bi-globe"></i>
+            <span>Voir le site</span>
+        </a>
+
         <button type="button" class="admin-sidebar__collapse-btn" data-admin-sidebar-toggle aria-label="Réduire ou étendre la sidebar">
             <i class="bi bi-layout-sidebar" data-admin-collapse-icon></i>
             <span class="admin-sidebar__collapse-label">Réduire le menu</span>

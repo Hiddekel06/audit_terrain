@@ -1,4 +1,7 @@
-@extends('layouts.app')
+@extends('layouts.admin')
+
+@section('admin-title', 'Détail du candidat')
+@section('admin-subtitle', 'Consultez les informations détaillées du profil')
 
 @section('content')
 <style>
@@ -13,17 +16,11 @@
         --card: #ffffff;
     }
 
-    .candidate-dashboard {
-        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-        background: linear-gradient(135deg, #f8fbff 0%, #f2f6ff 100%);
-        min-height: 100vh;
-        padding: 2rem;
-    }
-
     .candidate-container {
         max-width: 900px;
         margin: 0 auto;
     }
+/* ... rest of styles ... */
 
     /* Back button */
     .back-link {
@@ -399,42 +396,41 @@
     }
 </style>
 
-<div class="candidate-dashboard">
-    <div class="candidate-container">
-        <!-- Retour amélioré + navigation précédent/suivant -->
-        <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:1.5rem;">
-            <a href="{{ route('admin.candidates.index') }}" class="back-link">
+<div class="candidate-container">
+    <!-- Retour amélioré + navigation précédent/suivant -->
+    <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:1.5rem;">
+        <a href="{{ route('admin.candidates.index') }}" class="back-link">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M19 12H5M12 19l-7-7 7-7"/>
             </svg>
             Retour à la liste des candidats
         </a>
-            <div style="margin-left: auto; display:flex; gap:0.5rem;">
-                @php
-                    $query = request()->query();
-                    if (isset($query['page'])) {
-                        unset($query['page']);
-                    }
-                    $qs = http_build_query($query);
-                    $qs = $qs ? ('?'.$qs) : '';
-                @endphp
-                @if(!empty($prevId))
-                    <a href="{{ route('admin.candidates.show', ['user' => $prevId]) }}{{ $qs }}" class="back-link" style="background:#eef3ff; color:var(--primary);">
-                        ← Précédent
-                    </a>
-                @else
-                    <span class="back-link" style="opacity:0.45; pointer-events:none;">← Précédent</span>
-                @endif
+        <div style="margin-left: auto; display:flex; gap:0.5rem;">
+            @php
+                $query = request()->query();
+                if (isset($query['page'])) {
+                    unset($query['page']);
+                }
+                $qs = http_build_query($query);
+                $qs = $qs ? ('?'.$qs) : '';
+            @endphp
+            @if(!empty($prevId))
+                <a href="{{ route('admin.candidates.show', ['user' => $prevId]) }}{{ $qs }}" class="back-link" style="background:#eef3ff; color:var(--primary);">
+                    ← Précédent
+                </a>
+            @else
+                <span class="back-link" style="opacity:0.45; pointer-events:none;">← Précédent</span>
+            @endif
 
-                @if(!empty($nextId))
-                    <a href="{{ route('admin.candidates.show', ['user' => $nextId]) }}{{ $qs }}" class="back-link" style="background:#eef3ff; color:var(--primary);">
-                        Suivant →
-                    </a>
-                @else
-                    <span class="back-link" style="opacity:0.45; pointer-events:none;">Suivant →</span>
-                @endif
-            </div>
+            @if(!empty($nextId))
+                <a href="{{ route('admin.candidates.show', ['user' => $nextId]) }}{{ $qs }}" class="back-link" style="background:#eef3ff; color:var(--primary);">
+                    Suivant →
+                </a>
+            @else
+                <span class="back-link" style="opacity:0.45; pointer-events:none;">Suivant →</span>
+            @endif
         </div>
+    </div>
 
         <!-- En-tête candidat amélioré -->
         <div class="candidate-header">
@@ -606,5 +602,4 @@
             </div>
         </div>
     </div>
-</div>
 @endsection

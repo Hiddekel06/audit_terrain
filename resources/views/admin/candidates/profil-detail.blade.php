@@ -1,14 +1,16 @@
-@extends('layouts.app')
+@extends('layouts.admin')
+
+@section('admin-title', 'Analyse par profil')
+@section('admin-subtitle', 'Statistiques et répartition pour le profil sélectionné')
 
 @section('content')
-<div style="padding: 2rem; background: #f7f8fa; min-height: 100vh;">
-    <div style="max-width: 1200px; margin: 0 auto;">
-        <!-- Retour -->
-        <div style="margin-bottom: 2rem;">
-            <a href="{{ route('admin.candidates.index') }}" style="color: #4a8c5c; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-                ← Retour à la liste
-            </a>
-        </div>
+<div style="max-width: 1200px; margin: 0 auto;">
+    <!-- Retour -->
+    <div style="margin-bottom: 2rem;">
+        <a href="{{ route('admin.candidates.index') }}" style="color: #4a8c5c; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+            ← Retour à la liste
+        </a>
+    </div>
 
         <!-- En-tête profil -->
         <div style="background: linear-gradient(135deg, #4a8c5c 0%, #2f5f3d 100%); border-radius: 12px; padding: 2rem; margin-bottom: 2rem; color: white;">
@@ -117,5 +119,4 @@
             </div>
         </div>
     </div>
-</div>
 @endsection

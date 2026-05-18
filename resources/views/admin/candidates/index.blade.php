@@ -1,16 +1,12 @@
-@extends('layouts.app')
+@extends('layouts.admin')
+
+@section('admin-title', 'Gestion des candidats')
+@section('admin-subtitle', 'Explorez et analysez tous les profils des candidats')
 
 @section('content')
-<div style="padding: 2rem; background: #f7f8fa; min-height: 100vh;">
-    <div style="max-width: 1400px; margin: 0 auto;">
-        <!-- En-tête -->
-        <div style="margin-bottom: 2rem;">
-            <h1 style="font-size: 2rem; font-weight: 700; color: #1a2e1a; margin: 0 0 1rem;">Gestion des candidats</h1>
-            <p style="color: #5a6e5a; margin: 0;">Explorez et analysez tous les profils des candidats</p>
-        </div>
-
-        <!-- Filtres -->
-        <div style="background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; border: 1px solid #dce8dc;">
+<div style="max-width: 1400px; margin: 0 auto;">
+    <!-- Filtres -->
+    <div style="background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; border: 1px solid #dce8dc;">
             <form method="GET" action="{{ route('admin.candidates.index') }}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; align-items: flex-end;">
                 <!-- Recherche -->
                 <div>
@@ -195,7 +191,6 @@
             @endif
         </div>
     </div>
-</div>
 
 <style>
     .candidate-row:hover {
