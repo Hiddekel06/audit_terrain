@@ -37,8 +37,16 @@ Route::middleware('admin.auth')->group(function () {
         ->name('admin.candidates.profil');
 
     // Recherche operationnelle (admin)
-    Route::view('/admin/recherche-operationnelle', 'admin.operations-research')
+    Route::get('/admin/recherche-operationnelle', [App\Http\Controllers\AdminOperationsResearchController::class, 'index'])
         ->name('admin.operations.research');
+    Route::post('/admin/recherche-operationnelle/team', [App\Http\Controllers\AdminOperationsResearchController::class, 'storeTeam'])
+        ->name('admin.operations.team.store');
+    Route::post('/admin/recherche-operationnelle/assign', [App\Http\Controllers\AdminOperationsResearchController::class, 'assignMember'])
+        ->name('admin.operations.assign');
+    Route::post('/admin/recherche-operationnelle/auto', [App\Http\Controllers\AdminOperationsResearchController::class, 'autoDistribute'])
+        ->name('admin.operations.auto');
+    Route::delete('/admin/recherche-operationnelle/team/{team}', [App\Http\Controllers\AdminOperationsResearchController::class, 'destroyTeam'])
+        ->name('admin.operations.team.destroy');
 
     // Vue admin des utilisateurs par région et ordre de priorité
     Route::get('/admin/regions-priorites', [App\Http\Controllers\AdminRegionPriorityController::class, 'index'])

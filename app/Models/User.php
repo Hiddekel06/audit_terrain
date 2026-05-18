@@ -25,6 +25,7 @@ class User extends Authenticatable
         'experiences',
         'competences_techniques',
         'ministere_id',
+        'team_id',
     ];
 
     protected $hidden = [
@@ -78,5 +79,13 @@ class User extends Authenticatable
     public function profil()
     {
         return $this->belongsTo(Profil::class);
+    }
+
+    /**
+     * Équipe à laquelle appartient l'utilisateur.
+     */
+    public function team()
+    {
+        return $this->belongsTo(Team::class);
     }
 }

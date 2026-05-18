@@ -20,7 +20,6 @@
         max-width: 900px;
         margin: 0 auto;
     }
-/* ... rest of styles ... */
 
     /* Back button */
     .back-link {
@@ -116,63 +115,81 @@
         word-break: break-word;
     }
 
-    /* Profile Card Premium */
+    /* Profile Card Premium Styles */
     .profile-premium-card {
-        background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
         border-radius: 20px;
         padding: 0;
         overflow: hidden;
-        box-shadow: 0 8px 20px rgba(31,60,136,0.12);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+
+    /* Thème Chef d'équipe (Amber/Gold) */
+    .theme-chef {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+    
+    /* Thème Auditeur (Blue/Indigo) */
+    .theme-auditeur {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    }
+    
+    /* Thème Support (Emerald/Teal) */
+    .theme-support {
+        background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+    }
+
+    /* Thème Par défaut */
+    .theme-default {
+        background: linear-gradient(135deg, #6b7280 0%, #374151 100%);
     }
 
     .profile-premium-header {
-        padding: 0.8rem 1rem;
+        padding: 0.6rem 1rem;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(4px);
     }
 
     .profile-premium-icon {
         background: rgba(255, 255, 255, 0.2);
-        border-radius: 12px;
-        padding: 8px;
+        border-radius: 10px;
+        padding: 6px;
         display: inline-flex;
         align-items: center;
-        backdrop-filter: blur(4px);
     }
 
     .profile-premium-badge {
-        background: rgba(255, 255, 255, 0.18);
-        backdrop-filter: blur(4px);
-        padding: 4px 12px;
-        border-radius: 40px;
-        font-size: 11px;
-        font-weight: 700;
+        font-size: 10px;
+        font-weight: 800;
         color: white;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 1px;
     }
 
     .profile-premium-content {
-        padding: 1rem;
+        padding: 1.25rem 1rem;
         text-align: center;
     }
 
     .profile-premium-label {
-        font-size: 11px;
+        font-size: 10px;
         text-transform: uppercase;
-        letter-spacing: 1px;
-        color: rgba(255, 255, 255, 0.7);
-        margin-bottom: 0.5rem;
+        letter-spacing: 1.5px;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 0.25rem;
+        font-weight: 600;
     }
 
     .profile-premium-value {
-        font-size: 1.2rem;
+        font-size: 1.15rem;
         font-weight: 800;
         color: white;
         margin: 0;
-        word-break: break-word;
+        line-height: 1.2;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     /* Section Cards */
@@ -267,6 +284,11 @@
         color: #2a4a3a;
     }
 
+    .tag-green {
+        background: #e8f4eb;
+        color: #1a4d2e;
+    }
+
     /* Regional Choice Cards */
     .choice-card {
         border: 1px solid #e8f0e8;
@@ -337,10 +359,6 @@
 
     /* Responsive */
     @media (max-width: 768px) {
-        .candidate-dashboard {
-            padding: 1rem;
-        }
-        
         .header-grid {
             grid-template-columns: 1fr;
             gap: 1.5rem;
@@ -359,41 +377,6 @@
             grid-template-columns: 1fr;
         }
     }
-
-    /* Panel scrollable central pour CV / sections longues */
-    .scrollable-panel {
-        max-height: calc(72vh - 120px);
-        overflow: auto;
-        padding-right: 0.75rem;
-    }
-
-    /* Ajustements pour la grille show */
-    .show-grid {
-        display:grid;
-        grid-template-columns: 1fr 320px;
-        gap:1.5rem;
-        align-items:start;
-    }
-
-    .show-grid .main-column {
-        max-width: 860px;
-        margin: 0 auto;
-    }
-
-    @media (max-width: 900px) {
-        .show-grid {
-            grid-template-columns: 1fr !important;
-        }
-
-        .side-column {
-            position: static;
-        }
-
-        .scrollable-panel {
-            max-height: none;
-            overflow: visible;
-        }
-    }
 </style>
 
 <div class="candidate-container">
@@ -403,19 +386,11 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M19 12H5M12 19l-7-7 7-7"/>
             </svg>
-            Retour à la liste des candidats
+            Retour à la liste
         </a>
         <div style="margin-left: auto; display:flex; gap:0.5rem;">
-            @php
-                $query = request()->query();
-                if (isset($query['page'])) {
-                    unset($query['page']);
-                }
-                $qs = http_build_query($query);
-                $qs = $qs ? ('?'.$qs) : '';
-            @endphp
             @if(!empty($prevId))
-                <a href="{{ route('admin.candidates.show', ['user' => $prevId]) }}{{ $qs }}" class="back-link" style="background:#eef3ff; color:var(--primary);">
+                <a href="{{ route('admin.candidates.show', ['user' => $prevId]) }}" class="back-link" style="background:#eef3ff; color:var(--primary);">
                     ← Précédent
                 </a>
             @else
@@ -423,7 +398,7 @@
             @endif
 
             @if(!empty($nextId))
-                <a href="{{ route('admin.candidates.show', ['user' => $nextId]) }}{{ $qs }}" class="back-link" style="background:#eef3ff; color:var(--primary);">
+                <a href="{{ route('admin.candidates.show', ['user' => $nextId]) }}" class="back-link" style="background:#eef3ff; color:var(--primary);">
                     Suivant →
                 </a>
             @else
@@ -432,174 +407,191 @@
         </div>
     </div>
 
-        <!-- En-tête candidat amélioré -->
-        <div class="candidate-header">
-            <div class="header-grid">
-                <div>
-                    <h1 class="candidate-name">{{ $user->nom }} {{ $user->prenom }}</h1>
-                    <div class="candidate-matricule">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="2" y="4" width="20" height="16" rx="2"/>
-                            <path d="M8 12h8"/>
-                        </svg>
-                        Matricule: {{ $user->matricule }}
-                    </div>
-                </div>
-                <div>
-                    <!-- Profil redesigné plus classe -->
-                    <div class="profile-premium-card">
-                        <div class="profile-premium-header">
-                            <div class="profile-premium-icon">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                                    <circle cx="12" cy="7" r="4"/>
-                                </svg>
-                            </div>
-                            <div class="profile-premium-badge">Profil</div>
-                        </div>
-                        <div class="profile-premium-content">
-                            <div class="profile-premium-label">Catégorie</div>
-                            <div class="profile-premium-value">{{ $user->profil->libelle ?? '—' }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="candidate-header-body">
-                @php
-                    $dispoLabels = [
-                        'immediate' => 'Immédiate',
-                        'sous_7_jours' => 'Sous 7 jours',
-                        'sous_15_jours' => 'Sous 15 jours',
-                        'selon_calendrier' => 'Selon le calendrier'
-                    ];
-                @endphp
-
-                <div class="candidate-meta-grid">
-                    <div class="candidate-meta-card">
-                        <div class="info-label">Email</div>
-                        <div class="candidate-meta-value">{{ $user->email }}</div>
-                    </div>
-                    <div class="candidate-meta-card">
-                        <div class="info-label">Téléphone</div>
-                        <div class="candidate-meta-value">+221 {{ $user->telephone }}</div>
-                    </div>
-                    <div class="candidate-meta-card">
-                        <div class="info-label">Ministère</div>
-                        <div class="candidate-meta-value">{{ $user->ministere->nom ?? '—' }}</div>
-                    </div>
-                    <div class="candidate-meta-card">
-                        <div class="info-label">Disponibilité</div>
-                        <div class="candidate-meta-value">
-                            <span class="tag tag-green" style="display: inline-flex; padding: 0.35rem 0.7rem; font-size: 0.75rem;">
-                                {{ $dispoLabels[$user->disponibilite] ?? '—' }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Compétences -->
-        <div class="info-section">
-            <h2 class="section-title">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-                </svg>
-                Compétences & Expertises
-            </h2>
-            
-            <div style="margin-bottom: 1.5rem;">
-                <div class="info-label" style="margin-bottom: 0.75rem;">Niveau numérique</div>
-                <span class="tag tag-green">
-                    {{ ucfirst(str_replace('_', ' ', $user->niveau_numerique ?? '—')) }}
-                </span>
-            </div>
-
-            <div style="margin-bottom: 1.5rem;">
-                <div class="info-label" style="margin-bottom: 0.75rem;">Expériences</div>
-                <div class="tags-container">
-                    @forelse($experiences as $exp)
-                        <span class="tag tag-green">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <path d="M12 6v6l4 2"/>
-                            </svg>
-                            {{ str_replace('_', ' ', ucfirst($exp)) }}
-                        </span>
-                    @empty
-                        <span class="info-value">—</span>
-                    @endforelse
-                </div>
-            </div>
-
+    <!-- En-tête candidat -->
+    <div class="candidate-header">
+        <div class="header-grid">
             <div>
-                <div class="info-label" style="margin-bottom: 0.75rem;">Compétences techniques</div>
-                <div class="tags-container">
-                    @forelse($competencesTechniques as $comp)
-                        <span class="tag tag-gray">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-                                <polyline points="2 17 12 22 22 17"/>
-                                <polyline points="2 12 12 17 22 12"/>
+                <h1 class="candidate-name">{{ $user->nom }} {{ $user->prenom }}</h1>
+                <div class="candidate-matricule">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="4" width="20" height="16" rx="2"/>
+                        <path d="M8 12h8"/>
+                    </svg>
+                    Matricule: {{ $user->matricule }}
+                </div>
+            </div>
+            <div>
+                @php
+                    $themeClass = 'theme-default';
+                    if (str_contains(strtolower($user->profil->libelle ?? ''), 'chef')) $themeClass = 'theme-chef';
+                    elseif (str_contains(strtolower($user->profil->libelle ?? ''), 'auditeur')) $themeClass = 'theme-auditeur';
+                    elseif (str_contains(strtolower($user->profil->libelle ?? ''), 'support')) $themeClass = 'theme-support';
+                @endphp
+                <div class="profile-premium-card {{ $themeClass }}">
+                    <div class="profile-premium-header">
+                        <div class="profile-premium-icon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
                             </svg>
-                            {{ str_replace('_', ' ', ucfirst($comp)) }}
-                        </span>
-                    @empty
-                        <span class="info-value">—</span>
-                    @endforelse
-                </div>
-            </div>
-        </div>
-
-        <!-- Choix régionaux -->
-        <div class="info-section">
-            <h2 class="section-title">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                    <circle cx="12" cy="10" r="3"/>
-                </svg>
-                Choix régionaux
-            </h2>
-            
-            <div style="display: grid; gap: 1rem;">
-                @forelse($regionalChoices as $choice)
-                    <div class="choice-card">
-                        <div class="choice-header">
-                            <div>
-                                <span class="choice-order">Choix {{ $choice->ordre }}</span>
-                                <span class="choice-region" style="margin-left: 0.75rem;">{{ $choice->region->nom }}</span>
-                            </div>
                         </div>
-                        
-                        @if($choice->motivations->count() > 0)
-                            <div class="motivations-list">
-                                @foreach($choice->motivations as $mot)
-                                    <span class="motivation-tag">
-                                        {{ $mot->motivation->libelle ?? $mot->motivation_libre }}
-                                    </span>
-                                @endforeach
-                            </div>
-                        @endif
+                        <div class="profile-premium-badge">Profil vérifié</div>
                     </div>
-                @empty
-                    <div class="info-value" style="text-align: center; padding: 2rem;">Aucun choix régional enregistré</div>
-                @endforelse
+                    <div class="profile-premium-content">
+                        <div class="profile-premium-label">Catégorie</div>
+                        <div class="profile-premium-value">{{ $user->profil->libelle ?? '—' }}</div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Métadonnées -->
-        <div class="meta-footer">
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
-                <div>
-                    <div class="info-label">Inscrit le</div>
-                    <div class="info-value">{{ $user->created_at->format('d/m/Y à H:i') }}</div>
+        <div class="candidate-header-body">
+            @php
+                $dispoLabels = [
+                    'immediate' => 'Immédiate',
+                    'sous_7_jours' => 'Sous 7 jours',
+                    'sous_15_jours' => 'Sous 15 jours',
+                    'selon_calendrier' => 'Selon le calendrier'
+                ];
+            @endphp
+
+            <div class="candidate-meta-grid">
+                <div class="candidate-meta-card">
+                    <div class="info-label">Email</div>
+                    <div class="candidate-meta-value">{{ $user->email }}</div>
                 </div>
-                <div>
-                    <div class="info-label">Dernière mise à jour</div>
-                    <div class="info-value">{{ $user->updated_at->format('d/m/Y à H:i') }}</div>
+                <div class="candidate-meta-card">
+                    <div class="info-label">Téléphone</div>
+                    <div class="candidate-meta-value">+221 {{ $user->telephone }}</div>
+                </div>
+                <div class="candidate-meta-card">
+                    <div class="info-label">Ministère</div>
+                    <div class="candidate-meta-value">{{ $user->ministere->nom ?? '—' }}</div>
+                </div>
+                <div class="candidate-meta-card">
+                    <div class="info-label">Disponibilité</div>
+                    <div class="candidate-meta-value">
+                        <span class="tag tag-green" style="display: inline-flex; padding: 0.35rem 0.7rem; font-size: 0.75rem;">
+                            {{ $dispoLabels[$user->disponibilite] ?? '—' }}
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Compétences -->
+    <div class="info-section">
+        <h2 class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            </svg>
+            Compétences & Expertises
+        </h2>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <div class="info-label" style="margin-bottom: 0.75rem;">Niveau numérique</div>
+            <span class="tag tag-green">
+                {{ ucfirst(str_replace('_', ' ', $user->niveau_numerique ?? '—')) }}
+            </span>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+            <div class="info-label" style="margin-bottom: 0.75rem;">Expériences</div>
+            <div class="tags-container">
+                @forelse($experiences as $exp)
+                    <span class="tag tag-green">
+                        {{ str_replace('_', ' ', ucfirst($exp)) }}
+                    </span>
+                @empty
+                    <span class="info-value">—</span>
+                @endforelse
+            </div>
+        </div>
+
+        <div>
+            <div class="info-label" style="margin-bottom: 0.75rem;">Compétences techniques</div>
+            <div class="tags-container">
+                @forelse($competencesTechniques as $comp)
+                    <span class="tag tag-gray">
+                        {{ str_replace('_', ' ', ucfirst($comp)) }}
+                    </span>
+                @empty
+                    <span class="info-value">—</span>
+                @endforelse
+            </div>
+        </div>
+    </div>
+
+    <!-- Choix régionaux -->
+    <div class="info-section">
+        <h2 class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+            </svg>
+            Affectation
+        </h2>
+        <div style="display: grid; gap: 1rem;">
+            @if($user->team)
+                <div class="choice-card" style="border-color: #2b8c5e; background: #f0f7f0;">
+                    <div class="choice-header">
+                        <div>
+                            <span class="choice-order" style="background: #2b8c5e;">Équipe</span>
+                            <span class="choice-region" style="margin-left: 0.75rem;">{{ $user->team->nom }}</span>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            @forelse($regionalChoices as $choice)
+                <div class="choice-card">
+                    <div class="choice-header">
+                        <div>
+                            <span class="choice-order">Choix {{ $choice->ordre }}</span>
+                            <span class="choice-region" style="margin-left: 0.75rem;">{{ $choice->region->nom }}</span>
+                        </div>
+                    </div>
+                    
+                    @if($choice->motivations->count() > 0)
+                        <div class="motivations-list">
+                            @foreach($choice->motivations as $mot)
+                                <span class="motivation-tag">
+                                    {{ $mot->motivation->libelle ?? $mot->motivation_libre }}
+                                </span>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            @empty
+                @if(!empty($user->ready_to_deploy_all_regions))
+                    <div class="choice-card" style="border-color: #4c6ef5; background: #f0f3ff;">
+                        <div class="choice-header">
+                            <div>
+                                <span class="choice-order" style="background: #4c6ef5;">National</span>
+                                <span class="choice-region" style="margin-left: 0.75rem;">Prêt pour toutes les régions</span>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <div class="info-value" style="text-align: center; padding: 2rem;">Aucun choix régional enregistré</div>
+                @endif
+            @endforelse
+        </div>
+    </div>
+
+    <!-- Métadonnées -->
+    <div class="meta-footer">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+            <div>
+                <div class="info-label">Inscrit le</div>
+                <div class="info-value">{{ $user->created_at->format('d/m/Y à H:i') }}</div>
+            </div>
+            <div>
+                <div class="info-label">Dernière mise à jour</div>
+                <div class="info-value">{{ $user->updated_at->format('d/m/Y à H:i') }}</div>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection

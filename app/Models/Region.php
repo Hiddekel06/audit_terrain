@@ -13,4 +13,9 @@ class Region extends Model
     {
         return $this->hasMany(UserRegionChoice::class);
     }
+
+    public function teams()
+    {
+        return $this->hasMany(Team::class);
+    }
 }
