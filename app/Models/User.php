@@ -26,6 +26,7 @@ class User extends Authenticatable
         'experiences',
         'competences_techniques',
         'ministere_id',
+        'direction',
         'team_id',
     ];
 

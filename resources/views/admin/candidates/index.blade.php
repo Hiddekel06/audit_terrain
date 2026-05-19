@@ -197,7 +197,7 @@
                                             <span class="text-muted"><i class="bi bi-geo-alt me-1"></i> {{ $candidate->regionChoices->first()?->region->nom ?? '—' }}</span>
                                         @endif
                                     </div>
-                                </td>
+
                                 <td class="text-center">
                                     <div style="display:flex; gap:0.5rem; justify-content:center; align-items:center;">
                                         <a href="{{ route('admin.candidates.show', $candidate) }}" title="Voir" class="btn btn-sm btn-modern-outline" style="padding:0.45rem 0.6rem;">
@@ -219,6 +219,7 @@
                                             data-user-nom="{{ $candidate->nom }}"
                                             data-user-matricule="{{ $candidate->matricule ?? '—' }}"
                                             data-structure-name="{{ $candidate->ministere?->nom ?? '—' }}"
+                                            data-direction-name="{{ $candidate->direction ?? '—' }}"
                                             data-current-profil-id="{{ $candidate->profil_id }}"
                                             data-region-choices='@json($candidate->regionChoices->sortBy("ordre")->pluck("region.nom"))'
                                             data-initial-profil-name="{{ $candidate->initialProfil?->libelle ?? '' }}"
@@ -328,6 +329,29 @@
                     </div>
 
                     <div class="mb-3">
+                        <label for="profileDirectionInput" class="form-label fw-bold text-muted small text-uppercase">Direction</label>
+                        <input
+                            type="text"
+                            id="profileDirectionInput"
+                            name="direction"
+                            class="form-control rounded-pill border-light bg-light px-4"
+                            placeholder="Saisir la direction"
+                        >
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="profileDirectionInput" class="form-label fw-bold text-muted small text-uppercase">Direction</label>
+                        <input
+                            type="text"
+                            id="profileDirectionInput"
+                            name="direction"
+                            class="form-control rounded-pill border-light bg-light px-4"
+                            placeholder="Saisir la direction"
+                        >
+                        <small class="text-muted d-block mt-1">Tu peux saisir une direction manuellement si tu veux l’ajouter ou la corriger.</small>
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label fw-bold text-muted small text-uppercase">Profil initial</label>
                         <div id="profileInitialLabel" class="small text-muted">—</div>
                     </div>
@@ -339,6 +363,7 @@
                             <div><span class="fw-semibold">Prénom :</span> <span id="profilePrenom">—</span></div>
                             <div><span class="fw-semibold">Matricule :</span> <span id="profileMatricule">—</span></div>
                             <div><span class="fw-semibold">Structure :</span> <span id="profileStructure">—</span></div>
+                            <div><span class="fw-semibold">Direction :</span> <span id="profileDirection">—</span></div>
                         </div>
                     </div>
 
@@ -399,6 +424,7 @@
         const profileModalElement = document.getElementById('profileModal');
         const profileUserId = document.getElementById('profileUserId');
         const profileSelect = document.getElementById('profileSelect');
+        const profileDirectionInput = document.getElementById('profileDirectionInput');
 
         if (profileModalElement) {
             profileModalElement.addEventListener('show.bs.modal', (event) => {
@@ -412,9 +438,11 @@
                 const userPrenom = button.getAttribute('data-user-prenom') || '';
                 const userMatricule = button.getAttribute('data-user-matricule') || '';
                 const structureName = button.getAttribute('data-structure-name') || '';
+                const directionName = button.getAttribute('data-direction-name') || '';
 
                 if (profileUserId) profileUserId.value = userId || '';
                 if (profileSelect) profileSelect.value = currentProfilId || '';
+                if (profileDirectionInput) profileDirectionInput.value = directionName === '—' ? '' : directionName;
 
                 // Initial profil
                 const initialName = button.getAttribute('data-initial-profil-name') || '';
@@ -427,11 +455,13 @@
                 const prenomLabel = document.getElementById('profilePrenom');
                 const matriculeLabel = document.getElementById('profileMatricule');
                 const structureLabel = document.getElementById('profileStructure');
+                const directionLabel = document.getElementById('profileDirection');
 
                 if (nomLabel) nomLabel.textContent = userNom || '—';
                 if (prenomLabel) prenomLabel.textContent = userPrenom || '—';
                 if (matriculeLabel) matriculeLabel.textContent = userMatricule || '—';
                 if (structureLabel) structureLabel.textContent = structureName || '—';
+                if (directionLabel) directionLabel.textContent = directionName || '—';
 
                 // Render regional choices
                 try {

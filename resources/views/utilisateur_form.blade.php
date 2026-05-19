@@ -535,6 +535,15 @@
                         @enderror
                     </div>
 
+                    <div class="field-group {{ old('ministere_id') ? '' : 'd-none' }}" data-direction-wrapper>
+                        <label for="direction" class="id-label">Direction <span class="text-danger">*</span></label>
+                        <input type="text" class="id-input @error('direction') is-invalid @enderror" id="direction" name="direction" value="{{ old('direction') }}" placeholder="Ex: DSI , DENS...">
+                        @error('direction')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                        <small class="text-muted d-block mt-1">Ce champ apparaît après le choix de la structure.</small>
+                    </div>
+
                     <div class="field-row">
                         <div>
                             <label for="matricule" class="id-label">Matricule <span class="text-danger">*</span></label>
@@ -680,6 +689,9 @@
         const noMatriculeInput = document.getElementById('no_matricule');
         const cinInput = document.getElementById('cin');
         const cinWrapper = document.querySelector('[data-cin-wrapper]');
+        const ministereInput = document.getElementById('ministere_id');
+        const directionInput = document.getElementById('direction');
+        const directionWrapper = document.querySelector('[data-direction-wrapper]');
         const telInput = document.getElementById('telephone');
         const initialStep = Number(form?.dataset.initialStep || 1);
 
@@ -729,6 +741,21 @@
                 matriculeInput.disabled = useCin;
                 if (useCin) {
                     matriculeInput.value = '';
+                }
+            }
+        }
+
+        function syncDirectionField() {
+            const hasStructure = Boolean(ministereInput?.value);
+
+            directionWrapper?.classList.toggle('d-none', !hasStructure);
+
+            if (directionInput) {
+                directionInput.required = hasStructure;
+                directionInput.disabled = !hasStructure;
+
+                if (!hasStructure) {
+                    directionInput.value = '';
                 }
             }
         }
@@ -786,11 +813,13 @@
         });
 
         noMatriculeInput?.addEventListener('change', syncIdentityFields);
+        ministereInput?.addEventListener('change', syncDirectionField);
 
         setupExclusiveNone('experiences');
         setupExclusiveNone('competences_techniques');
 
         syncIdentityFields();
+        syncDirectionField();
         showStep(initialStep);
     });
 </script>

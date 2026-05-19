@@ -79,6 +79,12 @@
 
     .drag-card {
         cursor: grab;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    .drag-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px rgba(37, 99, 235, 0.08);
     }
 
     .drag-card.dragging {
@@ -150,7 +156,7 @@
             </div>
             <div class="col-md-8 text-md-end d-flex gap-2 justify-content-md-end pt-md-4">
                 <button type="button" class="btn btn-modern-primary" data-bs-toggle="modal" data-bs-target="#autoDeployModal">
-                    <i class="bi bi-magic me-2"></i> Répartition automatique
+                    <i class="bi bi-magic me-2"></i> Simuler la répartition
                 </button>
                 <button type="button" class="btn btn-modern-outline" data-bs-toggle="modal" data-bs-target="#resetDeploymentModal">
                     <i class="bi bi-arrow-counterclockwise me-2"></i> Réinitialiser
@@ -185,6 +191,46 @@
         </div>
     @endif
 
+    @isset($simulationTeams)
+        <div class="glass-card p-4 mb-4 border border-primary border-opacity-10">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+                <div>
+                    <h4 class="h6 fw-bold mb-1 text-primary">Aperçu de simulation</h4>
+                    <div class="small text-muted"> Nous pouvons comparer ce résultat avant d'appliquer une répartition réelle.</div>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2">Équipes simulées: {{ $simulationSummary['teams'] ?? 0 }}</span>
+                    <span class="badge bg-light text-dark rounded-pill px-3 py-2">Chefs: {{ $simulationSummary['chefs'] ?? 0 }}</span>
+                    <span class="badge bg-light text-dark rounded-pill px-3 py-2">Auditeurs: {{ $simulationSummary['auditeurs'] ?? 0 }}</span>
+                    <span class="badge bg-light text-dark rounded-pill px-3 py-2">Supports: {{ $simulationSummary['supports'] ?? 0 }}</span>
+                    <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3 py-2">Vacants chefs: {{ $simulationSummary['missingChefs'] ?? 0 }}</span>
+                    <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3 py-2">Vacants auditeurs: {{ $simulationSummary['missingAuditeurs'] ?? 0 }}</span>
+                    <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3 py-2">Vacants supports: {{ $simulationSummary['missingSupports'] ?? 0 }}</span>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                @foreach($simulationTeams as $team)
+                    <div class="col-md-6 col-xl-4">
+                        <div class="border rounded-4 p-3 h-100 bg-white shadow-sm">
+                            <div class="fw-bold text-dark mb-2">{{ $team['nom'] }}</div>
+                            <div class="small text-muted">
+                                @forelse($team['members'] as $member)
+                                    <div class="d-flex justify-content-between gap-2 py-1 border-bottom">
+                                        <span>{{ $member['role'] }}</span>
+                                        <span class="fw-semibold text-dark text-end">{{ $member['name'] }}</span>
+                                    </div>
+                                @empty
+                                    <div class="text-muted">Aucun membre simulé pour cette équipe.</div>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endisset
+
     <form id="dragAssignForm" action="{{ route('admin.operations.assign') }}" method="POST" class="d-none">
         @csrf
         <input type="hidden" name="user_id" id="dragUserId">
@@ -218,7 +264,7 @@
                 <form action="{{ route('admin.operations.auto') }}" method="POST">
                     @csrf
                     <div class="modal-header border-0 pt-4 px-4">
-                        <h5 class="modal-title fw-bold text-primary">Répartition automatique</h5>
+                        <h5 class="modal-title fw-bold text-primary">Simulation de répartition</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body p-4">
@@ -227,13 +273,13 @@
                             <input type="number" name="team_count" class="form-control rounded-pill border-light bg-light px-4" min="1" max="100" value="3" required>
                         </div>
                         <div class="small text-muted">
-                            Le script créera le nombre d'équipes choisi et répartira les candidats non assignés disponibles.
+                            Le script affichera un aperçu de répartition sans enregistrer de changement en base.
                         </div>
                     </div>
                     <div class="modal-footer border-0 pb-4 px-4 justify-content-between">
                         <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Annuler</button>
-                        <button type="submit" class="btn btn-modern-primary">
-                            <i class="bi bi-magic me-2"></i> Lancer le déploiement
+                        <button type="submit" class="btn btn-modern-primary" formaction="{{ route('admin.operations.simulate') }}">
+                            <i class="bi bi-eye me-2"></i> Simuler
                         </button>
                     </div>
                 </form>
@@ -384,10 +430,11 @@
                                                     data-user-name="{{ $member->prenom }} {{ $member->nom }}"
                                                     data-profil-id="{{ $id }}"
                                                     data-source-team-id="{{ $team->id }}"
+                                                    title="Glisser cet agent vers une autre équipe"
                                                 >
                                                     {{ $member->prenom }} {{ $member->nom }}
                                                 </div>
-                                                <div class="text-muted" style="font-size: 0.75rem;">{{ $label }}</div>
+                                                <div class="text-muted" style="font-size: 0.75rem;">{{ $label }} - glisser pour déplacer</div>
                                             @else
                                                 <div class="small text-muted italic fw-medium">{{ $label }}</div>
                                                 <div class="text-danger fw-bold" style="font-size: 0.7rem;">Poste vacant</div>
@@ -414,6 +461,7 @@
                                                 data-user-nom="{{ $member->nom }}"
                                                 data-user-matricule="{{ $member->matricule ?? '—' }}"
                                                 data-structure-name="{{ $member->ministere?->nom ?? '—' }}"
+                                                data-direction-name="{{ $member->direction ?? '—' }}"
                                                 data-current-profil-id="{{ $member->profil_id }}"
                                                 data-region-choices='@json($member->regionChoices->sortBy("ordre")->pluck("region.nom"))'
                                                 data-initial-profil-name="{{ $member->initialProfil?->libelle ?? '' }}"
@@ -473,6 +521,7 @@
                             data-user-name="{{ $user->prenom }} {{ $user->nom }}"
                             data-profil-id="{{ $user->profil_id }}"
                             data-source-team-id=""
+                            title="Glisser cet agent vers une équipe"
                         >
                             <div class="d-flex align-items-center gap-3">
                                 <div class="avatar-modern bg-light text-dark">
@@ -522,6 +571,7 @@
                                     data-user-nom="{{ $user->nom }}"
                                     data-user-matricule="{{ $user->matricule ?? '—' }}"
                                     data-structure-name="{{ $user->ministere?->nom ?? '—' }}"
+                                    data-direction-name="{{ $user->direction ?? '—' }}"
                                     data-current-profil-id="{{ $user->profil_id }}"
                                     data-region-choices='@json($user->regionChoices->sortBy("ordre")->pluck("region.nom"))'
                                     data-initial-profil-name="{{ $user->initialProfil?->libelle ?? '' }}"
@@ -632,7 +682,6 @@
                 const prenomLabel = document.getElementById('profilePrenom');
                 const matriculeLabel = document.getElementById('profileMatricule');
                 const structureLabel = document.getElementById('profileStructure');
-
                 if (nomLabel) nomLabel.textContent = userNom || '—';
                 if (prenomLabel) prenomLabel.textContent = userPrenom || '—';
                 if (matriculeLabel) matriculeLabel.textContent = userMatricule || '—';

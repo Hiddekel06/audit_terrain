@@ -171,6 +171,7 @@ class UserRegionChoiceController extends Controller
                 'experiences' => $pendingUser['experiences'] ?? null,
                 'competences_techniques' => $pendingUser['competences_techniques'] ?? null,
                 'ministere_id' => $pendingUser['ministere_id'] ?? null,
+                'direction' => $pendingUser['direction'] ?? null,
                 'ready_to_deploy_all_regions' => session('ready_to_deploy_all_regions', false),
             ]);
 

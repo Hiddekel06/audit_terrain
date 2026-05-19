@@ -477,6 +477,10 @@
                     <div class="candidate-meta-value">{{ $user->ministere->nom ?? '—' }}</div>
                 </div>
                 <div class="candidate-meta-card">
+                    <div class="info-label">Direction</div>
+                    <div class="candidate-meta-value">{{ $user->direction ?? '—' }}</div>
+                </div>
+                <div class="candidate-meta-card">
                     <div class="info-label">Disponibilité</div>
                     <div class="candidate-meta-value">
                         <span class="tag tag-green" style="display: inline-flex; padding: 0.35rem 0.7rem; font-size: 0.75rem;">

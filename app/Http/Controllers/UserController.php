@@ -39,6 +39,7 @@ class UserController extends Controller
             'telephone' => ['required', 'digits:9'],
             'email' => ['required', 'email:rfc', 'max:255'],
             'ministere_id' => ['required', 'integer', 'exists:ministeres,id'],
+            'direction' => ['required', 'string', 'max:255'],
 
             'no_matricule' => ['nullable', 'boolean'],
             'matricule' => ['required_without:no_matricule', 'nullable', 'regex:/^\d{6}[A-Za-z]$/'],
@@ -54,6 +55,7 @@ class UserController extends Controller
             'telephone.digits' => 'Le numéro de téléphone doit contenir exactement 9 chiffres.',            'ministere_id.required' => 'Veuillez sélectionner un ministère.',
             'ministere_id.exists' => 'Le ministère sélectionné est invalide.',            'matricule.required_without' => 'Le matricule est obligatoire si vous ne cochez pas la case "Pas de matricule".',
             'matricule.regex' => 'Le matricule doit contenir 6 chiffres suivis d’une lettre.',
+            'direction.required' => 'Veuillez renseigner votre direction.',
             'cin.digits' => 'Le CIN doit contenir exactement 13 chiffres.',
             'cin.required_if' => 'Le CIN est obligatoire lorsque vous cochez "Pas de matricule".',
             'experiences.required' => 'Veuillez sélectionner au moins une expérience.',
@@ -81,6 +83,7 @@ class UserController extends Controller
                 'telephone' => $validated['telephone'],
                 'email' => $validated['email'],
                 'ministere_id' => (int) $validated['ministere_id'],
+                'direction' => trim($validated['direction']),
 
                 'profil_id' => (int) $validated['profil_id'],
                 'niveau_numerique' => $validated['niveau_numerique'],

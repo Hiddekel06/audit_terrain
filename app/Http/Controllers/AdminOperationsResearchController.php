@@ -12,16 +12,15 @@ use Illuminate\Support\Facades\DB;
 class AdminOperationsResearchController extends Controller
 {
     /**
-     * Affiche l'interface de gestion des équipes.
+     * Prépare le contexte commun de la page.
      */
-    public function index(Request $request)
+    private function buildPageContext(Request $request): array
     {
         $selectedRegionId = $request->input('region_id');
-        
+
         $regions = Region::orderBy('nom')->get();
         $profils = Profil::orderBy('ordre')->orderBy('libelle')->get();
-        
-        // On récupère les équipes de la région sélectionnée (ou toutes si aucune)
+
         $teamsQuery = Team::with([
             'members' => function ($query) {
                 $query->with([
@@ -35,12 +34,13 @@ class AdminOperationsResearchController extends Controller
             },
             'region',
         ]);
+
         if ($selectedRegionId) {
             $teamsQuery->where('region_id', $selectedRegionId);
         }
+
         $teams = $teamsQuery->get();
 
-        // On récupère les candidats non assignés
         $unassignedUsersQuery = User::with([
             'profil',
             'ministere',
@@ -48,19 +48,100 @@ class AdminOperationsResearchController extends Controller
                 $query->orderBy('ordre');
             },
             'regionChoices.region',
-        ])
-            ->whereNull('team_id');
-            
+        ])->whereNull('team_id');
+
         if ($selectedRegionId) {
-            // Optionnel: filtrer les candidats qui ont choisi cette région en choix 1
-            $unassignedUsersQuery->whereHas('regionChoices', function($q) use ($selectedRegionId) {
+            $unassignedUsersQuery->whereHas('regionChoices', function ($q) use ($selectedRegionId) {
                 $q->where('region_id', $selectedRegionId)->where('ordre', 1);
             });
         }
-        
+
         $unassignedUsers = $unassignedUsersQuery->get();
 
-        return view('admin.operations-research', compact('teams', 'regions', 'profils', 'unassignedUsers', 'selectedRegionId'));
+        return compact('teams', 'regions', 'profils', 'unassignedUsers', 'selectedRegionId');
+    }
+
+    /**
+     * Affiche l'interface de gestion des équipes.
+     */
+    public function index(Request $request)
+    {
+        return view('admin.operations-research', $this->buildPageContext($request));
+    }
+
+    /**
+     * Simule une répartition sans écrire en base.
+     */
+    public function simulateDistribute(Request $request)
+    {
+        $validated = $request->validate([
+            'team_count' => 'required|integer|min:1|max:100',
+        ]);
+
+        $pageContext = $this->buildPageContext($request);
+        $requestedTeamCount = (int) $validated['team_count'];
+
+        $candidates = User::with(['profil', 'ministere', 'regionChoices.region'])
+            ->whereNull('team_id')
+            ->get()
+            ->groupBy('profil_id');
+
+        $chefId = 1;
+        $auditeurId = 2;
+        $supportId = 3;
+
+        $chefs = $candidates->get($chefId, collect())->values();
+        $auditeurs = $candidates->get($auditeurId, collect())->values();
+        $supports = $candidates->get($supportId, collect())->values();
+
+        $simulationTeams = [];
+
+        for ($i = 0; $i < $requestedTeamCount; $i++) {
+            $members = [];
+
+            if (isset($chefs[$i])) {
+                $members[] = [
+                    'role' => 'Chef d\'équipe',
+                    'name' => $chefs[$i]->prenom . ' ' . $chefs[$i]->nom,
+                    'profil' => $chefs[$i]->profil?->libelle,
+                ];
+            }
+
+            if (isset($auditeurs[$i])) {
+                $members[] = [
+                    'role' => 'Auditeur',
+                    'name' => $auditeurs[$i]->prenom . ' ' . $auditeurs[$i]->nom,
+                    'profil' => $auditeurs[$i]->profil?->libelle,
+                ];
+            }
+
+            if (isset($supports[$i])) {
+                $members[] = [
+                    'role' => 'Support',
+                    'name' => $supports[$i]->prenom . ' ' . $supports[$i]->nom,
+                    'profil' => $supports[$i]->profil?->libelle,
+                ];
+            }
+
+            $simulationTeams[] = [
+                'nom' => 'Équipe ' . ($i + 1),
+                'members' => $members,
+            ];
+        }
+
+        return view('admin.operations-research', $pageContext + [
+            'simulationTeams' => $simulationTeams,
+            'simulationRequestedTeamCount' => $requestedTeamCount,
+            'simulationSummary' => [
+                'chefs' => $chefs->count(),
+                'auditeurs' => $auditeurs->count(),
+                'supports' => $supports->count(),
+                'teams' => count($simulationTeams),
+                'missingChefs' => max(0, $requestedTeamCount - $chefs->count()),
+                'missingAuditeurs' => max(0, $requestedTeamCount - $auditeurs->count()),
+                'missingSupports' => max(0, $requestedTeamCount - $supports->count()),
+            ],
+        ]);
     }
 
     /**
@@ -122,6 +203,7 @@ class AdminOperationsResearchController extends Controller
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
             'profil_id' => 'required|exists:profil,id',
+            'direction' => 'nullable|string|max:255',
         ]);
 
         $user = User::findOrFail($validated['user_id']);
@@ -141,6 +223,9 @@ class AdminOperationsResearchController extends Controller
         }
 
         $user->profil_id = $newProfilId;
+        if (array_key_exists('direction', $validated)) {
+            $user->direction = trim((string) $validated['direction']);
+        }
         $user->save();
 
         return back()->with('success', 'Profil de l’agent mis à jour.');

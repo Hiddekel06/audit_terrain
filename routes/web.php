@@ -45,6 +45,8 @@ Route::middleware('admin.auth')->group(function () {
         ->name('admin.operations.team.store');
     Route::post('/admin/recherche-operationnelle/assign', [App\Http\Controllers\AdminOperationsResearchController::class, 'assignMember'])
         ->name('admin.operations.assign');
+    Route::post('/admin/recherche-operationnelle/simulate', [App\Http\Controllers\AdminOperationsResearchController::class, 'simulateDistribute'])
+        ->name('admin.operations.simulate');
     Route::post('/admin/recherche-operationnelle/profile', [App\Http\Controllers\AdminOperationsResearchController::class, 'updateProfile'])
         ->name('admin.operations.profile.update');
     Route::post('/admin/recherche-operationnelle/auto', [App\Http\Controllers\AdminOperationsResearchController::class, 'autoDistribute'])
