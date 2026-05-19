@@ -404,6 +404,14 @@
             @else
                 <span class="back-link" style="opacity:0.45; pointer-events:none;">Suivant →</span>
             @endif
+            <!-- Formulaire de suppression du candidat -->
+            <form method="POST" action="{{ route('admin.candidates.destroy', $user) }}" onsubmit="return confirm('Confirmer la suppression de ce candidat ? Cette action est irréversible.');">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="back-link" style="background:#ffecec; color:#9b1c1c; border-color: rgba(155,28,28,0.12);">
+                    Supprimer
+                </button>
+            </form>
         </div>
     </div>
 

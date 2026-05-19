@@ -186,9 +186,24 @@
                                     </div>
                                 </td>
                                 <td class="text-center">
-                                    <a href="{{ route('admin.candidates.show', $candidate) }}" class="btn btn-sm btn-modern-outline px-3">
-                                        Détails
-                                    </a>
+                                    <div style="display:flex; gap:0.5rem; justify-content:center; align-items:center;">
+                                        <a href="{{ route('admin.candidates.show', $candidate) }}" title="Voir" class="btn btn-sm btn-modern-outline" style="padding:0.45rem 0.6rem;">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                                <circle cx="12" cy="12" r="3"></circle>
+                                            </svg>
+                                        </a>
+
+                                        <button type="button" title="Supprimer" class="btn btn-sm btn-modern-outline btn-delete" style="padding:0.45rem 0.6rem; background:#fff5f5; border-color: rgba(155,28,28,0.08); color:#9b1c1c;" data-action="{{ route('admin.candidates.destroy', $candidate) }}" data-name="{{ $candidate->nom }} {{ $candidate->prenom }}">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="3 6 5 6 21 6"></polyline>
+                                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                                <path d="M10 11v6"></path>
+                                                <path d="M14 11v6"></path>
+                                                <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
@@ -218,3 +233,75 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<style>
+    /* Simple modal styles */
+    .ct-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1050;
+    }
+    .ct-modal {
+        background: white;
+        border-radius: 12px;
+        max-width: 420px;
+        width: 100%;
+        padding: 1.25rem;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+    }
+</style>
+
+<div id="ct-confirm-delete" class="ct-modal-backdrop">
+    <div class="ct-modal" role="dialog" aria-modal="true" aria-labelledby="ct-confirm-title">
+        <h5 id="ct-confirm-title">Confirmer la suppression</h5>
+        <p id="ct-confirm-message" class="text-muted">Voulez-vous vraiment supprimer ce candidat ? Cette action est irréversible.</p>
+
+        <form id="ct-delete-form" method="POST" action="">
+            @csrf
+            @method('DELETE')
+            <div style="display:flex; gap:0.5rem; justify-content:flex-end; margin-top:1rem;">
+                <button type="button" id="ct-cancel" class="btn btn-modern-outline">Annuler</button>
+                <button type="submit" id="ct-confirm" class="btn btn-modern-primary" style="background:linear-gradient(135deg,#ef4444,#dc2626); border:none;">Supprimer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function(){
+        const modal = document.getElementById('ct-confirm-delete');
+        const form = document.getElementById('ct-delete-form');
+        const message = document.getElementById('ct-confirm-message');
+        const cancel = document.getElementById('ct-cancel');
+
+        document.querySelectorAll('.btn-delete').forEach(btn => {
+            btn.addEventListener('click', function(){
+                const action = this.dataset.action;
+                const name = this.dataset.name || 'ce candidat';
+                form.action = action;
+                message.textContent = `Voulez-vous vraiment supprimer ${name} ? Cette action est irréversible.`;
+                modal.style.display = 'flex';
+            });
+        });
+
+        cancel.addEventListener('click', function(){
+            modal.style.display = 'none';
+            form.action = '';
+        });
+
+        // Close modal when clicking backdrop
+        modal.addEventListener('click', function(e){
+            if (e.target === modal) {
+                modal.style.display = 'none';
+                form.action = '';
+            }
+        });
+    })();
+</script>
+
+@endpush

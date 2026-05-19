@@ -33,6 +33,8 @@ Route::middleware('admin.auth')->group(function () {
         ->name('admin.candidates.index');
     Route::get('/admin/candidates/{user}', [App\Http\Controllers\AdminCandidateController::class, 'show'])
         ->name('admin.candidates.show');
+    Route::delete('/admin/candidates/{user}', [App\Http\Controllers\AdminCandidateController::class, 'destroy'])
+        ->name('admin.candidates.destroy');
     Route::get('/admin/candidates/profil/{profil}', [App\Http\Controllers\AdminCandidateController::class, 'profilDetail'])
         ->name('admin.candidates.profil');
 

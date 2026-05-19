@@ -29,36 +29,53 @@
         box-shadow: 0 10px 18px rgba(26, 46, 26, 0.08);
     }
 
+    /* Rétablir l'accent discret bas-gauche d'origine (très léger) */
+    .admin-kpi-card::after {
+        content: '';
+        position: absolute;
+        bottom: -12px;
+        left: -12px;
+        width: 92px;
+        height: 46px;
+        border-radius: 60px 60px 0 0;
+        opacity: 0.10;
+        z-index: 0;
+        filter: blur(2px);
+    }
+
+    /* S'assurer que le contenu de la carte reste au-dessus des accents */
+    .admin-kpi-card > div { position: relative; z-index: 2; }
+
     .admin-kpi-card--total::before {
-        background: linear-gradient(180deg, rgba(90, 166, 200, 0.28), rgba(90, 166, 200, 0.5));
+        background: linear-gradient(180deg, rgba(79,70,229,0.28), rgba(6,182,212,0.5));
     }
 
     .admin-kpi-card--profile::before {
-        background: linear-gradient(180deg, rgba(74, 140, 92, 0.26), rgba(122, 185, 138, 0.5));
+        background: linear-gradient(180deg, rgba(16,185,129,0.26), rgba(52,211,153,0.5));
     }
 
     .admin-kpi-card--profile-a::before {
-        background: linear-gradient(180deg, rgba(90, 166, 200, 0.26), rgba(120, 202, 221, 0.5));
+        background: linear-gradient(180deg, rgba(79,70,229,0.26), rgba(14,165,233,0.5));
     }
 
     .admin-kpi-card--profile-b::before {
-        background: linear-gradient(180deg, rgba(209, 108, 114, 0.24), rgba(232, 156, 161, 0.5));
+        background: linear-gradient(180deg, rgba(236,72,153,0.26), rgba(236,72,153,0.5));
     }
 
     .admin-kpi-card--profile-c::before {
-        background: linear-gradient(180deg, rgba(217, 164, 65, 0.24), rgba(237, 198, 108, 0.52));
+        background: linear-gradient(180deg, rgba(249,115,22,0.26), rgba(250,204,21,0.5));
     }
 
     .admin-kpi-card--profile-d::before {
-        background: linear-gradient(180deg, rgba(124, 109, 207, 0.24), rgba(166, 152, 236, 0.5));
+        background: linear-gradient(180deg, rgba(124,77,255,0.26), rgba(165,90,255,0.5));
     }
 
     .admin-kpi-card--yes::before {
-        background: linear-gradient(180deg, rgba(74, 140, 92, 0.28), rgba(122, 185, 138, 0.52));
+        background: linear-gradient(180deg, rgba(16,185,129,0.28), rgba(74,222,128,0.52));
     }
 
     .admin-kpi-card--no::before {
-        background: linear-gradient(180deg, rgba(209, 108, 114, 0.24), rgba(232, 156, 161, 0.5));
+        background: linear-gradient(180deg, rgba(239,68,68,0.26), rgba(252,165,165,0.5));
     }
 
     .admin-kpi-card:hover {
@@ -70,19 +87,19 @@
     .admin-kpi-card__accent {
         height: 5px;
         width: 100%;
-        background: linear-gradient(90deg, #4a8c5c 0%, #79b98a 100%);
+        background: linear-gradient(90deg, #6366f1 0%, #06b6d4 100%);
     }
 
     .admin-kpi-card__accent--blue {
-        background: linear-gradient(90deg, #4a8c5c 0%, #5aa6c8 100%);
+        background: linear-gradient(90deg, #6366f1 0%, #60a5fa 100%);
     }
 
     .admin-kpi-card__accent--amber {
-        background: linear-gradient(90deg, #4a8c5c 0%, #d9a441 100%);
+        background: linear-gradient(90deg, #f97316 0%, #f59e0b 100%);
     }
 
     .admin-kpi-card__accent--rose {
-        background: linear-gradient(90deg, #4a8c5c 0%, #d16c72 100%);
+        background: linear-gradient(90deg, #fb7185 0%, #f472b6 100%);
     }
 
     .admin-kpi-icon {
@@ -151,6 +168,10 @@
         font-weight: 800;
     }
 
+    /* Animations */
+    .kpi-animate { opacity: 0; transform: translateY(6px); transition: all 0.45s cubic-bezier(.2,.9,.2,1); }
+    .kpi-animate.visible { opacity: 1; transform: translateY(0); }
+
     .admin-kpi-card .kpi-link {
         display: inline-flex;
         align-items: center;
@@ -158,18 +179,18 @@
         font-size: 11px;
         border-radius: 999px;
         padding: 0.42rem 0.75rem;
-        border: 1px solid rgba(74, 140, 92, 0.2);
-        background: rgba(74, 140, 92, 0.07);
-        color: #2f6a40;
+        border: 1px solid rgba(99,102,241,0.12);
+        background: rgba(99,102,241,0.06);
+        color: #3730a3;
         text-decoration: none;
         font-weight: 700;
         transition: all 0.18s ease;
     }
 
     .admin-kpi-card .kpi-link:hover {
-        background: rgba(74, 140, 92, 0.12);
-        border-color: rgba(74, 140, 92, 0.3);
-        color: #245131;
+        background: rgba(99,102,241,0.12);
+        border-color: rgba(99,102,241,0.25);
+        color: #1e1b4b;
     }
 
     .admin-kpi-card .kpi-subtitle {
@@ -188,7 +209,7 @@
     {{-- Header avec Titre et Action --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h3 fw-bold text-dark mb-0">Tableau de Bord Analytique</h1>
+            <h1 class="h3 fw-bold text-dark mb-0">Tableau de bord</h1>
             <p class="text-muted mb-0">Suivi des inscriptions et des motivations en temps réel.</p>
         </div>
         {{-- Actions admin retirées (boutons d'ajout supprimés) --}}
@@ -226,7 +247,7 @@
         @endphp
 
         <div class="col-sm-6 col-md-3">
-            <div class="admin-kpi-card admin-kpi-card--total h-100">
+            <div class="admin-kpi-card admin-kpi-card--total h-100 kpi-animate">
                 <div class="p-3 p-lg-4 h-100 d-flex align-items-center gap-3">
                     <div class="admin-kpi-icon admin-kpi-icon--total">
                         <i class="bi bi-people-fill fs-3"></i>
@@ -247,7 +268,7 @@
                 $profilTheme = $profilThemes[$loop->index % count($profilThemes)];
             @endphp
             <div class="col-sm-6 col-md-3">
-                <div class="admin-kpi-card {{ $profilTheme['cardClass'] }} h-100">
+                <div class="admin-kpi-card {{ $profilTheme['cardClass'] }} h-100 kpi-animate">
                     <div class="p-3 p-lg-4 h-100 d-flex align-items-center gap-3">
                         <div class="admin-kpi-icon {{ $profilTheme['iconClass'] }}">
                             <i class="bi {{ $profilTheme['icon'] }} fs-3"></i>
@@ -274,7 +295,7 @@
     {{-- ===== KPI DEPLOIEMENT ===== --}}
     <div class="row g-3 mb-4">
         <div class="col-sm-6 col-md-6">
-            <div class="admin-kpi-card admin-kpi-card--yes h-100">
+            <div class="admin-kpi-card admin-kpi-card--yes h-100 kpi-animate">
                 <div class="p-3 p-lg-4 h-100 d-flex align-items-center gap-3">
                     <div class="admin-kpi-icon admin-kpi-icon--yes">
                         <i class="bi bi-check2-circle fs-3"></i>
@@ -291,7 +312,7 @@
             </div>
         </div>
         <div class="col-sm-6 col-md-6">
-            <div class="admin-kpi-card admin-kpi-card--no h-100">
+            <div class="admin-kpi-card admin-kpi-card--no h-100 kpi-animate">
                 <div class="p-3 p-lg-4 h-100 d-flex align-items-center gap-3">
                     <div class="admin-kpi-icon admin-kpi-icon--no">
                         <i class="bi bi-x-circle fs-3"></i>
@@ -402,6 +423,21 @@
         }
     });
 </script>
+    <script>
+        // Reveal animation for KPI cards (no count-up)
+        document.addEventListener('DOMContentLoaded', function () {
+            const reveals = document.querySelectorAll('.kpi-animate');
+            const io = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        io.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.12 });
+            reveals.forEach(r => io.observe(r));
+        });
+    </script>
 
-{{-- Modals d'ajout supprimés (fonctionnalité désactivée en production) --}}
+    {{-- Modals d'ajout supprimés (fonctionnalité désactivée en production) --}}
 @endsection

@@ -8,6 +8,7 @@ use App\Models\Profil;
 use App\Models\Ministere;
 use App\Models\Region;
 use App\Models\UserRegionChoice;
+use Illuminate\Support\Facades\DB;
 
 class AdminCandidateController extends Controller
 {
@@ -296,5 +297,30 @@ class AdminCandidateController extends Controller
             'experiencesStats',
             'regionalChoices'
         ));
+    }
+
+    /**
+     * Supprime un candidat et ses dépendances liées.
+     */
+    public function destroy(User $user)
+    {
+        DB::transaction(function () use ($user) {
+            // Supprimer les motivations liées aux choix régionaux
+            foreach ($user->regionChoices as $choice) {
+                $choice->userRegionChoiceMotivations()->delete();
+            }
+
+            // Supprimer les choix régionaux
+            $user->regionChoices()->delete();
+
+            // Supprimer les réponses dynamiques
+            $user->dynamicAnswers()->delete();
+
+            // Enfin supprimer l'utilisateur
+            $user->delete();
+        });
+
+        return redirect()->route('admin.candidates.index')
+            ->with('success', 'Candidat supprimé avec succès.');
     }
 }
