@@ -80,6 +80,19 @@
         border-color: #2563eb !important;
         box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1) !important;
     }
+    .action-mini-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(37, 99, 235, 0.12);
+        background: white;
+        color: #2563eb;
+        transition: all 0.15s ease;
+    }
+    .action-mini-btn:hover { transform: translateY(-1px); background:#eff6ff; }
 </style>
 
 <div class="container-fluid p-0 pb-5">
@@ -193,6 +206,26 @@
                                                 <circle cx="12" cy="12" r="3"></circle>
                                             </svg>
                                         </a>
+                                        
+                                        <button
+                                            type="button"
+                                            class="action-mini-btn"
+                                            title="Modifier le profil"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#profileModal"
+                                            data-user-id="{{ $candidate->id }}"
+                                            data-user-name="{{ $candidate->prenom }} {{ $candidate->nom }}"
+                                            data-user-prenom="{{ $candidate->prenom }}"
+                                            data-user-nom="{{ $candidate->nom }}"
+                                            data-user-matricule="{{ $candidate->matricule ?? '—' }}"
+                                            data-structure-name="{{ $candidate->ministere?->nom ?? '—' }}"
+                                            data-current-profil-id="{{ $candidate->profil_id }}"
+                                            data-region-choices='@json($candidate->regionChoices->sortBy("ordre")->pluck("region.nom"))'
+                                            data-initial-profil-name="{{ $candidate->initialProfil?->libelle ?? '' }}"
+                                            style="margin-left:4px;"
+                                        >
+                                            <i class="bi bi-pencil-square" style="font-size:0.9rem"></i>
+                                        </button>
 
                                         <button type="button" title="Supprimer" class="btn btn-sm btn-modern-outline btn-delete" style="padding:0.45rem 0.6rem; background:#fff5f5; border-color: rgba(155,28,28,0.08); color:#9b1c1c;" data-action="{{ route('admin.candidates.destroy', $candidate) }}" data-name="{{ $candidate->nom }} {{ $candidate->prenom }}">
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
@@ -272,6 +305,63 @@
     </div>
 </div>
 
+<!-- Profile edit modal (shared with operations page) -->
+<div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card border-0">
+            <form action="{{ route('admin.operations.profile.update') }}" method="POST">
+                @csrf
+                <div class="modal-header border-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold text-primary">Modifier le profil</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" name="user_id" id="profileUserId">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Profil</label>
+                        <select name="profil_id" id="profileSelect" class="form-select rounded-pill border-light bg-light px-4" required>
+                            <option value="">Sélectionner un profil</option>
+                            @foreach($profils as $profil)
+                                <option value="{{ $profil->id }}">{{ $profil->libelle }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Profil initial</label>
+                        <div id="profileInitialLabel" class="small text-muted">—</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Identité</label>
+                        <div class="small text-muted">
+                            <div><span class="fw-semibold">Nom :</span> <span id="profileNom">—</span></div>
+                            <div><span class="fw-semibold">Prénom :</span> <span id="profilePrenom">—</span></div>
+                            <div><span class="fw-semibold">Matricule :</span> <span id="profileMatricule">—</span></div>
+                            <div><span class="fw-semibold">Structure :</span> <span id="profileStructure">—</span></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Choix régionaux</label>
+                        <div id="profileChoicesList" class="small text-muted">Aucun choix régional enregistré.</div>
+                    </div>
+
+                    <div class="small text-muted">
+                        La modification prend effet immédiatement et respecte les contraintes de l'équipe.
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pb-4 px-4 justify-content-between">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-modern-primary">
+                        <i class="bi bi-check2-circle me-2"></i> Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
     (function(){
         const modal = document.getElementById('ct-confirm-delete');
@@ -304,4 +394,61 @@
     })();
 </script>
 
+<script>
+    (function(){
+        const profileModalElement = document.getElementById('profileModal');
+        const profileUserId = document.getElementById('profileUserId');
+        const profileSelect = document.getElementById('profileSelect');
+
+        if (profileModalElement) {
+            profileModalElement.addEventListener('show.bs.modal', (event) => {
+                const button = event.relatedTarget;
+                if (!button) return;
+
+                const userId = button.getAttribute('data-user-id');
+                const currentProfilId = button.getAttribute('data-current-profil-id');
+                const regionChoicesJson = button.getAttribute('data-region-choices') || '[]';
+                const userNom = button.getAttribute('data-user-nom') || '';
+                const userPrenom = button.getAttribute('data-user-prenom') || '';
+                const userMatricule = button.getAttribute('data-user-matricule') || '';
+                const structureName = button.getAttribute('data-structure-name') || '';
+
+                if (profileUserId) profileUserId.value = userId || '';
+                if (profileSelect) profileSelect.value = currentProfilId || '';
+
+                // Initial profil
+                const initialName = button.getAttribute('data-initial-profil-name') || '';
+                const initialLabel = document.getElementById('profileInitialLabel');
+                if (initialLabel) {
+                    initialLabel.textContent = initialName || '—';
+                }
+
+                const nomLabel = document.getElementById('profileNom');
+                const prenomLabel = document.getElementById('profilePrenom');
+                const matriculeLabel = document.getElementById('profileMatricule');
+                const structureLabel = document.getElementById('profileStructure');
+
+                if (nomLabel) nomLabel.textContent = userNom || '—';
+                if (prenomLabel) prenomLabel.textContent = userPrenom || '—';
+                if (matriculeLabel) matriculeLabel.textContent = userMatricule || '—';
+                if (structureLabel) structureLabel.textContent = structureName || '—';
+
+                // Render regional choices
+                try {
+                    const choices = JSON.parse(regionChoicesJson || '[]');
+                    const container = document.getElementById('profileChoicesList');
+                    if (container) {
+                        if (Array.isArray(choices) && choices.length > 0) {
+                            container.innerHTML = choices.map((c, i) => `<div>${i+1}. ${c}</div>`).join('');
+                        } else {
+                            container.innerHTML = 'Aucun choix régional enregistré.';
+                        }
+                    }
+                } catch (err) {
+                    // ignore parse errors
+                }
+            });
+        }
+    })();
+</script>
 @endpush

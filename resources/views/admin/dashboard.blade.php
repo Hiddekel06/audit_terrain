@@ -2,15 +2,15 @@
 
 @section('admin-title', 'Tableau de Bord Analytique')
 @section('admin-subtitle', 'Suivi des inscriptions, motivations et questions dynamiques')
-@section('body-bg', '#f4f7f6') {{-- Un gris-bleu plus pro --}}
+@section('body-bg', '#ffffff') {{-- Fond plus blanc pour le dashboard --}}
 
 @section('content')
 <style>
     .admin-kpi-card {
-        background: linear-gradient(180deg, #ffffff 0%, #fbfdfb 100%);
-        border: 1px solid #dce8dc;
+        background: #ffffff;
+        border: 1px solid rgba(15,23,42,0.04);
         border-radius: 20px;
-        box-shadow: 0 10px 24px rgba(26, 46, 26, 0.06);
+        box-shadow: 0 6px 18px rgba(15,23,42,0.06);
         overflow: hidden;
         position: relative;
         transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
@@ -25,8 +25,8 @@
         height: 36px;
         transform: none;
         border-radius: 0 0 0 72px;
-        opacity: 0.95;
-        box-shadow: 0 10px 18px rgba(26, 46, 26, 0.08);
+        opacity: 0.08;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.04);
     }
 
     /* Rétablir l'accent discret bas-gauche d'origine (très léger) */

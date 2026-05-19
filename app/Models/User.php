@@ -21,6 +21,7 @@ class User extends Authenticatable
         'disponibilite',
         'ready_to_deploy_all_regions',
         'profil_id',
+        'profil_initial_id',
         'niveau_numerique',
         'experiences',
         'competences_techniques',
@@ -55,6 +56,14 @@ class User extends Authenticatable
     public function regionChoices()
     {
         return $this->hasMany(UserRegionChoice::class);
+    }
+
+    /**
+     * Profil initial/choisi par l'utilisateur lors de son inscription.
+     */
+    public function initialProfil()
+    {
+        return $this->belongsTo(Profil::class, 'profil_initial_id');
     }
 
     /**

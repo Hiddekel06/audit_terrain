@@ -76,6 +76,56 @@
         background: white;
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
+
+    .drag-card {
+        cursor: grab;
+    }
+
+    .drag-card.dragging {
+        opacity: 0.55;
+        transform: scale(0.98);
+    }
+
+    .drop-slot {
+        position: relative;
+    }
+
+    .drop-slot.drop-ready {
+        border-color: rgba(34, 197, 94, 0.5);
+        background: rgba(240, 253, 244, 0.85);
+        box-shadow: inset 0 0 0 2px rgba(34, 197, 94, 0.15);
+    }
+
+    .drop-slot.drop-blocked {
+        border-color: rgba(239, 68, 68, 0.4);
+        background: rgba(254, 242, 242, 0.9);
+    }
+
+    .drop-zone-unassigned.drop-ready {
+        outline: 2px dashed rgba(37, 99, 235, 0.45);
+        outline-offset: -10px;
+        background: rgba(239, 246, 255, 0.55);
+    }
+
+    .action-mini-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(37, 99, 235, 0.16);
+        background: white;
+        color: #2563eb;
+        transition: all 0.2s ease;
+    }
+
+    .action-mini-btn:hover {
+        transform: translateY(-1px);
+        border-color: rgba(37, 99, 235, 0.3);
+        background: #eff6ff;
+        color: #1d4ed8;
+    }
 </style>
 
 <div class="container-fluid p-0 pb-5">
@@ -99,12 +149,12 @@
                 </form>
             </div>
             <div class="col-md-8 text-md-end d-flex gap-2 justify-content-md-end pt-md-4">
-                <form action="{{ route('admin.operations.auto') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn btn-modern-primary">
-                        <i class="bi bi-magic me-2"></i> Répartition automatique
-                    </button>
-                </form>
+                <button type="button" class="btn btn-modern-primary" data-bs-toggle="modal" data-bs-target="#autoDeployModal">
+                    <i class="bi bi-magic me-2"></i> Répartition automatique
+                </button>
+                <button type="button" class="btn btn-modern-outline" data-bs-toggle="modal" data-bs-target="#resetDeploymentModal">
+                    <i class="bi bi-arrow-counterclockwise me-2"></i> Réinitialiser
+                </button>
                 <button type="button" class="btn btn-modern-outline" data-bs-toggle="modal" data-bs-target="#createTeamModal">
                     <i class="bi bi-plus-lg me-2"></i> Nouvelle équipe
                 </button>
@@ -123,6 +173,147 @@
             <i class="bi bi-info-circle-fill me-2"></i> {{ session('info') }}
         </div>
     @endif
+
+    @if($errors->any())
+        <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4 ps-4">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <ul class="mb-0">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <form id="dragAssignForm" action="{{ route('admin.operations.assign') }}" method="POST" class="d-none">
+        @csrf
+        <input type="hidden" name="user_id" id="dragUserId">
+        <input type="hidden" name="team_id" id="dragTeamId">
+    </form>
+
+    <div class="modal fade" id="moveMemberModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-card border-0">
+                <div class="modal-header border-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold text-primary">Confirmer le déplacement</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4 pb-3">
+                    <p class="mb-2" id="moveMemberModalMessage">Confirmer le déplacement ?</p>
+                    <div class="small text-muted">
+                        L'agent sera déplacé vers la nouvelle équipe après confirmation.
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pb-4 px-4 justify-content-between">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-modern-primary" id="confirmMoveButton">Confirmer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="autoDeployModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-card border-0">
+                <form action="{{ route('admin.operations.auto') }}" method="POST">
+                    @csrf
+                    <div class="modal-header border-0 pt-4 px-4">
+                        <h5 class="modal-title fw-bold text-primary">Répartition automatique</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Nombre d'équipes à créer</label>
+                            <input type="number" name="team_count" class="form-control rounded-pill border-light bg-light px-4" min="1" max="100" value="3" required>
+                        </div>
+                        <div class="small text-muted">
+                            Le script créera le nombre d'équipes choisi et répartira les candidats non assignés disponibles.
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pb-4 px-4 justify-content-between">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-modern-primary">
+                            <i class="bi bi-magic me-2"></i> Lancer le déploiement
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="resetDeploymentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-card border-0">
+                <form action="{{ route('admin.operations.reset') }}" method="POST">
+                    @csrf
+                    <div class="modal-header border-0 pt-4 px-4">
+                        <h5 class="modal-title fw-bold text-danger">Réinitialiser le déploiement</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <p class="mb-2 fw-semibold">Voulez-vous vraiment remettre tout le module à zéro ?</p>
+                        <div class="small text-muted">
+                            Cette action va retirer tous les agents de leurs équipes et supprimer les équipes existantes. Vous repartirez avec une page où personne n'est assigné.
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pb-4 px-4 justify-content-between">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-danger rounded-pill px-4">
+                            <i class="bi bi-arrow-counterclockwise me-2"></i> Réinitialiser
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-card border-0">
+                <form action="{{ route('admin.operations.profile.update') }}" method="POST">
+                    @csrf
+                    <div class="modal-header border-0 pt-4 px-4">
+                        <h5 class="modal-title fw-bold text-primary">Modifier le profil</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <input type="hidden" name="user_id" id="profileUserId">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Profil</label>
+                            <select name="profil_id" id="profileSelect" class="form-select rounded-pill border-light bg-light px-4" required>
+                                <option value="">Sélectionner un profil</option>
+                                @foreach($profils as $profil)
+                                    <option value="{{ $profil->id }}">{{ $profil->libelle }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Identité</label>
+                            <div class="small text-muted">
+                                <div><span class="fw-semibold">Nom :</span> <span id="profileNom">—</span></div>
+                                <div><span class="fw-semibold">Prénom :</span> <span id="profilePrenom">—</span></div>
+                                <div><span class="fw-semibold">Matricule :</span> <span id="profileMatricule">—</span></div>
+                                <div><span class="fw-semibold">Structure :</span> <span id="profileStructure">—</span></div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Choix régionaux</label>
+                            <div id="profileChoicesList" class="small text-muted">Aucun choix régional enregistré.</div>
+                        </div>
+                        <div class="small text-muted">
+                            La modification prend effet immédiatement et respecte les contraintes de l'équipe.
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pb-4 px-4 justify-content-between">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-modern-primary">
+                            <i class="bi bi-check2-circle me-2"></i> Enregistrer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <div class="row g-4">
         <!-- Liste des Équipes -->
@@ -175,13 +366,27 @@
 
                                 @foreach($profilesNeeded as $id => $label)
                                     @php $member = $currentMembers->get($id)?->first(); @endphp
-                                    <div class="member-slot-modern p-3 mb-2 d-flex align-items-center gap-3">
+                                    <div
+                                        class="member-slot-modern drop-slot p-3 mb-2 d-flex align-items-center gap-3"
+                                        data-team-id="{{ $team->id }}"
+                                        data-profil-id="{{ $id }}"
+                                        data-has-member="{{ $member ? '1' : '0' }}"
+                                    >
                                         <div class="avatar-modern text-primary bg-primary bg-opacity-10">
                                             <i class="bi {{ $id == 1 ? 'bi-person-badge' : ($id == 2 ? 'bi-person' : 'bi-tools') }}"></i>
                                         </div>
                                         <div class="flex-grow-1 overflow-hidden">
                                             @if($member)
-                                                <div class="small fw-bold text-dark text-truncate">{{ $member->prenom }} {{ $member->nom }}</div>
+                                                <div
+                                                    class="small fw-bold text-dark text-truncate drag-card"
+                                                    draggable="true"
+                                                    data-user-id="{{ $member->id }}"
+                                                    data-user-name="{{ $member->prenom }} {{ $member->nom }}"
+                                                    data-profil-id="{{ $id }}"
+                                                    data-source-team-id="{{ $team->id }}"
+                                                >
+                                                    {{ $member->prenom }} {{ $member->nom }}
+                                                </div>
                                                 <div class="text-muted" style="font-size: 0.75rem;">{{ $label }}</div>
                                             @else
                                                 <div class="small text-muted italic fw-medium">{{ $label }}</div>
@@ -197,6 +402,24 @@
                                                     <i class="bi bi-x-lg"></i>
                                                 </button>
                                             </form>
+                                            <button
+                                                type="button"
+                                                class="action-mini-btn"
+                                                title="Modifier le profil"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#profileModal"
+                                                data-user-id="{{ $member->id }}"
+                                                data-user-name="{{ $member->prenom }} {{ $member->nom }}"
+                                                data-user-prenom="{{ $member->prenom }}"
+                                                data-user-nom="{{ $member->nom }}"
+                                                data-user-matricule="{{ $member->matricule ?? '—' }}"
+                                                data-structure-name="{{ $member->ministere?->nom ?? '—' }}"
+                                                data-current-profil-id="{{ $member->profil_id }}"
+                                                data-region-choices='@json($member->regionChoices->sortBy("ordre")->pluck("region.nom"))'
+                                                data-initial-profil-name="{{ $member->initialProfil?->libelle ?? '' }}"
+                                            >
+                                                <i class="bi bi-pencil-square"></i>
+                                            </button>
                                         @endif
                                     </div>
                                 @endforeach
@@ -240,10 +463,17 @@
                 </h3>
             </div>
             
-            <div class="glass-card overflow-hidden">
+            <div class="glass-card overflow-hidden drop-zone-unassigned" data-drop-unassigned="1">
                 <div class="list-group list-group-flush bg-transparent">
                     @forelse($unassignedUsers as $user)
-                        <div class="list-group-item p-3 border-0 border-bottom bg-transparent hover-bg-light transition-all">
+                        <div
+                            class="list-group-item p-3 border-0 border-bottom bg-transparent hover-bg-light transition-all drag-card"
+                            draggable="true"
+                            data-user-id="{{ $user->id }}"
+                            data-user-name="{{ $user->prenom }} {{ $user->nom }}"
+                            data-profil-id="{{ $user->profil_id }}"
+                            data-source-team-id=""
+                        >
                             <div class="d-flex align-items-center gap-3">
                                 <div class="avatar-modern bg-light text-dark">
                                     {{ substr($user->prenom, 0, 1) }}{{ substr($user->nom, 0, 1) }}
@@ -280,6 +510,24 @@
                                         @endif
                                     </ul>
                                 </div>
+                                <button
+                                    type="button"
+                                    class="action-mini-btn"
+                                    title="Modifier le profil"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#profileModal"
+                                    data-user-id="{{ $user->id }}"
+                                    data-user-name="{{ $user->prenom }} {{ $user->nom }}"
+                                    data-user-prenom="{{ $user->prenom }}"
+                                    data-user-nom="{{ $user->nom }}"
+                                    data-user-matricule="{{ $user->matricule ?? '—' }}"
+                                    data-structure-name="{{ $user->ministere?->nom ?? '—' }}"
+                                    data-current-profil-id="{{ $user->profil_id }}"
+                                    data-region-choices='@json($user->regionChoices->sortBy("ordre")->pluck("region.nom"))'
+                                    data-initial-profil-name="{{ $user->initialProfil?->libelle ?? '' }}"
+                                >
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
                             </div>
                         </div>
                     @empty
@@ -293,6 +541,219 @@
         </div>
     </div>
 </div>
+
+<script>
+    (function () {
+        let draggedPayload = null;
+        let pendingMove = null;
+
+        const dragAssignForm = document.getElementById('dragAssignForm');
+        const dragUserId = document.getElementById('dragUserId');
+        const dragTeamId = document.getElementById('dragTeamId');
+        const moveMemberModalElement = document.getElementById('moveMemberModal');
+        const moveMemberModalMessage = document.getElementById('moveMemberModalMessage');
+        const confirmMoveButton = document.getElementById('confirmMoveButton');
+        const profileModalElement = document.getElementById('profileModal');
+        const profileUserId = document.getElementById('profileUserId');
+        const profileSelect = document.getElementById('profileSelect');
+        const moveMemberModal = moveMemberModalElement && window.bootstrap ? new bootstrap.Modal(moveMemberModalElement) : null;
+        const profileModal = profileModalElement && window.bootstrap ? new bootstrap.Modal(profileModalElement) : null;
+
+        function clearDropStates() {
+            document.querySelectorAll('.drop-slot').forEach((slot) => {
+                slot.classList.remove('drop-ready', 'drop-blocked');
+            });
+
+            document.querySelectorAll('.drop-zone-unassigned').forEach((zone) => {
+                zone.classList.remove('drop-ready');
+            });
+        }
+
+        function submitMove(userId, teamId) {
+            dragUserId.value = userId;
+            dragTeamId.value = teamId ?? '';
+            dragAssignForm.submit();
+        }
+
+        function openMoveConfirm(userId, teamId, userName, teamName) {
+            pendingMove = { userId, teamId };
+
+            if (moveMemberModalMessage) {
+                moveMemberModalMessage.textContent = teamId
+                    ? `Confirmer le déplacement de ${userName} vers ${teamName} ?`
+                    : `Confirmer le retrait de ${userName} vers les candidats libres ?`;
+            }
+
+            if (moveMemberModal) {
+                moveMemberModal.show();
+            } else {
+                submitMove(userId, teamId);
+            }
+        }
+
+        if (confirmMoveButton) {
+            confirmMoveButton.addEventListener('click', () => {
+                if (!pendingMove) return;
+                if (moveMemberModal) {
+                    moveMemberModal.hide();
+                }
+                submitMove(pendingMove.userId, pendingMove.teamId);
+            });
+        }
+
+        if (profileModalElement) {
+            profileModalElement.addEventListener('show.bs.modal', (event) => {
+                const button = event.relatedTarget;
+                if (!button) return;
+
+                const userId = button.getAttribute('data-user-id');
+                const currentProfilId = button.getAttribute('data-current-profil-id');
+                const userNom = button.getAttribute('data-user-nom') || '';
+                const userPrenom = button.getAttribute('data-user-prenom') || '';
+                const userMatricule = button.getAttribute('data-user-matricule') || '';
+                const structureName = button.getAttribute('data-structure-name') || '';
+
+                if (profileUserId) {
+                    profileUserId.value = userId || '';
+                }
+
+                if (profileSelect) {
+                    profileSelect.value = currentProfilId || '';
+                }
+
+                // Initial profil
+                const initialName = button.getAttribute('data-initial-profil-name') || '';
+                const initialLabel = document.getElementById('profileInitialLabel');
+                if (initialLabel) {
+                    initialLabel.textContent = initialName || '—';
+                }
+
+                const nomLabel = document.getElementById('profileNom');
+                const prenomLabel = document.getElementById('profilePrenom');
+                const matriculeLabel = document.getElementById('profileMatricule');
+                const structureLabel = document.getElementById('profileStructure');
+
+                if (nomLabel) nomLabel.textContent = userNom || '—';
+                if (prenomLabel) prenomLabel.textContent = userPrenom || '—';
+                if (matriculeLabel) matriculeLabel.textContent = userMatricule || '—';
+                if (structureLabel) structureLabel.textContent = structureName || '—';
+            });
+        }
+
+        // Populate regional choices in profile modal
+        if (profileModalElement) {
+            profileModalElement.addEventListener('show.bs.modal', (event) => {
+                const button = event.relatedTarget;
+                if (!button) return;
+
+                const regionChoicesJson = button.getAttribute('data-region-choices') || '[]';
+                try {
+                    const choices = JSON.parse(regionChoicesJson || '[]');
+                    const container = document.getElementById('profileChoicesList');
+                    if (container) {
+                        if (Array.isArray(choices) && choices.length > 0) {
+                            container.innerHTML = choices.map((c, i) => `<div>${i+1}. ${c}</div>`).join('');
+                        } else {
+                            container.innerHTML = 'Aucun choix régional enregistré.';
+                        }
+                    }
+                } catch (err) {
+                    // ignore
+                }
+            });
+        }
+
+        document.querySelectorAll('.drag-card').forEach((card) => {
+            card.addEventListener('dragstart', (event) => {
+                draggedPayload = {
+                    userId: card.dataset.userId,
+                    userName: card.dataset.userName || '',
+                    profilId: card.dataset.profilId,
+                    sourceTeamId: card.dataset.sourceTeamId || '',
+                };
+
+                card.classList.add('dragging');
+                event.dataTransfer.effectAllowed = 'move';
+                event.dataTransfer.setData('text/plain', JSON.stringify(draggedPayload));
+            });
+
+            card.addEventListener('dragend', () => {
+                card.classList.remove('dragging');
+                clearDropStates();
+            });
+        });
+
+        document.querySelectorAll('.drop-slot').forEach((slot) => {
+            slot.addEventListener('dragover', (event) => {
+                if (!draggedPayload) return;
+
+                const targetProfilId = slot.dataset.profilId;
+                const hasMember = slot.dataset.hasMember === '1';
+
+                if (draggedPayload.profilId === targetProfilId && !hasMember) {
+                    event.preventDefault();
+                    slot.classList.add('drop-ready');
+                    slot.classList.remove('drop-blocked');
+                } else {
+                    slot.classList.add('drop-blocked');
+                    slot.classList.remove('drop-ready');
+                }
+            });
+
+            slot.addEventListener('dragleave', () => {
+                slot.classList.remove('drop-ready', 'drop-blocked');
+            });
+
+            slot.addEventListener('drop', (event) => {
+                event.preventDefault();
+                if (!draggedPayload) return;
+
+                const targetTeamId = slot.dataset.teamId;
+                const targetProfilId = slot.dataset.profilId;
+                const hasMember = slot.dataset.hasMember === '1';
+                const targetTeamName = slot.closest('.glass-card')?.querySelector('h4')?.textContent?.trim() || 'cette équipe';
+                const sourceName = draggedPayload.userName || 'cet agent';
+
+                if (draggedPayload.profilId !== targetProfilId || hasMember) {
+                    clearDropStates();
+                    return;
+                }
+
+                if (draggedPayload.sourceTeamId === targetTeamId) {
+                    clearDropStates();
+                    return;
+                }
+
+                clearDropStates();
+                openMoveConfirm(draggedPayload.userId, targetTeamId, sourceName, targetTeamName);
+            });
+        });
+
+        document.querySelectorAll('.drop-zone-unassigned').forEach((zone) => {
+            zone.addEventListener('dragover', (event) => {
+                if (!draggedPayload) return;
+
+                event.preventDefault();
+                zone.classList.add('drop-ready');
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('drop-ready');
+            });
+
+            zone.addEventListener('drop', (event) => {
+                event.preventDefault();
+                if (!draggedPayload) return;
+
+                zone.classList.remove('drop-ready');
+                if (!draggedPayload.sourceTeamId) return;
+
+                const sourceName = draggedPayload.userName || 'cet agent';
+                openMoveConfirm(draggedPayload.userId, '', sourceName, 'les candidats libres');
+            });
+        });
+    })();
+</script>
 
 <!-- Modal Création Équipe -->
 <div class="modal fade" id="createTeamModal" tabindex="-1" aria-hidden="true">

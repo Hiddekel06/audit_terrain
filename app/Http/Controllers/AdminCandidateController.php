@@ -17,7 +17,14 @@ class AdminCandidateController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::with(['profil', 'ministere', 'regionChoices.region']);
+        $query = User::with([
+            'profil',
+            'ministere',
+            'regionChoices' => function ($regionQuery) {
+                $regionQuery->orderBy('ordre');
+            },
+            'regionChoices.region',
+        ]);
 
         // Filtres
         if ($request->filled('profil_id')) {
