@@ -541,7 +541,7 @@
                         @error('direction')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
-                        <small class="text-muted d-block mt-1">Ce champ apparaît après le choix de la structure.</small>
+                        <small class="text-muted d-block mt-1">Votre service d'appartenance.</small>
                     </div>
 
                     <div class="field-row">

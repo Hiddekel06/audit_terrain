@@ -337,17 +337,6 @@
                             class="form-control rounded-pill border-light bg-light px-4"
                             placeholder="Saisir la direction"
                         >
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="profileDirectionInput" class="form-label fw-bold text-muted small text-uppercase">Direction</label>
-                        <input
-                            type="text"
-                            id="profileDirectionInput"
-                            name="direction"
-                            class="form-control rounded-pill border-light bg-light px-4"
-                            placeholder="Saisir la direction"
-                        >
                         <small class="text-muted d-block mt-1">Tu peux saisir une direction manuellement si tu veux l’ajouter ou la corriger.</small>
                     </div>
 
