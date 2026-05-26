@@ -14,6 +14,7 @@ L'objectif principal est de permettre à une équipe de coordination de constitu
 - Prévisualisation de déploiement avant application.
 - Optimisation automatique du déploiement à partir des données disponibles.
 - Import Excel des candidats avec prévisualisation, normalisation et gestion des doublons.
+- Import Excel des candidats avec deux modes distincts: création classique et mise à jour des téléphones par matricule.
 - Génération de rapports CSV pour les lignes ignorées lors des imports.
 - Visualisation de la répartition des agents par ministère et par profil.
 - Administration des questions dynamiques, motivations et vues de synthèse.
@@ -86,7 +87,12 @@ Il permet notamment:
 - de normaliser les données importées,
 - de reconnaître les ministères à partir d'alias et de variantes,
 - de détecter les doublons de matricule ou de téléphone,
+- d'importer soit de nouveaux agents, soit de mettre à jour uniquement les téléphones à partir du matricule,
 - de conserver un historique des lignes ignorées dans un fichier CSV.
+
+Les modèles téléchargeables sont des fichiers Excel `.xlsx`:
+- modèle classique pour la création d'agents,
+- modèle téléphone pour la mise à jour des numéros.
 
 Les rapports d'import sont consultables dans `/admin/import-reports`.
 La sidebar admin affiche désormais ce lien à la place de l'ancien accès aux motivations.
@@ -118,6 +124,8 @@ Ce mode créera les équipes et affectera réellement les candidats.
 - Les régions sont filtrables côté interface, mais l'optimisation automatique fonctionne aujourd'hui surtout sur le stock national.
 - Les opérations qui touchent plusieurs tables passent par des transactions.
 - La page ministères agrège les agents par `ministere_id` et calcule les compteurs par profil.
+- Les imports refusent les faux matricules numériques et vérifient aussi les doublons de téléphone.
+- Une migration de nettoyage a été ajoutée pour déplacer les anciens matricules qui contenaient un numéro de téléphone vers le champ `telephone`, puis laisser `matricule` vide pour ces cas.
 
 ## Fichiers Clés
 - [routes/web.php](../routes/web.php) : routes principales du domaine candidat, admin et recherche opérationnelle.
@@ -144,6 +152,9 @@ Ce mode créera les équipes et affectera réellement les candidats.
 - Mode d'optimisation automatique basé sur les candidats disponibles.
 - Nouvelle vue ministères avec synthèse par profil.
 - Nouveau module de rapports d'import pour analyser les lignes ignorées.
+- Séparation des imports admin entre création classique et mise à jour des téléphones.
+- Passage des modèles d'import en Excel `.xlsx`.
+- Migration de correction des anciens matricules qui étaient en réalité des numéros de téléphone.
 - Sidebar mise à jour pour pointer vers la répartition ministérielle.
 
 ## Installation Locale
@@ -158,6 +169,7 @@ Ce mode créera les équipes et affectera réellement les candidats.
 - Vérifier un fichier PHP: `php -l path/to/file.php`
 - Vider / reconstruire le cache des vues: `php artisan view:clear` puis `php artisan view:cache`
 - Lancer les tests: `php artisan test`
+- Lancer les migrations: `php artisan migrate`
 
 ## Bonnes Pratiques Du Projet
 - Utiliser `DB::transaction()` pour les opérations qui touchent plusieurs tables.

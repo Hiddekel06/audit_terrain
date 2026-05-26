@@ -12,8 +12,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Imports\AgentsImport;
+use App\Imports\AgentsPhoneUpdateImport;
 use App\Imports\AgentsPreviewImport;
 use App\Exports\CandidatesExport;
+use App\Exports\ImportTemplateExport;
 use Maatwebsite\Excel\Facades\Excel;
 
 class AdminCandidateController extends Controller
@@ -166,7 +168,7 @@ class AdminCandidateController extends Controller
         $validated = $request->validate([
             'prenom' => 'required|string|max:255',
             'nom' => 'required|string|max:255',
-            'telephone' => ['required', 'digits:9'],
+            'telephone' => ['required', 'digits:9', 'unique:users,telephone'],
             'email' => ['required', 'email:rfc', 'max:255'],
             'ministere_id' => ['required', 'exists:ministeres,id'],
             'direction' => ['nullable', 'string', 'max:255'],
@@ -181,6 +183,7 @@ class AdminCandidateController extends Controller
             'competences_techniques' => ['nullable', 'array'],
         ], [
             'telephone.digits' => 'Le numéro de téléphone doit contenir exactement 9 chiffres.',
+            'telephone.unique' => 'Ce numéro de téléphone est déjà utilisé par un autre agent.',
             'matricule.unique' => 'Ce matricule est déjà utilisé par un autre agent.',
             'matricule.regex' => 'Le matricule doit être au format 6 chiffres suivis d\'une lettre majuscule, par ex. 123456A.',
         ]);
@@ -232,10 +235,12 @@ class AdminCandidateController extends Controller
     public function importExcel(Request $request)
     {
         $request->validate([
-            'excel_file' => 'required|mimes:xlsx,xls,csv|max:5120',
+            'excel_file' => 'required|mimes:xlsx,xls|max:5120',
+            'import_mode' => 'nullable|in:classic,phone_update',
         ]);
 
         try {
+            $mode = $request->input('import_mode', 'classic');
             $token = (string) Str::uuid();
             $file = $request->file('excel_file');
             $storedPath = $file->storeAs('import-previews', $token . '.' . $file->getClientOriginalExtension());
@@ -243,28 +248,62 @@ class AdminCandidateController extends Controller
             $previewImport = new AgentsPreviewImport();
             Excel::import($previewImport, Storage::path($storedPath));
 
-            $parser = new AgentsImport();
             $previewRows = [];
 
-            foreach ($previewImport->rows as $index => $row) {
-                $parsed = $parser->parseRow($row, is_numeric($index) ? $index + 2 : null);
-                $parsed['ministere_reconnu'] = $parsed['ministere_id']
-                    ? optional(Ministere::find($parsed['ministere_id']))->nom
-                    : null;
-                $parsed['profil_reconnu'] = $parsed['profil_id']
-                    ? optional(Profil::find($parsed['profil_id']))->libelle
-                    : null;
-                // add secondary profile names for preview if any
-                $parsed['profil_secondaires'] = [];
-                if (!empty($parsed['profil_secondaires'])) {
-                    foreach ($parsed['profil_secondaires'] as $pId) {
-                        $p = Profil::find($pId);
-                        if ($p) {
-                            $parsed['profil_secondaires'][] = $p->libelle;
-                        }
+            if ($mode === 'phone_update') {
+                foreach ($previewImport->rows as $index => $row) {
+                    $line = is_numeric($index) ? $index + 2 : null;
+                    $matricule = strtoupper(trim((string) ($row['matricule'] ?? $row['cin'] ?? '')));
+                    $matricule = preg_replace('/[\s\/]+/', '', $matricule) ?? $matricule;
+                    $telephone = preg_replace('/\D+/', '', (string) ($row['telephone'] ?? $row['tel'] ?? $row['numero_telephone'] ?? '')) ?? '';
+                    if (strlen($telephone) > 9) {
+                        $telephone = substr($telephone, -9);
                     }
+
+                    $matchedUser = $matricule !== '' ? User::where('matricule', $matricule)->first() : null;
+                    $currentTelephone = $matchedUser?->telephone;
+
+                    $issues = [];
+                    if ($matricule === '') {
+                        $issues[] = 'Matricule manquant';
+                    }
+                    if ($telephone === '') {
+                        $issues[] = 'Téléphone manquant';
+                    }
+                    if ($matricule !== '' && !$matchedUser) {
+                        $issues[] = 'Matricule introuvable';
+                    }
+
+                    $status = empty($issues) ? 'ok' : 'error';
+
+                    $previewRows[] = [
+                        'line' => $line,
+                        'matricule' => $matricule,
+                        'telephone' => $telephone,
+                        'current_telephone' => $currentTelephone,
+                        'issues' => $issues,
+                        'warnings' => [],
+                        'status' => $status,
+                        'can_import' => $status === 'ok',
+                    ];
                 }
-                $previewRows[] = $parsed;
+            } else {
+                $parser = new AgentsImport();
+
+                foreach ($previewImport->rows as $index => $row) {
+                    $parsed = $parser->parseRow($row, is_numeric($index) ? $index + 2 : null);
+                    $parsed['ministere_reconnu'] = $parsed['ministere_id']
+                        ? optional(Ministere::find($parsed['ministere_id']))->nom
+                        : null;
+                    $parsed['profil_reconnu'] = $parsed['profil_id']
+                        ? optional(Profil::find($parsed['profil_id']))->libelle
+                        : null;
+                    $parsed['profil_secondaires'] = array_values(array_filter(array_map(function ($pId) {
+                        $p = Profil::find($pId);
+                        return $p ? $p->libelle : null;
+                    }, $parsed['profil_secondaires'] ?? [])));
+                    $previewRows[] = $parsed;
+                }
             }
 
             session([
@@ -272,15 +311,20 @@ class AdminCandidateController extends Controller
                     'token' => $token,
                     'path' => $storedPath,
                     'original_name' => $file->getClientOriginalName(),
+                    'mode' => $mode,
                     'rows' => $previewRows,
                     'total' => count($previewRows),
                     'valid' => collect($previewRows)->where('can_import', true)->count(),
                     'invalid' => collect($previewRows)->where('can_import', false)->count(),
-                    'warnings' => collect($previewRows)->filter(fn ($row) => ($row['status'] ?? '') === 'warning')->count(),
+                    'warnings' => $mode === 'phone_update'
+                        ? 0
+                        : collect($previewRows)->filter(fn ($row) => ($row['status'] ?? '') === 'warning')->count(),
                 ],
             ]);
 
-            return back()->with('info', 'Prévisualisation prête. Vérifie le rendu puis confirme l’import.');
+            return back()->with('info', $mode === 'phone_update'
+                ? 'Prévisualisation prête. Vérifie les matricules puis confirme la mise à jour.'
+                : 'Prévisualisation prête. Vérifie le rendu puis confirme l’import.');
         } catch (\Exception $e) {
             return back()->with('error', 'Une erreur est survenue lors de l\'importation : ' . $e->getMessage());
         }
@@ -316,7 +360,10 @@ class AdminCandidateController extends Controller
         }
 
         try {
-            $import = new AgentsImport();
+            $import = ($preview['mode'] ?? 'classic') === 'phone_update'
+                ? new AgentsPhoneUpdateImport()
+                : new AgentsImport();
+
             Excel::import($import, Storage::path($preview['path']));
 
             Storage::delete($preview['path']);
@@ -325,7 +372,11 @@ class AdminCandidateController extends Controller
             // Save full skipped list in session for review
             session(['import_skipped' => $import->skippedAgents]);
 
-            $msg = "{$import->importedCount} agents ont été importés avec succès.";
+            if (($preview['mode'] ?? 'classic') === 'phone_update') {
+                $msg = $import->updatedCount . ' numéros de téléphone ont été mis à jour avec succès.';
+            } else {
+                $msg = $import->importedCount . ' agents ont été importés avec succès.';
+            }
 
             // no temporary matricules generated
 
@@ -361,21 +412,21 @@ class AdminCandidateController extends Controller
     /**
      * Génère et télécharge un modèle Excel vide pour l'importation.
      */
-    public function downloadTemplate()
+    public function downloadTemplate(Request $request)
     {
-        $headers = [
-            'Membres', 'Matricule', 'Email', 'Telephone', 'Structure', 'Direction', 'Metier', 'Profil'
-        ];
-        
-        $callback = function() use ($headers) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, $headers, ';');
-            fclose($file);
-        };
+        $mode = $request->query('mode', 'classic');
 
-        return response()->streamDownload($callback, 'modele_import_agents.csv', [
-            'Content-Type' => 'text/csv',
-        ]);
+        if ($mode === 'phone_update') {
+            $headers = ['Matricule', 'Telephone'];
+            $filename = 'modele_maj_telephone.xlsx';
+        } else {
+            $headers = [
+                'Membres', 'Matricule', 'Email', 'Telephone', 'Structure', 'Direction', 'Metier', 'Profil'
+            ];
+            $filename = 'modele_import_agents.xlsx';
+        }
+
+        return Excel::download(new ImportTemplateExport($headers), $filename);
     }
 
     /**

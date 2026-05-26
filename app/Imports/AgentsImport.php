@@ -90,7 +90,6 @@ class AgentsImport implements ToCollection, WithHeadingRow
             $profilNormalized = is_string($profilRaw) ? strtolower(trim($profilRaw)) : null;
             $metierNormalized = is_string($metierRaw) ? strtolower(trim($metierRaw)) : null;
 
-            // 'null' token means explicit empty -> unset last value and effective is null
             if ($structureNormalized === 'null') {
                 $lastStructure = null;
                 $effectiveStructure = null;
@@ -121,7 +120,6 @@ class AgentsImport implements ToCollection, WithHeadingRow
                 $effectiveMetier = $metierRaw;
             }
 
-            // Merge effective values into row for parsing
             $effectiveRow = $arr;
             $effectiveRow['structure'] = $effectiveStructure;
             $effectiveRow['ministere'] = $effectiveStructure;
@@ -136,9 +134,7 @@ class AgentsImport implements ToCollection, WithHeadingRow
                     'line' => $parsed['line'] ?? null,
                     'display_name' => $parsed['display_name'] ?? '',
                     'matricule' => $parsed['matricule'] ?: '',
-                    'structure' => $arr['structure'] ?? ($arr['ministere'] ?? ''),
-                    'profil' => $arr['profil'] ?? '',
-                    'telephone' => $arr['telephone'] ?? '',
+                    'telephone' => $parsed['telephone'] ?? '',
                     'issues' => implode('; ', $parsed['issues'] ?? []),
                     'warnings' => implode('; ', $parsed['warnings'] ?? []),
                     'raw' => json_encode($arr, JSON_UNESCAPED_UNICODE),
@@ -146,41 +142,28 @@ class AgentsImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
-            // Determine matricule to store: prefer provided matricule, else use telephone if present.
             $matriculeToStore = $parsed['matricule'] ?: null;
             if (empty($matriculeToStore)) {
-                // normalize telephone to digits only for use as matricule
-                $tel = preg_replace('/[^0-9]+/', '', $parsed['telephone'] ?? '');
-                $matriculeToStore = $tel ?: null;
-            }
-
-            // If still empty, skip this row (no matricule and no telephone)
-            if (empty($matriculeToStore)) {
-                $this->skippedAgents[] = $parsed['display_name'] . ' (' . ($parsed['matricule'] ?: 'sans matricule') . ') - Matricule et téléphone manquants';
+                $this->skippedAgents[] = $parsed['display_name'] . ' (sans matricule) - Matricule manquant';
                 $this->skippedRows[] = [
                     'line' => $parsed['line'] ?? null,
                     'display_name' => $parsed['display_name'] ?? '',
-                    'matricule' => $parsed['matricule'] ?: '',
-                    'structure' => $arr['structure'] ?? ($arr['ministere'] ?? ''),
-                    'profil' => $arr['profil'] ?? '',
-                    'telephone' => $arr['telephone'] ?? '',
-                    'issues' => 'Matricule et téléphone manquants',
+                    'matricule' => '',
+                    'telephone' => $parsed['telephone'] ?? '',
+                    'issues' => 'Matricule manquant',
                     'warnings' => implode('; ', $parsed['warnings'] ?? []),
                     'raw' => json_encode($arr, JSON_UNESCAPED_UNICODE),
                 ];
                 continue;
             }
 
-            // Check duplicate on resulting matricule (whether original or telephone used)
             if (User::where('matricule', $matriculeToStore)->exists()) {
-                $this->skippedAgents[] = $parsed['display_name'] . ' (' . $matriculeToStore . ') - Doublon matricule/téléphone';
+                $this->skippedAgents[] = $parsed['display_name'] . ' (' . $matriculeToStore . ') - Doublon matricule';
                 $this->skippedRows[] = [
                     'line' => $parsed['line'] ?? null,
                     'display_name' => $parsed['display_name'] ?? '',
                     'matricule' => $matriculeToStore,
-                    'structure' => $arr['structure'] ?? ($arr['ministere'] ?? ''),
-                    'profil' => $arr['profil'] ?? '',
-                    'telephone' => $arr['telephone'] ?? '',
+                    'telephone' => $parsed['telephone'] ?? '',
                     'issues' => 'Doublon matricule',
                     'warnings' => implode('; ', $parsed['warnings'] ?? []),
                     'raw' => json_encode($arr, JSON_UNESCAPED_UNICODE),
@@ -224,14 +207,12 @@ class AgentsImport implements ToCollection, WithHeadingRow
                 $fp = fopen($file, 'w');
                 if ($fp) {
                     // header
-                    fputcsv($fp, ['line','display_name','matricule','structure','profil','telephone','issues','warnings','raw']);
+                    fputcsv($fp, ['line','display_name','matricule','telephone','issues','warnings','raw']);
                     foreach ($this->skippedRows as $r) {
                         fputcsv($fp, [
                             $r['line'] ?? '',
                             $r['display_name'] ?? '',
                             $r['matricule'] ?? '',
-                            $r['structure'] ?? '',
-                            $r['profil'] ?? '',
                             $r['telephone'] ?? '',
                             $r['issues'] ?? '',
                             $r['warnings'] ?? '',
@@ -274,12 +255,7 @@ class AgentsImport implements ToCollection, WithHeadingRow
         }
 
         $matriculeRaw = $row['matricule'] ?? $row['cin'] ?? null;
-        $matriculeNormToken = $normalize($matriculeRaw);
-        if ($matriculeNormToken === '') {
-            $matricule = '';
-        } else {
-            $matricule = $this->normalizeMatricule($matriculeRaw);
-        }
+        $matricule = $this->normalizeMatricule($matriculeRaw);
         $telephone = $normalize($row['telephone'] ?? '');
         $email = $normalize($row['email'] ?? '');
         $direction = $normalize($row['direction'] ?? 'N/A');
@@ -314,7 +290,7 @@ class AgentsImport implements ToCollection, WithHeadingRow
         }
 
         if ($matricule === '') {
-            $warnings[] = 'Matricule manquant';
+            $issues[] = 'Matricule manquant ou invalide';
         }
 
         $profilId = $this->findBestMatch($this->profils, $profilInput) ?: $this->profils->first();
@@ -333,7 +309,11 @@ class AgentsImport implements ToCollection, WithHeadingRow
         }
 
         if ($matricule !== '' && User::where('matricule', $matricule)->exists()) {
-            $issues[] = 'Doublon matricule';
+            $issues[] = 'Matricule déjà existant';
+        }
+
+        if ($telephone !== '' && User::where('telephone', $telephone)->exists()) {
+            $issues[] = 'Téléphone déjà existant';
         }
 
         if ($prenom === '' || $nom === '') {
@@ -366,6 +346,17 @@ class AgentsImport implements ToCollection, WithHeadingRow
         ];
     }
 
+    private function normalizeTelephone($value): string
+    {
+        $telephone = preg_replace('/\D+/', '', (string) $value) ?? '';
+
+        if (strlen($telephone) > 9) {
+            $telephone = substr($telephone, -9);
+        }
+
+        return $telephone;
+    }
+
     public function splitFullName(string $fullName): array
     {
         $parts = preg_split('/\s+/', trim($fullName)) ?: [];
@@ -385,6 +376,10 @@ class AgentsImport implements ToCollection, WithHeadingRow
     {
         $matricule = strtoupper(trim((string) $value));
         $matricule = preg_replace('/[\s\/]+/', '', $matricule) ?? $matricule;
+
+        if ($matricule === '' || !preg_match('/^[0-9]{6}[A-Z]$/', $matricule)) {
+            return '';
+        }
 
         return $matricule;
     }

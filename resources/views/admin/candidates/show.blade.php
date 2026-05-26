@@ -4,6 +4,26 @@
 @section('admin-subtitle', 'Consultez les informations détaillées du profil')
 
 @section('content')
+@php
+    $formatSenegalPhone = function ($value) {
+        $digits = preg_replace('/\D+/', '', (string) $value) ?? '';
+
+        if ($digits === '') {
+            return '—';
+        }
+
+        if (strlen($digits) > 9) {
+            $digits = substr($digits, -9);
+        }
+
+        if (strlen($digits) === 9) {
+            return '+221 ' . preg_replace('/(\d{2})(\d{3})(\d{2})(\d{2})/', '$1 $2 $3 $4', $digits);
+        }
+
+        return '+221 ' . $digits;
+    };
+@endphp
+
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap');
 
@@ -481,7 +501,7 @@
                 </div>
                 <div class="candidate-meta-card">
                     <div class="info-label">Téléphone</div>
-                    <div class="candidate-meta-value">+221 {{ $user->telephone }}</div>
+                    <div class="candidate-meta-value">{{ $formatSenegalPhone($user->telephone) }}</div>
                 </div>
                 <div class="candidate-meta-card">
                     <div class="info-label">Ministère</div>

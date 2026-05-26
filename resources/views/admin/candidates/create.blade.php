@@ -105,13 +105,21 @@
 
     @if(session('import_preview'))
         @php($importPreview = session('import_preview'))
+        @php($importMode = $importPreview['mode'] ?? 'classic')
         <div class="row justify-content-center mb-4">
             <div class="col-12">
                 <div class="glass-card-mini" style="max-width: 100%;">
                     <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
                         <div>
-                            <h3 class="h5 fw-bold text-dark mb-1">Prévisualisation d'import</h3>
-                            <div class="text-muted small">{{ $importPreview['original_name'] ?? 'Fichier importé' }} - {{ $importPreview['total'] ?? 0 }} ligne(s), {{ $importPreview['valid'] ?? 0 }} prête(s), {{ $importPreview['invalid'] ?? 0 }} bloquée(s)</div>
+                            <h3 class="h5 fw-bold text-dark mb-1">
+                                {{ $importMode === 'phone_update' ? 'Prévisualisation de mise à jour téléphone' : 'Prévisualisation d\'import' }}
+                            </h3>
+                            <div class="text-muted small">
+                                {{ $importPreview['original_name'] ?? 'Fichier importé' }} -
+                                {{ $importPreview['total'] ?? 0 }} ligne(s),
+                                {{ $importPreview['valid'] ?? 0 }} prête(s),
+                                {{ $importPreview['invalid'] ?? 0 }} bloquée(s)
+                            </div>
                         </div>
                         <div class="d-flex gap-2">
                             <form action="{{ route('admin.candidates.import.cancel') }}" method="POST" class="m-0">
@@ -121,7 +129,9 @@
                             <form action="{{ route('admin.candidates.import.confirm') }}" method="POST" class="m-0">
                                 @csrf
                                 <input type="hidden" name="preview_token" value="{{ $importPreview['token'] }}">
-                                <button type="submit" class="btn btn-modern-primary px-4">Confirmer l’import</button>
+                                <button type="submit" class="btn btn-modern-primary px-4">
+                                    {{ $importMode === 'phone_update' ? 'Confirmer la mise à jour' : 'Confirmer l’import' }}
+                                </button>
                             </form>
                         </div>
                     </div>
@@ -129,75 +139,104 @@
                     <div class="table-responsive">
                         <table class="table table-sm align-middle mb-0">
                             <thead>
-                                <tr>
-                                    <th>Ligne</th>
-                                    <th>Membres</th>
-                                    <th>Prénom</th>
-                                    <th>Nom</th>
-                                    <th>Matricule</th>
-                                    <th>Téléphone</th>
-                                    <th>Direction</th>
-                                    <th>Structure saisie</th>
-                                    <th>Ministère reconnu</th>
-                                    <th>Métier</th>
-                                    <th>Profil</th>
-                                    <th>Profil reconnu</th>
-                                    <th>Profil secondaire</th>
-                                    <th>Statut</th>
-                                </tr>
+                                @if($importMode === 'phone_update')
+                                    <tr>
+                                        <th>Ligne</th>
+                                        <th>Matricule</th>
+                                        <th>Téléphone actuel</th>
+                                        <th>Téléphone importé</th>
+                                        <th>Statut</th>
+                                    </tr>
+                                @else
+                                    <tr>
+                                        <th>Ligne</th>
+                                        <th>Membres</th>
+                                        <th>Prénom</th>
+                                        <th>Nom</th>
+                                        <th>Matricule</th>
+                                        <th>Téléphone</th>
+                                        <th>Direction</th>
+                                        <th>Structure saisie</th>
+                                        <th>Ministère reconnu</th>
+                                        <th>Métier</th>
+                                        <th>Profil</th>
+                                        <th>Profil reconnu</th>
+                                        <th>Profil secondaire</th>
+                                        <th>Statut</th>
+                                    </tr>
+                                @endif
                             </thead>
                             <tbody>
                                 @foreach(($importPreview['rows'] ?? []) as $row)
-                                    <tr>
-                                        <td>{{ $row['line'] ?? '—' }}</td>
-                                        <td>
-                                            <div class="fw-semibold">{{ $row['full_name'] ?: '—' }}</div>
-                                            @if(!empty($row['warnings']))
-                                                <div class="text-warning small">{{ implode(' | ', $row['warnings']) }}</div>
-                                            @endif
-                                            @if(!empty($row['issues']))
-                                                <div class="text-danger small">{{ implode(' | ', $row['issues']) }}</div>
-                                            @endif
-                                        </td>
-                                        <td>{{ $row['prenom'] ?: '—' }}</td>
-                                        <td>{{ $row['nom'] ?: '—' }}</td>
-                                        <td>{{ $row['matricule'] ?: '—' }}</td>
-                                        <td>{{ $row['telephone'] ?: '—' }}</td>
-                                        <td>{{ $row['direction'] ?: '—' }}</td>
-                                        <td>{{ $row['ministere_input'] ?: '—' }}</td>
-                                        <td>
-                                            @if(!empty($row['ministere_reconnu']))
-                                                <span class="badge bg-success-subtle text-success border border-success-subtle">{{ $row['ministere_reconnu'] }}</span>
-                                            @else
-                                                <span class="text-muted">—</span>
-                                            @endif
-                                        </td>
-                                        <td>{{ $row['metier'] ?: '—' }}</td>
-                                        <td>{{ $row['profil_input'] ?: '—' }}</td>
-                                        <td>
-                                            @if(!empty($row['profil_reconnu']))
-                                                <span class="badge bg-success-subtle text-success border border-success-subtle">{{ $row['profil_reconnu'] }}</span>
-                                            @else
-                                                <span class="text-muted">—</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if(!empty($row['profil_secondaires']))
-                                                <span class="small">{{ implode(', ', $row['profil_secondaires']) }}</span>
-                                            @else
-                                                <span class="text-muted">—</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if(($row['status'] ?? '') === 'ok')
-                                                <span class="badge bg-success">Prête</span>
-                                            @elseif(($row['status'] ?? '') === 'warning')
-                                                <span class="badge bg-warning text-dark">À vérifier</span>
-                                            @else
-                                                <span class="badge bg-danger">Bloquée</span>
-                                            @endif
-                                        </td>
-                                    </tr>
+                                    @if($importMode === 'phone_update')
+                                        <tr>
+                                            <td>{{ $row['line'] ?? '—' }}</td>
+                                            <td>{{ $row['matricule'] ?: '—' }}</td>
+                                            <td>{{ $row['current_telephone'] ?: '—' }}</td>
+                                            <td>{{ $row['telephone'] ?: '—' }}</td>
+                                            <td>
+                                                @if(($row['status'] ?? '') === 'ok')
+                                                    <span class="badge bg-success">Prête</span>
+                                                @else
+                                                    <span class="badge bg-danger">Bloquée</span>
+                                                @endif
+                                                @if(!empty($row['issues']))
+                                                    <div class="text-danger small">{{ implode(' | ', $row['issues']) }}</div>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @else
+                                        <tr>
+                                            <td>{{ $row['line'] ?? '—' }}</td>
+                                            <td>
+                                                <div class="fw-semibold">{{ $row['full_name'] ?: '—' }}</div>
+                                                @if(!empty($row['warnings']))
+                                                    <div class="text-warning small">{{ implode(' | ', $row['warnings']) }}</div>
+                                                @endif
+                                                @if(!empty($row['issues']))
+                                                    <div class="text-danger small">{{ implode(' | ', $row['issues']) }}</div>
+                                                @endif
+                                            </td>
+                                            <td>{{ $row['prenom'] ?: '—' }}</td>
+                                            <td>{{ $row['nom'] ?: '—' }}</td>
+                                            <td>{{ $row['matricule'] ?: '—' }}</td>
+                                            <td>{{ $row['telephone'] ?: '—' }}</td>
+                                            <td>{{ $row['direction'] ?: '—' }}</td>
+                                            <td>{{ $row['ministere_input'] ?: '—' }}</td>
+                                            <td>
+                                                @if(!empty($row['ministere_reconnu']))
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle">{{ $row['ministere_reconnu'] }}</span>
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
+                                            <td>{{ $row['metier'] ?: '—' }}</td>
+                                            <td>{{ $row['profil_input'] ?: '—' }}</td>
+                                            <td>
+                                                @if(!empty($row['profil_reconnu']))
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle">{{ $row['profil_reconnu'] }}</span>
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if(!empty($row['profil_secondaires']))
+                                                    <span class="small">{{ implode(', ', $row['profil_secondaires']) }}</span>
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if(($row['status'] ?? '') === 'ok')
+                                                    <span class="badge bg-success">Prête</span>
+                                                @elseif(($row['status'] ?? '') === 'warning')
+                                                    <span class="badge bg-warning text-dark">À vérifier</span>
+                                                @else
+                                                    <span class="badge bg-danger">Bloquée</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endif
                                 @endforeach
                             </tbody>
                         </table>
@@ -219,7 +258,7 @@
 
     <div class="row justify-content-center g-4">
         <!-- Ajout Individuel -->
-        <div class="col-lg-5">
+        <div class="col-lg-4">
             <div class="glass-card-mini h-100">
                 <div class="add-illustration-small">
                     <i class="bi bi-person-plus-fill"></i>
@@ -235,31 +274,63 @@
             </div>
         </div>
 
-        <!-- Import Excel -->
-        <div class="col-lg-5">
+        <!-- Import classique -->
+        <div class="col-lg-4">
             <div class="glass-card-mini h-100">
                 <div class="add-illustration-small" style="background: rgba(16, 185, 129, 0.08); color: #10b981;">
-                    <i class="bi bi-file-earmark-excel-fill"></i>
+                    <i class="bi bi-file-earmark-arrow-up-fill"></i>
                 </div>
-                <h2 class="h4 fw-bold text-dark mb-2">Importation groupée</h2>
+                <h2 class="h4 fw-bold text-dark mb-2">Import classique</h2>
                 <p class="text-muted small mb-4">
-                    Déposez un fichier Excel pour prévisualiser les lignes avant import. La colonne <strong>Membres</strong> sera découpée automatiquement en prénom et nom.
+                    Déposez un fichier Excel pour créer des agents avec le flux habituel.
                 </p>
                 
                 <form action="{{ route('admin.candidates.import') }}" method="POST" enctype="multipart/form-data" id="importForm">
                     @csrf
-                    <input type="file" name="excel_file" id="excel_file" class="d-none" accept=".xlsx,.xls,.csv" onchange="this.form.submit()">
+                    <input type="hidden" name="import_mode" value="classic">
+                    <input type="file" name="excel_file" id="excel_file" class="d-none" accept=".xlsx,.xls" onchange="document.getElementById('import-status').classList.remove('d-none'); this.form.submit()">
                     <button type="button" class="btn btn-modern-primary w-100" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);" onclick="document.getElementById('excel_file').click()">
                         <i class="bi bi-upload me-2"></i> Prévisualiser le fichier
                     </button>
-                    <div id="import-status" class="alert alert-info border-0 rounded-4 mt-3 mb-0 py-2 px-3 small">
+                    <div id="import-status" class="alert alert-info border-0 rounded-4 mt-3 mb-0 py-2 px-3 small d-none">
                         <i class="bi bi-hourglass-split me-2"></i> Import en cours, merci de patienter...
                     </div>
                 </form>
 
                 <div class="mt-3 text-center">
-                    <a href="{{ route('admin.candidates.template') }}" class="text-primary small fw-bold text-decoration-none">
-                        <i class="bi bi-download me-1"></i> Télécharger le modèle (CSV)
+                    <a href="{{ route('admin.candidates.template', ['mode' => 'classic']) }}" class="text-primary small fw-bold text-decoration-none">
+                        <i class="bi bi-download me-1"></i> Télécharger le modèle classique (Excel)
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import téléphone -->
+        <div class="col-lg-4">
+            <div class="glass-card-mini h-100">
+                <div class="add-illustration-small" style="background: rgba(59, 130, 246, 0.08); color: #3b82f6;">
+                    <i class="bi bi-telephone-fill"></i>
+                </div>
+                <h2 class="h4 fw-bold text-dark mb-2">Mise à jour téléphone</h2>
+                <p class="text-muted small mb-4">
+                    Importez un fichier Excel avec les colonnes <strong>matricule</strong> et <strong>telephone</strong> pour mettre à jour les numéros existants.
+                </p>
+
+                <form action="{{ route('admin.candidates.import') }}" method="POST" enctype="multipart/form-data" id="phoneImportForm">
+                    @csrf
+                    <input type="hidden" name="import_mode" value="phone_update">
+                    <input type="file" name="excel_file" id="phone_excel_file" class="d-none" accept=".xlsx,.xls" onchange="document.getElementById('phone-import-status').classList.remove('d-none'); this.form.submit()">
+                    <button type="button" class="btn btn-modern-primary w-100" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);" onclick="document.getElementById('phone_excel_file').click()">
+                        <i class="bi bi-arrow-repeat me-2"></i> Prévisualiser la mise à jour
+                    </button>
+                    <div id="phone-import-status" class="alert alert-info border-0 rounded-4 mt-3 mb-0 py-2 px-3 small d-none">
+                        <i class="bi bi-hourglass-split me-2"></i> Mise à jour en cours, merci de patienter...
+                    </div>
+                </form>
+
+                <div class="mt-3 text-center">
+                    <a href="{{ route('admin.candidates.template', ['mode' => 'phone_update']) }}" class="text-primary small fw-bold text-decoration-none">
+                        <i class="bi bi-download me-1"></i> Télécharger le modèle téléphone (Excel)
                     </a>
                 </div>
             </div>

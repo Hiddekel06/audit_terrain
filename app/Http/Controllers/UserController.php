@@ -55,6 +55,8 @@ class UserController extends Controller
         $validated = $request->validate($rules, [
             'telephone.digits' => 'Le numéro de téléphone doit contenir exactement 9 chiffres.',            'ministere_id.required' => 'Veuillez sélectionner un ministère.',
             'ministere_id.exists' => 'Le ministère sélectionné est invalide.',            'matricule.required_without' => 'Le matricule est obligatoire si vous ne cochez pas la case "Pas de matricule".',
+            'telephone.unique' => 'Ce numéro de téléphone est déjà utilisé. Vous avez déjà choisi.',
+            'email.unique' => 'Cette adresse email est déjà utilisée. Vous avez déjà choisi.',
             'matricule.regex' => 'Le matricule doit contenir 6 chiffres suivis d’une lettre.',
             'direction.required' => 'Veuillez renseigner votre direction.',
             'cin.digits' => 'Le CIN doit contenir exactement 13 chiffres.',
@@ -80,6 +82,18 @@ class UserController extends Controller
                 $hasNoMatricule ? 'cin' : 'matricule' => $hasNoMatricule
                     ? 'Ce CIN a déjà été utilisé. Vous avez déjà choisi.'
                     : 'Ce matricule a déjà été utilisé. Vous avez déjà choisi.',
+            ])->withInput();
+        }
+
+        if (User::where('telephone', $validated['telephone'])->exists()) {
+            return back()->withErrors([
+                'telephone' => 'Ce numéro de téléphone est déjà utilisé. Vous avez déjà choisi.',
+            ])->withInput();
+        }
+
+        if (User::where('email', $validated['email'])->exists()) {
+            return back()->withErrors([
+                'email' => 'Cette adresse email est déjà utilisée. Vous avez déjà choisi.',
             ])->withInput();
         }
 
