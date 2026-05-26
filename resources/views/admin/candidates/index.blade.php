@@ -4,21 +4,7 @@
 @section('admin-subtitle', 'Explorez et analysez tous les profils des candidats')
 
 @section('content')
-    @if(session()->has('import_skipped') && is_array(session('import_skipped')))
-        <div class="row justify-content-center mb-3">
-            <div class="col-lg-10">
-                <div class="alert alert-warning border-0 shadow-sm rounded-4 px-4 py-3">
-                    <strong>{{ session('import_skipped_count', count(session('import_skipped'))) }} lignes ignorées lors du dernier import :</strong>
-                    <div class="small mt-2">
-                        @foreach(session('import_skipped') as $skipped)
-                            <div>- {{ $skipped }}</div>
-                        @endforeach
-                    </div>
-                    <div class="mt-2"><a href="{{ route('admin.candidates.create') }}" class="btn btn-sm btn-light">Retour à l'import</a></div>
-                </div>
-            </div>
-        </div>
-    @endif
+    
 <style>
     .glass-card {
         background: rgba(255, 255, 255, 0.8);

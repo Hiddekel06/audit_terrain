@@ -9,6 +9,7 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\Importable;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
+use Illuminate\Support\Facades\Log;
 
 class AgentsImport implements ToCollection, WithHeadingRow
 {
@@ -20,6 +21,7 @@ class AgentsImport implements ToCollection, WithHeadingRow
     private array $profilAliases = [];
     public $importedCount = 0;
     public $skippedAgents = [];
+    private $skippedRows = [];
 
     public function __construct()
     {
@@ -36,7 +38,7 @@ class AgentsImport implements ToCollection, WithHeadingRow
             'ministere en charge de la famille' => 'famille',
             'ministere en charge de la jeunesse' => 'jeunesse',
             'ministere en charge des affaires etrangeres' => 'affaires etrangeres',
-            'ministere de l education nationale' => 'education nationale',
+            'ministere de l education nationale' => 'Ministère de l’Enseignement supérieur, de la Recherche et de l’Innovation',
             'ministere des finances et du budget' => 'finances budget',
             'ministere des infrastructures' => 'infrastructures',
             'ministere de l interieur et de la securite publique' => 'interieur securite publique',
@@ -131,6 +133,17 @@ class AgentsImport implements ToCollection, WithHeadingRow
 
             if (!$parsed['can_import']) {
                 $this->skippedAgents[] = $parsed['display_name'] . ' (' . ($parsed['matricule'] ?: 'sans matricule') . ') - ' . implode('; ', $parsed['issues']);
+                $this->skippedRows[] = [
+                    'line' => $parsed['line'] ?? null,
+                    'display_name' => $parsed['display_name'] ?? '',
+                    'matricule' => $parsed['matricule'] ?: '',
+                    'structure' => $arr['structure'] ?? ($arr['ministere'] ?? ''),
+                    'profil' => $arr['profil'] ?? '',
+                    'telephone' => $arr['telephone'] ?? '',
+                    'issues' => implode('; ', $parsed['issues'] ?? []),
+                    'warnings' => implode('; ', $parsed['warnings'] ?? []),
+                    'raw' => json_encode($arr, JSON_UNESCAPED_UNICODE),
+                ];
                 continue;
             }
 
@@ -145,12 +158,34 @@ class AgentsImport implements ToCollection, WithHeadingRow
             // If still empty, skip this row (no matricule and no telephone)
             if (empty($matriculeToStore)) {
                 $this->skippedAgents[] = $parsed['display_name'] . ' (' . ($parsed['matricule'] ?: 'sans matricule') . ') - Matricule et téléphone manquants';
+                $this->skippedRows[] = [
+                    'line' => $parsed['line'] ?? null,
+                    'display_name' => $parsed['display_name'] ?? '',
+                    'matricule' => $parsed['matricule'] ?: '',
+                    'structure' => $arr['structure'] ?? ($arr['ministere'] ?? ''),
+                    'profil' => $arr['profil'] ?? '',
+                    'telephone' => $arr['telephone'] ?? '',
+                    'issues' => 'Matricule et téléphone manquants',
+                    'warnings' => implode('; ', $parsed['warnings'] ?? []),
+                    'raw' => json_encode($arr, JSON_UNESCAPED_UNICODE),
+                ];
                 continue;
             }
 
             // Check duplicate on resulting matricule (whether original or telephone used)
             if (User::where('matricule', $matriculeToStore)->exists()) {
                 $this->skippedAgents[] = $parsed['display_name'] . ' (' . $matriculeToStore . ') - Doublon matricule/téléphone';
+                $this->skippedRows[] = [
+                    'line' => $parsed['line'] ?? null,
+                    'display_name' => $parsed['display_name'] ?? '',
+                    'matricule' => $matriculeToStore,
+                    'structure' => $arr['structure'] ?? ($arr['ministere'] ?? ''),
+                    'profil' => $arr['profil'] ?? '',
+                    'telephone' => $arr['telephone'] ?? '',
+                    'issues' => 'Doublon matricule',
+                    'warnings' => implode('; ', $parsed['warnings'] ?? []),
+                    'raw' => json_encode($arr, JSON_UNESCAPED_UNICODE),
+                ];
                 continue;
             }
 
@@ -175,6 +210,41 @@ class AgentsImport implements ToCollection, WithHeadingRow
             ]);
 
             $this->importedCount++;
+        }
+
+        // After processing all rows, if there are skipped rows, dump them to CSV for review
+        if (!empty($this->skippedRows)) {
+            try {
+                $dir = storage_path('app/imports');
+                if (!is_dir($dir)) {
+                    @mkdir($dir, 0755, true);
+                }
+
+                $ts = date('Ymd_His');
+                $file = $dir . DIRECTORY_SEPARATOR . "skipped_{$ts}.csv";
+                $fp = fopen($file, 'w');
+                if ($fp) {
+                    // header
+                    fputcsv($fp, ['line','display_name','matricule','structure','profil','telephone','issues','warnings','raw']);
+                    foreach ($this->skippedRows as $r) {
+                        fputcsv($fp, [
+                            $r['line'] ?? '',
+                            $r['display_name'] ?? '',
+                            $r['matricule'] ?? '',
+                            $r['structure'] ?? '',
+                            $r['profil'] ?? '',
+                            $r['telephone'] ?? '',
+                            $r['issues'] ?? '',
+                            $r['warnings'] ?? '',
+                            $r['raw'] ?? '',
+                        ]);
+                    }
+                    fclose($fp);
+                    Log::info('AgentsImport: skipped rows CSV written', ['file' => $file]);
+                }
+            } catch (\Throwable $e) {
+                Log::error('AgentsImport: failed to write skipped CSV', ['error' => $e->getMessage()]);
+            }
         }
     }
 

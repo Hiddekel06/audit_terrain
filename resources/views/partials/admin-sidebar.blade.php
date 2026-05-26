@@ -51,9 +51,9 @@
             <span class="admin-sidebar__link-label">Ministères</span>
         </a>
 
-        <a href="{{ route('admin.dashboard') }}#motivations-section" class="admin-sidebar__link">
-            <i class="bi bi-journal-text"></i>
-            <span class="admin-sidebar__link-label">Motivations</span>
+        <a href="{{ route('admin.import_reports.index') }}" class="admin-sidebar__link {{ $currentRoute === 'admin.import_reports.index' ? 'active' : '' }}">
+            <i class="bi bi-file-earmark-text"></i>
+            <span class="admin-sidebar__link-label">Rapports d'import</span>
         </a>
 
         <a href="{{ route('admin.candidates.create') }}" class="admin-sidebar__link {{ $currentRoute === 'admin.candidates.create' ? 'active' : '' }}">

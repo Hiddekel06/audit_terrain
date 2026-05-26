@@ -96,6 +96,12 @@ Route::middleware('admin.auth')->group(function () {
     Route::delete('/admin/motivations/{motivation}', [App\Http\Controllers\MotivationController::class, 'destroy'])->name('admin.motivations.destroy');
     Route::post('/admin/motivations/{motivation}/restore', [App\Http\Controllers\MotivationController::class, 'restore'])->name('admin.motivations.restore');
 
+    // Import reports (skipped rows CSVs)
+    Route::get('/admin/import-reports', [App\Http\Controllers\AdminImportReportsController::class, 'index'])
+        ->name('admin.import_reports.index');
+    Route::get('/admin/import-reports/download/{filename}', [App\Http\Controllers\AdminImportReportsController::class, 'download'])
+        ->name('admin.import_reports.download');
+
     // Questions dynamiques (admin)
     Route::post('/admin/questions', [App\Http\Controllers\AdminDynamicQuestionController::class, 'store'])->name('admin.questions.store');
     Route::put('/admin/questions/{question}', [App\Http\Controllers\AdminDynamicQuestionController::class, 'update'])->name('admin.questions.update');
