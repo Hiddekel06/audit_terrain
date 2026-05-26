@@ -15,6 +15,12 @@ class UserWizardTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+    }
+
     public function test_formulaire_affiche_le_matricule_et_les_profils(): void
     {
         $this->seedProfiles();
@@ -47,6 +53,7 @@ class UserWizardTest extends TestCase
             'telephone' => '771234567',
             'email' => 'awa@example.com',
             'ministere_id' => 1,
+            'direction' => 'DSI',
             'matricule' => '12345',
             'profil_id' => 1,
             'niveau_numerique' => 'intermediaire',
@@ -68,6 +75,7 @@ class UserWizardTest extends TestCase
             'telephone' => '771234567',
             'email' => 'awa@example.com',
             'ministere_id' => 1,
+            'direction' => 'DSI',
             'no_matricule' => 1,
             'cin' => '1234567890123',
             'profil_id' => 1,
@@ -93,6 +101,7 @@ class UserWizardTest extends TestCase
             'telephone' => '771234567',
             'email' => 'awa@example.com',
             'ministere_id' => 1,
+            'direction' => 'DSI',
             'matricule' => '123456A',
             'profil_id' => 1,
             'niveau_numerique' => 'intermediaire',
@@ -119,6 +128,7 @@ class UserWizardTest extends TestCase
                 'telephone' => '771234567',
                 'email' => 'awa@example.com',
                 'profil_id' => 1,
+                'direction' => 'DSI',
                 'niveau_numerique' => 'intermediaire',
                 'experiences' => ['audit_recensement', 'biometrie'],
                 'competences_techniques' => ['tablette_smartphone', 'excel_donnees'],
@@ -155,6 +165,7 @@ class UserWizardTest extends TestCase
                 'telephone' => '771234567',
                 'email' => 'awa@example.com',
                 'profil_id' => 1,
+                'direction' => 'DSI',
                 'niveau_numerique' => 'intermediaire',
                 'experiences' => ['audit_recensement', 'biometrie'],
                 'competences_techniques' => ['tablette_smartphone', 'excel_donnees'],
@@ -185,6 +196,7 @@ class UserWizardTest extends TestCase
                 'telephone' => '771234567',
                 'email' => 'awa@example.com',
                 'profil_id' => 1,
+                'direction' => 'DSI',
                 'niveau_numerique' => 'intermediaire',
                 'experiences' => ['audit_recensement', 'biometrie'],
                 'competences_techniques' => ['tablette_smartphone', 'excel_donnees'],
@@ -206,6 +218,7 @@ class UserWizardTest extends TestCase
             'telephone' => '771234567',
             'email' => 'awa@example.com',
             'profil_id' => 1,
+            'direction' => 'DSI',
             'niveau_numerique' => 'intermediaire',
             'ministere_id' => 1,
             'ready_to_deploy_all_regions' => 0,

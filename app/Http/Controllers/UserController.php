@@ -15,6 +15,7 @@ class UserController extends Controller
     public function create()
     {
         $profils = Profil::where('is_active', true)
+            ->where('code', '!=', 'chauffeur')
             ->orderBy('ordre')
             ->orderBy('id')
             ->get();
@@ -61,6 +62,13 @@ class UserController extends Controller
             'experiences.required' => 'Veuillez sélectionner au moins une expérience.',
             'competences_techniques.required' => 'Veuillez sélectionner au moins une compétence technique.',
         ]);
+
+        $selectedProfile = Profil::whereKey($validated['profil_id'])->first();
+        if (!$selectedProfile || $selectedProfile->code === 'chauffeur') {
+            return back()->withErrors([
+                'profil_id' => 'Ce profil n\'est pas disponible depuis le formulaire public.',
+            ])->withInput();
+        }
 
         $hasNoMatricule = $request->boolean('no_matricule');
         $identityNumber = $hasNoMatricule

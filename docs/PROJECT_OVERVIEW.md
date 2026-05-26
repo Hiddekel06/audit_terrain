@@ -1,98 +1,173 @@
-# Audit Terrain — Présentation du projet
+# Audit Terrain — Vue d'ensemble du projet
 
-## But du projet
-Audit Terrain est une application de gestion et de déploiement d'équipes terrain pour des missions d'audit. Elle permet :
-- l'enregistrement et la gestion des candidats (profil, niveau, affectation),
-- la création et la gestion d'équipes (teams),
-- l'affectation manuelle ou automatique des candidats aux équipes,
-- la collecte des réponses dynamiques et motivations par candidat,
-- des outils d'administration (tableau de bord, gestion des questions dynamiques, motivations, etc.).
+## Résumé
+Audit Terrain est une application Laravel dédiée à la gestion d'un vivier de candidats, au pilotage administratif des structures ministérielles et au déploiement d'équipes terrain pour des missions d'audit. Le projet couvre tout le cycle métier: inscription, enrichissement des profils, affectation aux équipes, répartition manuelle ou automatique, et administration des données opérationnelles.
 
-## Public cible
-- Administrateurs (gestion des candidats, équipes, répartition opérationnelle).
-- Coordinateurs terrain (création d'équipes, répartition des agents).
-- Développeurs / contributeurs souhaitant comprendre et participer au code.
+L'objectif principal est de permettre à une équipe de coordination de constituer des équipes cohérentes à partir de données réelles, tout en gardant une interface simple, rapide et suffisamment souple pour s'adapter à des contextes de terrain variables.
 
-## Stack technique
-- Backend: PHP 8.x avec Laravel (routes, controllers, Blade views, Eloquent).
-- Frontend: Blade + Bootstrap (modals), Chart.js pour graphiques, JavaScript vanilla pour interactions (drag & drop).
-- Base de données: MySQL / MariaDB (migrations présentes dans `database/migrations`).
-- Outils: Composer, npm (si vous utilisez les assets), PHPUnit pour les tests.
+## Ce Que Fait L'Application
+- Inscription et suivi des candidats.
+- Gestion du profil principal, du profil initial et de la direction.
+- Collecte des choix régionaux, motivations et réponses dynamiques.
+- Gestion des équipes terrain.
+- Affectation manuelle par glisser-déposer.
+- Prévisualisation de déploiement avant application.
+- Optimisation automatique du déploiement à partir des données disponibles.
+- Visualisation de la répartition des agents par ministère et par profil.
+- Administration des questions dynamiques, motivations et vues de synthèse.
 
-## Structure importante
-- `app/Http/Controllers/` : contrôleurs (ex. `AdminCandidateController`, `AdminOperationsResearchController`).
-- `app/Models/` : modèles Eloquent (ex. `User`, `Team`, `Profil`, `UserDynamicAnswer`).
-- `resources/views/admin/` : vues administratives (dashboard, candidates, operations-research, etc.).
-- `routes/web.php` : routes web protégées par middleware `admin.auth`.
-- `database/migrations/` : migrations pour la structure de la BDD.
-- `scripts/` : scripts utiles (tests manuels/quick-scripts).
+## Public Cible
+- Administrateurs qui gèrent les candidats, les équipes et les déploiements.
+- Coordinateurs terrain qui préparent les affectations.
+- Contributeurs techniques qui doivent comprendre rapidement le flux métier.
 
-## Points fonctionnels clés
-- Gestion des candidats : listing, détail, suppression (via `AdminCandidateController::destroy`).
-- Recherche Opérationnelle (`/admin/recherche-operationnelle`) :
-  - Drag & drop pour déplacer un agent entre équipes.
-  - Répartition automatique (`autoDistribute`) paramétrable par nombre d'équipes.
-  - Réinitialisation du déploiement (`resetDeployment`) pour remettre les assignations à zéro.
-  - Edition du `profil` d'un agent depuis l'interface opérationnelle.
+## Stack Technique
+- Backend: PHP 8.4 avec Laravel 13.
+- Frontend: Blade, Bootstrap, JavaScript vanilla.
+- Visualisation: Chart.js sur certaines pages de synthèse.
+- Base de données: MySQL / MariaDB via migrations Laravel.
+- Outils: Composer, npm si nécessaire, PHPUnit / `php artisan test`.
 
-## Installation locale (rapide)
-1. Cloner le dépôt et entrer dans le dossier :
+## Architecture Fonctionnelle
 
-   git clone <repo-url>
-   cd audit_terrain
+### 1. Cycle Candidat
+Le module candidat gère:
+- la création du compte candidat,
+- la conservation du profil initial,
+- la saisie d'une direction libre,
+- les réponses aux questions dynamiques,
+- les motivations et choix régionaux,
+- l'édition et la suppression en administration.
 
-2. Installer les dépendances PHP :
+Points importants:
+- le champ `profil_initial_id` permet de conserver l'état d'origine du candidat,
+- le champ `direction` est maintenant éditable et persistant,
+- l'affichage admin distingue le profil initial du profil courant.
 
-   composer install
+### 2. Recherche Opérationnelle
+La page `/admin/recherche-operationnelle` sert de poste de pilotage pour les équipes.
 
-3. Copier le fichier d'environnement et configurer la base :
+Elle permet:
+- la création manuelle d'équipes,
+- l'affectation manuelle d'un candidat vers une équipe,
+- le déplacement par drag & drop,
+- la libération d'un membre vers les candidats libres,
+- la modification du profil d'un agent dans une modale dédiée,
+- la réinitialisation complète du déploiement,
+- la simulation de scénarios avant application.
 
-   cp .env.example .env
-   # modifier .env : DB_CONNECTION, DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD, APP_URL
+Le drag & drop d'aperçu permet de déplacer des membres d'une équipe à une autre avec confirmation.
 
-4. Générer la clé d'application :
+### 3. Déploiement Paramétrable
+Le déploiement a été rendu plus souple pour couvrir plusieurs cas:
+- blocs mixtes de répartition, par exemple `4 équipes de 3` puis `2 équipes de 4`,
+- prévisualisation avant écriture en base,
+- mode d'optimisation automatique qui exploite le stock disponible sans paramètre saisi,
+- bouton de déploiement réel volontairement désactivé côté front tant que le flux final n'est pas validé.
 
-   php artisan key:generate
+Les blocs de répartition peuvent aussi intégrer des quotas par profil par équipe.
 
-5. Créer la base et exécuter les migrations :
+### 4. Répartition Par Ministère
+La page `/admin/ministeres` remplace le lien d'indicateurs de la sidebar et affiche:
+- le volume total d'agents par ministère,
+- le détail par profil (chefs d'équipe, auditeurs, supports),
+- une carte compacte et lisible inspirée de la vue des régions.
 
-   php artisan migrate
-   php artisan db:seed  # si vous avez des seeders
+Le rendu est actuellement basé sur des icônes Bootstrap côté interface, sans dépendance à des logos ministériels.
 
-6. (Optionnel) Installer les assets front-end et les compiler :
+L'idée métier est de ne plus penser uniquement en “nombre d'équipes fixe”, mais en “plan de déploiement” adaptable à la réalité du terrain.
 
-   npm install
-   npm run dev
+## Flux De Déploiement
+### Mode 1 - Prévisualiser Des Blocs
+L'utilisateur définit un ou plusieurs blocs:
+- nombre d'équipes,
+- taille des équipes.
 
-7. Lancer le serveur local :
+Le système calcule ensuite un aperçu sans écrire en base.
 
-   php artisan serve --host=127.0.0.1 --port=8007
+### Mode 2 - Optimisation Automatique
+L'utilisateur ne saisit aucun paramètre métier fin.
+Le script observe les candidats libres et construit le meilleur plan possible en fonction des profils disponibles.
 
-## Commandes utiles
-- Linter PHP : `php -l path/to/file.php`
-- Refresh/views cache : `php artisan view:clear` / `php artisan view:cache`
-- Run tests : `vendor/bin/phpunit` ou `php artisan test`
+Ce mode est utile pour:
+- les déploiements nationaux,
+- les phases où les régions ne sont pas encore intégrées au calcul,
+- les scénarios où l'on veut simplement le meilleur rendu possible avec les données présentes.
 
-## Conventions et bonnes pratiques
-- Utiliser des transactions (`DB::transaction`) pour les opérations multi-étapes qui modifient plusieurs tables.
-- Faire la validation côté serveur pour les règles métiers (ex: unicité d'un `profil` dans une équipe).
-- Préférer les formulaires classiques (avec CSRF) pour garder la compatibilité et la simplicité.
-- Respecter les conventions Laravel (noms de méthodes, ressources, etc.).
+### Mode 3 - Application Réelle
+Le déploiement réel est conservé dans le code, mais le bouton front est grisé pour l'instant.
+Ce mode créera les équipes et affectera réellement les candidats.
 
-## Variables d'environnement importantes
-- `APP_ENV`, `APP_DEBUG`, `APP_URL`
-- `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`
+## Règles Métier Importantes
+- Une équipe ne doit pas recevoir deux candidats avec le même profil quand cette règle est appliquée.
+- Les profils peuvent être ajustés depuis l'interface opérationnelle.
+- Les régions sont filtrables côté interface, mais l'optimisation automatique fonctionne aujourd'hui surtout sur le stock national.
+- Les opérations qui touchent plusieurs tables passent par des transactions.
+- La page ministères agrège les agents par `ministere_id` et calcule les compteurs par profil.
 
-## Où commencer pour contribuer
-1. Lancer l'application localement (voir Installation).
-2. Lire les contrôleurs d'administration dans `app/Http/Controllers/` pour comprendre la logique.
-3. Pour ajouter une fonctionnalité UI, vérifier `resources/views/admin/` et les routes associées dans `routes/web.php`.
-4. Ouvrir une branche par fonctionnalité et fournir des PRs claires avec description et étapes pour tester.
+## Fichiers Clés
+- [routes/web.php](../routes/web.php) : routes principales du domaine candidat, admin et recherche opérationnelle.
+- [app/Http/Controllers/AdminCandidateController.php](../app/Http/Controllers/AdminCandidateController.php) : listing, détail et suppression des candidats.
+- [app/Http/Controllers/AdminOperationsResearchController.php](../app/Http/Controllers/AdminOperationsResearchController.php) : création d'équipes, simulation, optimisation et affectation.
+- [app/Http/Controllers/AdminMinistereStatsController.php](../app/Http/Controllers/AdminMinistereStatsController.php) : synthèse des agents par ministère et par profil.
+- [resources/views/admin/candidates/index.blade.php](../resources/views/admin/candidates/index.blade.php) : liste des candidats et modale d'édition rapide.
+- [resources/views/admin/operations-research.blade.php](../resources/views/admin/operations-research.blade.php) : poste de pilotage du déploiement.
+- [resources/views/admin/ministeres.blade.php](../resources/views/admin/ministeres.blade.php) : tableau de bord ministériel compact.
+- [resources/views/utilisateur_form.blade.php](../resources/views/utilisateur_form.blade.php) : formulaire utilisateur avec direction et profil.
+- [database/migrations/](../database/migrations/) : historique des évolutions structurelles.
 
-## Ressources / contacts
-- Auteur / Mainteneur principal : voir `composer.json` ou `README.md` existant.
-- Pour questions techniques : ouvrir une issue dans le dépôt.
+## Évolutions Récentes Notables
+- Suppression d'un candidat depuis l'administration.
+- Edition du profil et de la direction depuis la vue candidat et la vue opérationnelle.
+- Conservation du profil initial.
+- Ajout du champ `direction` dans l'inscription et dans l'administration.
+- Drag & drop pour affecter les membres aux équipes.
+- Prévisualisation de déploiement et réinitialisation.
+- Répartition paramétrable par blocs.
+- Mode d'optimisation automatique basé sur les candidats disponibles.
+- Nouvelle vue ministères avec synthèse par profil.
+- Sidebar mise à jour pour pointer vers la répartition ministérielle.
+
+## Installation Locale
+1. Cloner le dépôt et entrer dans le dossier.
+2. Installer les dépendances PHP avec `composer install`.
+3. Copier `.env.example` vers `.env` et configurer la base.
+4. Générer la clé d'application avec `php artisan key:generate`.
+5. Lancer les migrations avec `php artisan migrate`.
+6. Démarrer le serveur local avec `php artisan serve --host=127.0.0.1 --port=8007`.
+
+## Commandes Utiles
+- Vérifier un fichier PHP: `php -l path/to/file.php`
+- Vider / reconstruire le cache des vues: `php artisan view:clear` puis `php artisan view:cache`
+- Lancer les tests: `php artisan test`
+
+## Bonnes Pratiques Du Projet
+- Utiliser `DB::transaction()` pour les opérations qui touchent plusieurs tables.
+- Valider les données côté serveur avant toute affectation.
+- Garder les formulaires simples et fiables avec CSRF.
+- Préférer des changements incrémentaux et testables pour les flux de déploiement.
+
+## Variables D'Environnement Utiles
+- `APP_ENV`
+- `APP_DEBUG`
+- `APP_URL`
+- `DB_CONNECTION`
+- `DB_HOST`
+- `DB_PORT`
+- `DB_DATABASE`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+
+## Pour Commencer À Contribuer
+1. Lire [app/Http/Controllers/AdminOperationsResearchController.php](../app/Http/Controllers/AdminOperationsResearchController.php) pour comprendre le moteur de déploiement.
+2. Lire [resources/views/admin/operations-research.blade.php](../resources/views/admin/operations-research.blade.php) pour voir l'interface de pilotage.
+3. Lire [app/Http/Controllers/AdminMinistereStatsController.php](../app/Http/Controllers/AdminMinistereStatsController.php) et [resources/views/admin/ministeres.blade.php](../resources/views/admin/ministeres.blade.php) pour la page ministères.
+4. Vérifier [routes/web.php](../routes/web.php) pour relier les actions aux écrans.
+5. Se baser sur les migrations récentes pour comprendre l'évolution du modèle de données.
+
+## Note De Contexte
+Ce document décrit l'état fonctionnel actuel du projet et sert de base de compréhension pour les nouveaux contributeurs comme pour les mainteneurs.
 
 ---
 
-Fichier généré automatiquement le: 2026-05-19
+Dernière mise à jour: 2026-05-22

@@ -88,12 +88,14 @@
     }
 
     .drag-card.dragging {
-        opacity: 0.55;
+        opacity: 0.5;
         transform: scale(0.98);
     }
 
-    .drop-slot {
-        position: relative;
+    .simulation-members.drop-ready {
+        background: rgba(34, 197, 94, 0.08);
+        border-radius: 0.5rem;
+        outline: 2px dashed rgba(34, 197, 94, 0.4);
     }
 
     .drop-slot.drop-ready {
@@ -131,6 +133,54 @@
         border-color: rgba(37, 99, 235, 0.3);
         background: #eff6ff;
         color: #1d4ed8;
+    }
+
+    .deploy-modal .modal-content {
+        border-radius: 28px;
+        overflow: hidden;
+        border: 1px solid rgba(37, 99, 235, 0.08);
+        box-shadow: 0 24px 70px rgba(15, 23, 42, 0.12);
+    }
+
+    .deploy-modal__header {
+        background: linear-gradient(180deg, rgba(37, 99, 235, 0.08) 0%, rgba(37, 99, 235, 0.02) 100%);
+    }
+
+    .deploy-modal__eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.35rem 0.75rem;
+        border-radius: 999px;
+        background: rgba(37, 99, 235, 0.08);
+        color: #1d4ed8;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    .deploy-mode-card {
+        border: 1px solid rgba(37, 99, 235, 0.08);
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    .deploy-block-row {
+        background: rgba(248, 250, 252, 0.9);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 18px;
+        padding: 1rem;
+    }
+
+    .deploy-block-remove {
+        width: 38px;
+        height: 38px;
+        border-radius: 999px;
+        border: 1px solid rgba(239, 68, 68, 0.15);
+        background: rgba(254, 242, 242, 0.85);
+        color: #dc2626;
     }
 </style>
 
@@ -192,36 +242,27 @@
     @endif
 
     @isset($simulationTeams)
-        <div class="glass-card p-4 mb-4 border border-primary border-opacity-10">
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
-                <div>
-                    <h4 class="h6 fw-bold mb-1 text-primary">Aperçu de simulation</h4>
-                    <div class="small text-muted"> Nous pouvons comparer ce résultat avant d'appliquer une répartition réelle.</div>
-                </div>
-                <div class="d-flex gap-2 flex-wrap">
-                    <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2">Équipes simulées: {{ $simulationSummary['teams'] ?? 0 }}</span>
-                    <span class="badge bg-light text-dark rounded-pill px-3 py-2">Chefs: {{ $simulationSummary['chefs'] ?? 0 }}</span>
-                    <span class="badge bg-light text-dark rounded-pill px-3 py-2">Auditeurs: {{ $simulationSummary['auditeurs'] ?? 0 }}</span>
-                    <span class="badge bg-light text-dark rounded-pill px-3 py-2">Supports: {{ $simulationSummary['supports'] ?? 0 }}</span>
-                    <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3 py-2">Vacants chefs: {{ $simulationSummary['missingChefs'] ?? 0 }}</span>
-                    <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3 py-2">Vacants auditeurs: {{ $simulationSummary['missingAuditeurs'] ?? 0 }}</span>
-                    <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3 py-2">Vacants supports: {{ $simulationSummary['missingSupports'] ?? 0 }}</span>
-                </div>
-            </div>
-
+        <div class="glass-card p-4 mb-4">
+            <h4 class="h6 fw-bold mb-3 text-primary">Aperçu de simulation</h4>
             <div class="row g-3">
-                @foreach($simulationTeams as $team)
+                @foreach($simulationTeams as $tIndex => $team)
                     <div class="col-md-6 col-xl-4">
-                        <div class="border rounded-4 p-3 h-100 bg-white shadow-sm">
+                        <div class="border rounded-4 p-3 h-100 bg-white shadow-sm simulation-team" data-sim-team-index="{{ $tIndex }}">
                             <div class="fw-bold text-dark mb-2">{{ $team['nom'] }}</div>
-                            <div class="small text-muted">
-                                @forelse($team['members'] as $member)
-                                    <div class="d-flex justify-content-between gap-2 py-1 border-bottom">
-                                        <span>{{ $member['role'] }}</span>
-                                        <span class="fw-semibold text-dark text-end">{{ $member['name'] }}</span>
+                            <div class="simulation-members" data-sim-team-index="{{ $tIndex }}" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                @forelse($team['members'] as $mIndex => $member)
+                                    <div class="d-flex justify-content-between gap-2 py-3 px-2 sim-member drag-card"
+                                         style="background: #f8fafc; border-radius: 0.5rem; cursor: grab; align-items: center;"
+                                         draggable="true"
+                                         data-sim-user-id="{{ $member['id'] }}"
+                                         data-sim-team-index="{{ $tIndex }}"
+                                         data-sim-member-index="{{ $mIndex }}"
+                                    >
+                                        <span class="sim-member-role" style="font-size: 0.9rem; font-weight: 500; color: #666;">{{ $member['role'] }}</span>
+                                        <span class="fw-semibold text-dark sim-member-name">{{ $member['name'] }}</span>
                                     </div>
                                 @empty
-                                    <div class="text-muted">Aucun membre simulé pour cette équipe.</div>
+                                    <div class="text-muted" style="padding: 1rem; text-align: center;">Aucun membre simulé pour cette équipe.</div>
                                 @endforelse
                             </div>
                         </div>
@@ -258,29 +299,106 @@
         </div>
     </div>
 
-    <div class="modal fade" id="autoDeployModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+    <div class="modal fade deploy-modal" id="autoDeployModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content glass-card border-0">
-                <form action="{{ route('admin.operations.auto') }}" method="POST">
+                <form action="{{ route('admin.operations.simulate') }}" method="POST">
                     @csrf
-                    <div class="modal-header border-0 pt-4 px-4">
-                        <h5 class="modal-title fw-bold text-primary">Simulation de répartition</h5>
+                    @php
+                        $blocks = old('deployment_blocks', $deploymentBlocks ?? []);
+                        $deploymentProfiles = $deploymentProfiles ?? [];
+                        if (empty($blocks)) {
+                            $blocks = [[
+                                'team_count' => 3,
+                                'team_size' => 3,
+                            ]];
+                        }
+                    @endphp
+                    <div class="modal-header border-0 pt-4 px-4 deploy-modal__header">
+                        <div>
+                            <div class="deploy-modal__eyebrow mb-2">
+                                <i class="bi bi-sliders2"></i> Déploiement paramétrable
+                            </div>
+                            <h5 class="modal-title fw-bold text-primary mb-0">Prévisualiser avant d'appliquer</h5>
+                        </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body p-4">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold text-muted small text-uppercase">Nombre d'équipes à créer</label>
-                            <input type="number" name="team_count" class="form-control rounded-pill border-light bg-light px-4" min="1" max="100" value="3" required>
+                    <div class="modal-body p-4 p-md-4">
+                        
+
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div>
+                                <div class="fw-bold text-dark">Blocs de répartition</div>
+                                <div class="small text-muted">Chaque bloc décrit un lot d'équipes avec la même taille.</div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-modern-outline rounded-pill px-3" id="addDeploymentBlockBtn">
+                                <i class="bi bi-plus-lg me-1"></i> Ajouter un bloc
+                            </button>
                         </div>
-                        <div class="small text-muted">
-                            Le script affichera un aperçu de répartition sans enregistrer de changement en base.
+
+                        <div id="deploymentBlocksContainer" class="d-grid gap-3">
+                            @foreach($blocks as $index => $block)
+                                <div class="deploy-block-row" data-deployment-block>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div>
+                                            <div class="small text-uppercase text-muted fw-semibold">Bloc {{ $index + 1 }}</div>
+                                            <div class="fw-semibold text-dark">Paramétrer un lot d'équipes</div>
+                                        </div>
+                                        <button type="button" class="deploy-block-remove" data-remove-deployment-block title="Supprimer ce bloc" @if($loop->first) style="display:none;" @endif>
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                    <div class="row g-3 align-items-end">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold text-muted small text-uppercase">Nombre d'équipes</label>
+                                            <input type="number" name="deployment_blocks[{{ $index }}][team_count]" class="form-control rounded-pill border-light bg-white px-4" min="1" max="100" value="{{ $block['team_count'] ?? 1 }}" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold text-muted small text-uppercase">Taille de l'équipe</label>
+                                            <input type="number" name="deployment_blocks[{{ $index }}][team_size]" class="form-control rounded-pill border-light bg-white px-4" min="3" max="20" value="{{ $block['team_size'] ?? 3 }}" required>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="row g-2 mt-2">
+                                                @foreach($deploymentProfiles as $profileIndex => $profile)
+                                                    <div class="col-md-4">
+                                                        <label class="form-label fw-bold text-muted small text-uppercase">{{ $profile['label'] }} par équipe</label>
+                                                        <input
+                                                            type="number"
+                                                            name="deployment_blocks[{{ $index }}][quotas][{{ $profile['id'] }}]"
+                                                            class="form-control rounded-pill border-light bg-white px-4"
+                                                            min="0"
+                                                            max="20"
+                                                            value="{{ $block['quotas'][$profile['id']] ?? ($loop->last ? (isset($block['team_size']) ? max(0, $block['team_size'] - max(0, count($deploymentProfiles) - 1)) : 1) : 1) }}"
+                                                            data-quota-default="{{ $loop->last ? (isset($block['team_size']) ? max(0, $block['team_size'] - max(0, count($deploymentProfiles) - 1)) : 1) : 1 }}"
+                                                            data-profile-code="{{ $profile['code'] }}"
+                                                        >
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <div class="alert alert-primary border-0 rounded-4 mt-4 mb-0 py-3 px-4 bg-primary bg-opacity-10 text-primary">
+                            <i class="bi bi-info-circle me-2"></i>
+                            La prévisualisation sert à vérifier le résultat. L'optimisation automatique s'appuie uniquement sur les données libres.
                         </div>
                     </div>
-                    <div class="modal-footer border-0 pb-4 px-4 justify-content-between">
+                    <div class="modal-footer border-0 pb-4 px-4 justify-content-between flex-wrap gap-2">
                         <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Annuler</button>
-                        <button type="submit" class="btn btn-modern-primary" formaction="{{ route('admin.operations.simulate') }}">
-                            <i class="bi bi-eye me-2"></i> Simuler
-                        </button>
+                        <div class="d-flex gap-2 flex-wrap justify-content-end">
+                            <button type="submit" class="btn btn-modern-primary rounded-pill px-4">
+                                <i class="bi bi-eye me-2"></i> Prévisualiser les blocs
+                            </button>
+                            <button type="submit" class="btn btn-outline-primary rounded-pill px-4" formaction="{{ route('admin.operations.optimize') }}" formnovalidate>
+                                <i class="bi bi-stars me-2"></i> Optimiser automatiquement
+                            </button>
+                            <button type="submit" class="btn btn-secondary rounded-pill px-4 opacity-75" formaction="{{ route('admin.operations.auto') }}" disabled aria-disabled="true" title="Déploiement temporairement désactivé">
+                                <i class="bi bi-check2-circle me-2"></i> Appliquer le déploiement
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -406,12 +524,16 @@
 
                             <div class="members-list">
                                 @php
-                                    $profilesNeeded = [1 => 'Chef d\'équipe', 2 => 'Auditeur', 3 => 'Support'];
                                     $currentMembers = $team->members->groupBy('profil_id');
                                 @endphp
 
-                                @foreach($profilesNeeded as $id => $label)
-                                    @php $member = $currentMembers->get($id)?->first(); @endphp
+                                @foreach($deploymentProfiles as $profile)
+                                    @php
+                                        $id = $profile['id'];
+                                        $label = $profile['label'];
+                                        $icon = $profile['icon'];
+                                        $member = $currentMembers->get($id)?->first();
+                                    @endphp
                                     <div
                                         class="member-slot-modern drop-slot p-3 mb-2 d-flex align-items-center gap-3"
                                         data-team-id="{{ $team->id }}"
@@ -419,7 +541,7 @@
                                         data-has-member="{{ $member ? '1' : '0' }}"
                                     >
                                         <div class="avatar-modern text-primary bg-primary bg-opacity-10">
-                                            <i class="bi {{ $id == 1 ? 'bi-person-badge' : ($id == 2 ? 'bi-person' : 'bi-tools') }}"></i>
+                                            <i class="bi {{ $icon }}"></i>
                                         </div>
                                         <div class="flex-grow-1 overflow-hidden">
                                             @if($member)
@@ -474,7 +596,7 @@
                             </div>
                             
                             <div class="mt-3">
-                                @if($team->members->count() < 3)
+                                @if($team->members->count() < max(1, count($deploymentProfiles)))
                                     <span class="badge-status bg-warning bg-opacity-10 text-warning">
                                         <i class="bi bi-exclamation-triangle-fill me-1"></i> Incomplète
                                     </span>
@@ -804,6 +926,252 @@
     })();
 </script>
 
+<script>
+    (function () {
+        // Drag & drop for simulation preview: allow swapping/moving members between simulated teams
+        const simMembers = document.querySelectorAll('.sim-member');
+        let simDragged = null;
+
+        function recalcSimulationSummary() {
+            // Recalculate assigned counts and missingTotal based on DOM
+            const summary = {
+                teams: 0,
+                requestedTotal: 0,
+                assignedTotal: 0,
+                assignedChefs: 0,
+                assignedAuditeurs: 0,
+                assignedSupports: 0,
+            };
+
+            document.querySelectorAll('.simulation-team').forEach((team) => {
+                summary.teams++;
+                const members = team.querySelectorAll('.sim-member');
+                summary.requestedTotal += members.length;
+                summary.assignedTotal += members.length;
+
+                members.forEach((m) => {
+                    const role = (m.querySelector('.sim-member-role')?.textContent || '').toLowerCase();
+                    if (role.includes('chef')) summary.assignedChefs++;
+                    else if (role.includes('auditeur')) summary.assignedAuditeurs++;
+                    else summary.assignedSupports++;
+                });
+            });
+
+            // Update badges if present
+            const teamsBadge = document.querySelector('.badge.bg-primary');
+            if (teamsBadge) teamsBadge.textContent = `Équipes simulées: ${summary.teams}`;
+        }
+
+        function clearDropStates() {
+            document.querySelectorAll('.simulation-members').forEach((el) => {
+                el.classList.remove('drop-ready');
+            });
+        }
+
+        function handleDragStart(e) {
+            const el = e.currentTarget;
+            simDragged = {
+                userId: el.getAttribute('data-sim-user-id'),
+                teamIndex: parseInt(el.getAttribute('data-sim-team-index'), 10),
+                memberIndex: parseInt(el.getAttribute('data-sim-member-index'), 10),
+                node: el,
+            };
+            el.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            try { e.dataTransfer.setData('text/plain', JSON.stringify(simDragged)); } catch (err) {}
+        }
+
+        function handleDragEnd(e) {
+            if (simDragged && simDragged.node) simDragged.node.classList.remove('dragging');
+            simDragged = null;
+            document.querySelectorAll('.simulation-members .sim-member').forEach((it) => it.classList.remove('drop-target'));
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            e.currentTarget.classList.add('drop-ready');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drop-ready');
+        }
+
+        // When dropping on a team container, open confirm modal to move member there
+        function handleDropOnTeam(e) {
+            e.preventDefault();
+            if (!simDragged) return;
+
+            const teamContainer = e.currentTarget;
+            const targetTeamCard = teamContainer.closest('.simulation-team');
+            const targetTeamIndex = parseInt(targetTeamCard.getAttribute('data-sim-team-index'), 10);
+
+            // Don't move to same team
+            if (targetTeamIndex === simDragged.teamIndex) {
+                clearDropStates();
+                return;
+            }
+
+            pendingOperation = {
+                type: 'move',
+                source: { node: simDragged.node, teamIndex: simDragged.teamIndex, memberIndex: simDragged.memberIndex },
+                target: { teamContainer: teamContainer, teamIndex: targetTeamIndex },
+            };
+
+            const confirmSimMoveModalElement = document.getElementById('confirmSimMoveModal');
+            if (confirmSimMoveModalElement && window.bootstrap) {
+                const srcName = simDragged.node.querySelector('.sim-member-name')?.textContent || '';
+                document.getElementById('confirmSimMoveMessage').textContent = `Confirmer le déplacement de ${srcName} vers cette équipe ?`;
+                const m = new bootstrap.Modal(confirmSimMoveModalElement);
+                m.show();
+            } else {
+                performPendingOperation();
+            }
+
+            clearDropStates();
+        }
+
+        function attachSimHandlers(el) {
+            el.addEventListener('dragstart', handleDragStart);
+            el.addEventListener('dragend', handleDragEnd);
+        }
+
+        // Attach handlers to initial members
+        document.querySelectorAll('.sim-member').forEach((m) => {
+            attachSimHandlers(m);
+        });
+
+        // Make team member containers accept drops
+        document.querySelectorAll('.simulation-members').forEach((container) => {
+            container.addEventListener('dragover', handleDragOver);
+            container.addEventListener('dragleave', handleDragLeave);
+            container.addEventListener('drop', handleDropOnTeam);
+        });
+
+        // initial recalc
+        recalcSimulationSummary();
+
+        // pending operation + modal
+        let pendingOperation = null;
+
+        function performPendingOperation() {
+            if (!pendingOperation) return;
+
+            if (pendingOperation.type === 'move') {
+                const sourceNode = pendingOperation.source.node;
+                const teamContainer = pendingOperation.target.teamContainer;
+                const clone = sourceNode.cloneNode(true);
+                attachSimHandlers(clone);
+                teamContainer.appendChild(clone);
+                sourceNode.parentNode.removeChild(sourceNode);
+            }
+
+            pendingOperation = null;
+            recalcSimulationSummary();
+        }
+
+        // Setup modal listeners after a short delay to ensure Bootstrap is ready
+        setTimeout(function() {
+            const confirmSimMoveModalElement = document.getElementById('confirmSimMoveModal');
+            const cancelBtn = document.getElementById('confirmSimMoveCancel');
+            const confirmBtn = document.getElementById('confirmSimMoveConfirm');
+
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function () {
+                    pendingOperation = null;
+                    if (simDragged && simDragged.node) simDragged.node.classList.remove('dragging');
+                });
+            }
+
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', function () {
+                    if (confirmSimMoveModalElement && window.bootstrap) {
+                        const m = bootstrap.Modal.getInstance(confirmSimMoveModalElement) || new bootstrap.Modal(confirmSimMoveModalElement);
+                        m.hide();
+                    }
+                    performPendingOperation();
+                });
+            }
+        }, 100);
+    })();
+</script>
+
+<script>
+    (function () {
+        const container = document.getElementById('deploymentBlocksContainer');
+        const addButton = document.getElementById('addDeploymentBlockBtn');
+
+        if (!container || !addButton) {
+            return;
+        }
+
+        function refreshBlockIndexes() {
+            const blocks = Array.from(container.querySelectorAll('[data-deployment-block]'));
+
+            blocks.forEach((block, index) => {
+                block.querySelectorAll('input').forEach((input) => {
+                    input.name = input.name.replace(/deployment_blocks\[\d+\]/, `deployment_blocks[${index}]`);
+                });
+
+                const label = block.querySelector('.small.text-uppercase');
+                if (label) {
+                    label.textContent = `Bloc ${index + 1}`;
+                }
+
+                const removeButton = block.querySelector('[data-remove-deployment-block]');
+                if (removeButton) {
+                    removeButton.style.display = index === 0 ? 'none' : 'inline-flex';
+                }
+            });
+        }
+
+        addButton.addEventListener('click', function () {
+            const firstBlock = container.querySelector('[data-deployment-block]');
+            if (!firstBlock) {
+                return;
+            }
+
+            const clone = firstBlock.cloneNode(true);
+            // reset numeric fields to sensible defaults
+            clone.querySelectorAll('input').forEach((input) => {
+                if (input.name.includes('team_count')) {
+                    input.value = 1;
+                }
+
+                if (input.name.includes('team_size')) {
+                    input.value = 3;
+                }
+
+                if (input.name.includes('[quotas]')) {
+                    const defaultQuota = input.dataset.quotaDefault;
+                    input.value = defaultQuota !== undefined ? defaultQuota : 1;
+                }
+            });
+
+            container.appendChild(clone);
+            refreshBlockIndexes();
+        });
+
+        container.addEventListener('click', function (event) {
+            const removeButton = event.target.closest('[data-remove-deployment-block]');
+
+            if (!removeButton) {
+                return;
+            }
+
+            const block = removeButton.closest('[data-deployment-block]');
+            const blocks = container.querySelectorAll('[data-deployment-block]');
+
+            if (block && blocks.length > 1) {
+                block.remove();
+                refreshBlockIndexes();
+            }
+        });
+
+        refreshBlockIndexes();
+    })();
+</script>
+
 <!-- Modal Création Équipe -->
 <div class="modal fade" id="createTeamModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -834,6 +1202,26 @@
                     <button type="submit" class="btn btn-modern-primary">Créer l'équipe</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal confirmation simulation move -->
+<div class="modal fade" id="confirmSimMoveModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card border-0">
+            <div class="modal-header border-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold text-primary">Confirmer l'opération</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p id="confirmSimMoveMessage" class="mb-2">Confirmer ?</p>
+                <div class="small text-muted">L'échange est seulement appliqué dans la prévisualisation et n'est pas enregistré en base.</div>
+            </div>
+            <div class="modal-footer border-0 pb-4 px-4 justify-content-between">
+                <button type="button" class="btn btn-light rounded-pill px-4" id="confirmSimMoveCancel" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-modern-primary" id="confirmSimMoveConfirm">Confirmer</button>
+            </div>
         </div>
     </div>
 </div>

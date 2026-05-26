@@ -31,6 +31,20 @@ Route::middleware('admin.auth')->group(function () {
     // Gestion candidats
     Route::get('/admin/candidates', [App\Http\Controllers\AdminCandidateController::class, 'index'])
         ->name('admin.candidates.index');
+    Route::get('/admin/candidates/create', [App\Http\Controllers\AdminCandidateController::class, 'create'])
+        ->name('admin.candidates.create');
+    Route::get('/admin/candidates/check-matricule', [App\Http\Controllers\AdminCandidateController::class, 'checkMatricule'])
+        ->name('admin.candidates.check_matricule');
+    Route::post('/admin/candidates', [App\Http\Controllers\AdminCandidateController::class, 'store'])
+        ->name('admin.candidates.store');
+    Route::post('/admin/candidates/import', [App\Http\Controllers\AdminCandidateController::class, 'importExcel'])
+        ->name('admin.candidates.import');
+    Route::post('/admin/candidates/import/confirm', [App\Http\Controllers\AdminCandidateController::class, 'confirmImport'])
+        ->name('admin.candidates.import.confirm');
+    Route::post('/admin/candidates/import/cancel', [App\Http\Controllers\AdminCandidateController::class, 'cancelImport'])
+        ->name('admin.candidates.import.cancel');
+    Route::get('/admin/candidates/template', [App\Http\Controllers\AdminCandidateController::class, 'downloadTemplate'])
+        ->name('admin.candidates.template');
     Route::get('/admin/candidates/{user}', [App\Http\Controllers\AdminCandidateController::class, 'show'])
         ->name('admin.candidates.show');
     Route::delete('/admin/candidates/{user}', [App\Http\Controllers\AdminCandidateController::class, 'destroy'])
@@ -53,6 +67,11 @@ Route::middleware('admin.auth')->group(function () {
 
     Route::post('/admin/recherche-operationnelle/simulate', [App\Http\Controllers\AdminOperationsResearchController::class, 'simulateDistribute'])
         ->name('admin.operations.simulate');
+    Route::get('/admin/recherche-operationnelle/optimize', function () {
+        return redirect()->route('admin.operations.research')->with('info', 'L’optimisation automatique se lance depuis la modale de déploiement.');
+    })->name('admin.operations.optimize.get');
+    Route::post('/admin/recherche-operationnelle/optimize', [App\Http\Controllers\AdminOperationsResearchController::class, 'optimizeDistribute'])
+        ->name('admin.operations.optimize');
     Route::post('/admin/recherche-operationnelle/profile', [App\Http\Controllers\AdminOperationsResearchController::class, 'updateProfile'])
         ->name('admin.operations.profile.update');
     Route::post('/admin/recherche-operationnelle/auto', [App\Http\Controllers\AdminOperationsResearchController::class, 'autoDistribute'])
@@ -67,6 +86,10 @@ Route::middleware('admin.auth')->group(function () {
         ->name('admin.regions.priorities');
     Route::get('/admin/regions-priorites/{region}', [App\Http\Controllers\AdminRegionPriorityController::class, 'show'])
         ->name('admin.regions.priorities.show');
+
+    // Vue admin de la répartition des agents par ministère
+    Route::get('/admin/ministeres', [App\Http\Controllers\AdminMinistereStatsController::class, 'index'])
+        ->name('admin.ministeres.index');
 
     // Ajout / gestion des motivations (admin)
     Route::post('/admin/motivations', [App\Http\Controllers\MotivationController::class, 'store'])->name('admin.motivations.store');

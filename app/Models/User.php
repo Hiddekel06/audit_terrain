@@ -22,11 +22,14 @@ class User extends Authenticatable
         'ready_to_deploy_all_regions',
         'profil_id',
         'profil_initial_id',
+        'profil_secondaires',
         'niveau_numerique',
         'experiences',
         'competences_techniques',
         'ministere_id',
         'direction',
+        'metier',
+        'source_type',
         'team_id',
     ];
 
@@ -47,6 +50,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'experiences' => 'array',
             'competences_techniques' => 'array',
+            'profil_secondaires' => 'array',
             'ready_to_deploy_all_regions' => 'boolean',
         ];
     }

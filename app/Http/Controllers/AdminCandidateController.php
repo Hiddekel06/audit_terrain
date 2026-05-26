@@ -9,6 +9,11 @@ use App\Models\Ministere;
 use App\Models\Region;
 use App\Models\UserRegionChoice;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use App\Imports\AgentsImport;
+use App\Imports\AgentsPreviewImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AdminCandidateController extends Controller
 {
@@ -95,11 +100,253 @@ class AdminCandidateController extends Controller
     }
 
     /**
+     * Affiche le formulaire de création manuelle d'un agent.
+     */
+    public function create()
+    {
+        $profils = Profil::where('is_active', true)->orderBy('ordre')->get();
+        $ministeres = Ministere::orderBy('nom')->get();
+        
+        return view('admin.candidates.create', compact('profils', 'ministeres'));
+    }
+
+    /**
+     * Enregistre un nouvel agent ajouté manuellement.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'prenom' => 'required|string|max:255',
+            'nom' => 'required|string|max:255',
+            'telephone' => ['required', 'digits:9'],
+            'email' => ['required', 'email:rfc', 'max:255'],
+            'ministere_id' => ['required', 'exists:ministeres,id'],
+            'direction' => ['nullable', 'string', 'max:255'],
+            'metier' => ['nullable', 'string', 'max:255'],
+            // Matricule: 6 chiffres + 1 lettre majuscule
+            'matricule' => ['required', 'unique:users,matricule', 'regex:/^[0-9]{6}[A-Z]$/'],
+            'profil_id' => ['required', 'exists:profil,id'],
+            
+            // Facultatifs
+            'niveau_numerique' => ['nullable', 'in:debutant,intermediaire,avance,expert'],
+            'experiences' => ['nullable', 'array'],
+            'competences_techniques' => ['nullable', 'array'],
+        ], [
+            'telephone.digits' => 'Le numéro de téléphone doit contenir exactement 9 chiffres.',
+            'matricule.unique' => 'Ce matricule est déjà utilisé par un autre agent.',
+            'matricule.regex' => 'Le matricule doit être au format 6 chiffres suivis d\'une lettre majuscule, par ex. 123456A.',
+        ]);
+
+        $user = User::create([
+            'prenom' => $validated['prenom'],
+            'nom' => $validated['nom'],
+            'matricule' => strtoupper(trim($validated['matricule'])),
+            'telephone' => $validated['telephone'],
+            'email' => $validated['email'],
+            'ministere_id' => $validated['ministere_id'],
+            'direction' => trim($validated['direction']),
+            'metier' => trim($validated['metier'] ?? ''),
+            'profil_id' => $validated['profil_id'],
+            'profil_initial_id' => $validated['profil_id'],
+
+            'niveau_numerique' => $validated['niveau_numerique'] ?? null,
+            'source_type' => 'manual',
+            'experiences' => $validated['experiences'] ?? [],
+            'competences_techniques' => $validated['competences_techniques'] ?? [],
+            
+            'ready_to_deploy_all_regions' => true,
+            'disponibilite' => 'immediate',
+        ]);
+
+        return redirect()->route('admin.candidates.index')
+            ->with('success', "L'agent {$user->prenom} {$user->nom} a été ajouté avec succès.")
+            ->with('created_user_id', $user->id);
+    }
+
+    /**
+     * Vérifie l'existence d'un matricule (utilisé en AJAX côté client pour éviter doublons).
+     */
+    public function checkMatricule(Request $request)
+    {
+        $matricule = strtoupper(trim($request->query('matricule', '')));
+        if ($matricule === '') {
+            return response()->json(['exists' => false]);
+        }
+
+        $exists = \App\Models\User::where('matricule', $matricule)->exists();
+
+        return response()->json(['exists' => $exists]);
+    }
+
+    /**
+     * Gère l'importation massive d'agents via un fichier Excel.
+     */
+    public function importExcel(Request $request)
+    {
+        $request->validate([
+            'excel_file' => 'required|mimes:xlsx,xls,csv|max:5120',
+        ]);
+
+        try {
+            $token = (string) Str::uuid();
+            $file = $request->file('excel_file');
+            $storedPath = $file->storeAs('import-previews', $token . '.' . $file->getClientOriginalExtension());
+
+            $previewImport = new AgentsPreviewImport();
+            Excel::import($previewImport, Storage::path($storedPath));
+
+            $parser = new AgentsImport();
+            $previewRows = [];
+
+            foreach ($previewImport->rows as $index => $row) {
+                $parsed = $parser->parseRow($row, is_numeric($index) ? $index + 2 : null);
+                $parsed['ministere_reconnu'] = $parsed['ministere_id']
+                    ? optional(Ministere::find($parsed['ministere_id']))->nom
+                    : null;
+                $parsed['profil_reconnu'] = $parsed['profil_id']
+                    ? optional(Profil::find($parsed['profil_id']))->libelle
+                    : null;
+                // add secondary profile names for preview if any
+                $parsed['profil_secondaires'] = [];
+                if (!empty($parsed['profil_secondaires'])) {
+                    foreach ($parsed['profil_secondaires'] as $pId) {
+                        $p = Profil::find($pId);
+                        if ($p) {
+                            $parsed['profil_secondaires'][] = $p->libelle;
+                        }
+                    }
+                }
+                $previewRows[] = $parsed;
+            }
+
+            session([
+                'import_preview' => [
+                    'token' => $token,
+                    'path' => $storedPath,
+                    'original_name' => $file->getClientOriginalName(),
+                    'rows' => $previewRows,
+                    'total' => count($previewRows),
+                    'valid' => collect($previewRows)->where('can_import', true)->count(),
+                    'invalid' => collect($previewRows)->where('can_import', false)->count(),
+                    'warnings' => collect($previewRows)->filter(fn ($row) => ($row['status'] ?? '') === 'warning')->count(),
+                ],
+            ]);
+
+            return back()->with('info', 'Prévisualisation prête. Vérifie le rendu puis confirme l’import.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Une erreur est survenue lors de l\'importation : ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Lance l'import réel après validation de l'aperçu.
+     */
+    public function confirmImport(Request $request)
+    {
+        $request->validate([
+            'preview_token' => 'required|string',
+        ]);
+
+        $preview = session('import_preview');
+
+        if (!$preview) {
+            return redirect()->route('admin.candidates.create')->with('error', 'Aucun aperçu d\'import trouvé en session. Recharge le fichier Excel.');
+        }
+
+        $provided = $request->input('preview_token');
+        $expected = $preview['token'] ?? null;
+        if (!hash_equals((string)$expected, (string)$provided)) {
+            \Log::warning('Import preview token mismatch', ['expected' => $expected, 'provided' => $provided]);
+            return redirect()->route('admin.candidates.create')->with('error', 'Jeton d\'aperçu invalide. Recharge l\'aperçu puis réessaie.');
+        }
+
+        // Ensure stored file still exists
+        $storedPath = $preview['path'] ?? null;
+        if (!$storedPath || !\Storage::exists($storedPath)) {
+            \Log::warning('Import preview file missing', ['path' => $storedPath]);
+            return redirect()->route('admin.candidates.create')->with('error', 'Fichier d\'aperçu introuvable sur le serveur. Recharge le fichier Excel.');
+        }
+
+        try {
+            $import = new AgentsImport();
+            Excel::import($import, Storage::path($preview['path']));
+
+            Storage::delete($preview['path']);
+            session()->forget('import_preview');
+
+            // Save full skipped list in session for review
+            session(['import_skipped' => $import->skippedAgents]);
+
+            $msg = "{$import->importedCount} agents ont été importés avec succès.";
+
+            // no temporary matricules generated
+
+            $skippedCount = count($import->skippedAgents);
+            if ($skippedCount > 0) {
+                $displayCount = min(20, $skippedCount);
+                $displayList = array_slice($import->skippedAgents, 0, $displayCount);
+                $msg .= ' Attention : ' . $skippedCount . ' lignes ont été ignorées (' . implode('; ', $displayList) . ( $skippedCount > $displayCount ? ' ...' : '' ) . ').';
+            }
+
+            return redirect()->route('admin.candidates.index')->with('success', $msg)->with('import_skipped_count', $skippedCount);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Une erreur est survenue lors de l\'importation : ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Annule l'aperçu d'import courant.
+     */
+    public function cancelImport()
+    {
+        $preview = session('import_preview');
+
+        if ($preview && !empty($preview['path'])) {
+            Storage::delete($preview['path']);
+        }
+
+        session()->forget('import_preview');
+
+        return redirect()->route('admin.candidates.create')->with('info', 'Aperçu d’import annulé.');
+    }
+
+    /**
+     * Génère et télécharge un modèle Excel vide pour l'importation.
+     */
+    public function downloadTemplate()
+    {
+        $headers = [
+            'Membres', 'Matricule', 'Email', 'Telephone', 'Structure', 'Direction', 'Metier', 'Profil'
+        ];
+        
+        $callback = function() use ($headers) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $headers, ';');
+            fclose($file);
+        };
+
+        return response()->streamDownload($callback, 'modele_import_agents.csv', [
+            'Content-Type' => 'text/csv',
+        ]);
+    }
+
+    /**
      * Affiche le détail d'un candidat.
      */
     public function show(Request $request, User $user)
     {
         $user->load(['profil', 'ministere', 'regionChoices.region', 'dynamicAnswers']);
+
+        $themeClass = 'theme-default';
+        $profilLabel = strtolower($user->profil->libelle ?? '');
+
+        if (str_contains($profilLabel, 'chef')) {
+            $themeClass = 'theme-chef';
+        } elseif (str_contains($profilLabel, 'auditeur')) {
+            $themeClass = 'theme-auditeur';
+        } elseif (str_contains($profilLabel, 'support')) {
+            $themeClass = 'theme-support';
+        }
 
         // Formater les données
         $experiences = $user->experiences ?? [];
@@ -178,7 +425,8 @@ class AdminCandidateController extends Controller
             'competencesTechniques',
             'regionalChoices',
             'prevId',
-            'nextId'
+            'nextId',
+            'themeClass'
         ));
     }
 
@@ -285,6 +533,21 @@ class AdminCandidateController extends Controller
             ->sortDesc()
             ->take(10);
 
+        $metierStats = User::whereIn('id', $completedUserIds)
+            ->where('profil_id', $profil->id)
+            ->selectRaw("COALESCE(NULLIF(TRIM(metier), ''), 'Non précisé') as metier_label, COUNT(*) as total")
+            ->groupBy('metier_label')
+            ->orderByDesc('total')
+            ->take(10)
+            ->get();
+
+        $sourceStats = User::whereIn('id', $completedUserIds)
+            ->where('profil_id', $profil->id)
+            ->selectRaw("COALESCE(source_type, 'manual') as source_type, COUNT(*) as total")
+            ->groupBy('source_type')
+            ->orderByDesc('total')
+            ->get();
+
         // Choix régionaux pour ce profil (seulement utilisateurs complétés)
         $profilUserIds = User::where('profil_id', $profil->id)->pluck('id')->toArray();
         $profilCompletedUserIds = array_values(array_intersect($profilUserIds, $completedUserIds));
@@ -302,6 +565,8 @@ class AdminCandidateController extends Controller
             'niveauStats',
             'competencesStats',
             'experiencesStats',
+            'metierStats',
+            'sourceStats',
             'regionalChoices'
         ));
     }

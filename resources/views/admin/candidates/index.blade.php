@@ -4,6 +4,21 @@
 @section('admin-subtitle', 'Explorez et analysez tous les profils des candidats')
 
 @section('content')
+    @if(session()->has('import_skipped') && is_array(session('import_skipped')))
+        <div class="row justify-content-center mb-3">
+            <div class="col-lg-10">
+                <div class="alert alert-warning border-0 shadow-sm rounded-4 px-4 py-3">
+                    <strong>{{ session('import_skipped_count', count(session('import_skipped'))) }} lignes ignorées lors du dernier import :</strong>
+                    <div class="small mt-2">
+                        @foreach(session('import_skipped') as $skipped)
+                            <div>- {{ $skipped }}</div>
+                        @endforeach
+                    </div>
+                    <div class="mt-2"><a href="{{ route('admin.candidates.create') }}" class="btn btn-sm btn-light">Retour à l'import</a></div>
+                </div>
+            </div>
+        </div>
+    @endif
 <style>
     .glass-card {
         background: rgba(255, 255, 255, 0.8);
@@ -93,9 +108,44 @@
         transition: all 0.15s ease;
     }
     .action-mini-btn:hover { transform: translateY(-1px); background:#eff6ff; }
+    .source-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 9999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+    }
+    .source-badge.manual {
+        background: #f0f4f0;
+        color: #1a2e1a;
+    }
+    .source-badge.import {
+        background: #e8f4eb;
+        color: #1a4d2e;
+    }
 </style>
 
 <div class="container-fluid p-0 pb-5">
+    @if(session('success'))
+        <div class="row justify-content-center mb-4">
+            <div class="col-lg-10">
+                <div class="alert alert-success border-0 shadow-sm rounded-4 px-4 py-3 animate__animated animate__fadeIn">
+                    <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+                </div>
+            </div>
+        </div>
+    @endif
+    <!-- Header Actions -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h4 fw-bold mb-0 text-dark">Liste des candidats</h2>
+        <button type="button" class="btn btn-modern-primary" data-bs-toggle="modal" data-bs-target="#createAgentModal">
+            <i class="bi bi-person-plus me-2"></i> Nouvel agent
+        </button>
+    </div>
+
     <!-- Filtres -->
     <div class="glass-card p-4 mb-4">
         <form method="GET" action="{{ route('admin.candidates.index') }}" class="row g-3">
@@ -169,6 +219,14 @@
                                         <div>
                                             <div class="fw-bold">{{ $candidate->nom }} {{ $candidate->prenom }}</div>
                                             <div class="text-muted small">{{ $candidate->matricule ?? $candidate->email }}</div>
+                                            {{-- Métier remové: champ non utilisé --}}
+                                            @php($candidateSource = $candidate->source_type ?? 'manual')
+                                            <div class="mt-2">
+                                                <span class="source-badge {{ $candidateSource === 'import' ? 'import' : 'manual' }}">
+                                                    <i class="bi bi-{{ $candidateSource === 'import' ? 'upload' : 'person-check' }}"></i>
+                                                    {{ $candidateSource === 'import' ? 'Importé' : 'Inscrit' }}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
@@ -179,7 +237,7 @@
                                 </td>
                                 <td>
                                     <span class="badge-modern bg-light text-dark">
-                                        {{ ucfirst(str_replace('_', ' ', $candidate->niveau_numerique ?? '—')) }}
+                                        {{ $candidate->niveau_numerique ? ucfirst(str_replace('_', ' ', $candidate->niveau_numerique)) : '—' }}
                                     </span>
                                 </td>
                                 <td>
@@ -307,21 +365,7 @@
 </div>
 
 <!-- Profile edit modal (shared with operations page) -->
-<div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content glass-card border-0">
-            <form action="{{ route('admin.operations.profile.update') }}" method="POST">
-                @csrf
-                <div class="modal-header border-0 pt-4 px-4">
-                    <h5 class="modal-title fw-bold text-primary">Modifier le profil</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <input type="hidden" name="user_id" id="profileUserId">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold text-muted small text-uppercase">Profil</label>
-                        <select name="profil_id" id="profileSelect" class="form-select rounded-pill border-light bg-light px-4" required>
-                            <option value="">Sélectionner un profil</option>
+
                             @foreach($profils as $profil)
                                 <option value="{{ $profil->id }}">{{ $profil->libelle }}</option>
                             @endforeach
@@ -376,8 +420,96 @@
     </div>
 </div>
 
+<!-- Modal Création Agent -->
+<div class="modal fade" id="createAgentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content glass-card border-0">
+            <form action="{{ route('admin.candidates.store') }}" method="POST">
+                @csrf
+                <div class="modal-header border-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold text-primary">Nouvel agent</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <style>
+                        .form-label-modern { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 0.4rem; margin-left: 0.5rem; }
+                        .form-control-modern, .form-select-modern { background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(0, 0, 0, 0.05); border-radius: 1rem; padding: 0.75rem 1.25rem; transition: all 0.2s ease; }
+                        .form-control-modern:focus, .form-select-modern:focus { background: white; border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); outline: none; }
+                    </style>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label-modern">Prénom</label>
+                            <input type="text" name="prenom" class="form-control form-control-modern" value="{{ old('prenom') }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-modern">Nom</label>
+                            <input type="text" name="nom" class="form-control form-control-modern" value="{{ old('nom') }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-modern">Matricule / CIN</label>
+                            <input type="text" name="matricule" class="form-control form-control-modern" value="{{ old('matricule') }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-modern">Email</label>
+                            <input type="email" name="email" class="form-control form-control-modern" value="{{ old('email') }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-modern">Téléphone</label>
+                            <input type="text" name="telephone" id="index-telephone" class="form-control form-control-modern js-phone-9" value="{{ old('telephone') }}" required inputmode="numeric" pattern="[0-9]{9}" maxlength="9">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-modern">Ministère / Structure</label>
+                            <select name="ministere_id" class="form-select form-select-modern" required>
+                                <option value="">Choisir...</option>
+                                @foreach($ministeres as $m)
+                                    <option value="{{ $m->id }}">{{ $m->nom }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-modern">Direction</label>
+                            <input type="text" name="direction" class="form-control form-control-modern" value="{{ old('direction') }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-modern">Profil</label>
+                            <select name="profil_id" class="form-select form-select-modern" required>
+                                <option value="">Choisir...</option>
+                                @foreach($profils as $p)
+                                    <option value="{{ $p->id }}">{{ $p->libelle }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-12 mt-3">
+                            <div class="p-3 rounded-4 bg-light text-muted small">
+                                <i class="bi bi-info-circle me-1"></i> L'agent sera automatiquement marqué comme prêt pour <strong>toutes les régions</strong>.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pb-4 px-4 justify-content-between">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-modern-primary">
+                        <i class="bi bi-plus-lg me-2"></i> Ajouter l'agent
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
     (function(){
+        document.querySelectorAll('.js-phone-9').forEach(function(input) {
+            input.addEventListener('input', function(e) {
+                e.target.value = e.target.value.replace(/\D/g, '').slice(0, 9);
+            });
+            input.addEventListener('paste', function(e) {
+                e.preventDefault();
+                var pasted = (e.clipboardData || window.clipboardData).getData('text');
+                e.target.value = pasted.replace(/\D/g, '').slice(0, 9);
+            });
+        });
+
         const modal = document.getElementById('ct-confirm-delete');
         const form = document.getElementById('ct-delete-form');
         const message = document.getElementById('ct-confirm-message');
@@ -467,6 +599,13 @@
                     // ignore parse errors
                 }
             });
+        }
+
+        // Auto-open create modal if URL has ?action=new
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('action') === 'new') {
+            const createModal = new bootstrap.Modal(document.getElementById('createAgentModal'));
+            createModal.show();
         }
     })();
 </script>

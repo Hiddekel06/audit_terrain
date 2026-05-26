@@ -40,6 +40,26 @@ class ProfilSeeder extends Seeder
                 'created_at' => '2026-05-04 00:00:00',
                 'updated_at' => '2026-05-04 00:00:00',
             ],
+            [
+                'id' => 4,
+                'libelle' => 'Chauffeur',
+                'code' => 'chauffeur',
+                'description' => 'Assure le transport et la mobilité des équipes sur le terrain.',
+                'ordre' => 4,
+                'is_active' => true,
+                'created_at' => '2026-05-04 00:00:00',
+                'updated_at' => '2026-05-04 00:00:00',
+            ],
+            [
+                'id' => 5,
+                'libelle' => 'Superviseur',
+                'code' => 'superviseur',
+                'description' => 'Supervise et coordonne les activités de l’équipe sur le terrain.',
+                'ordre' => 5,
+                'is_active' => true,
+                'created_at' => '2026-05-04 00:00:00',
+                'updated_at' => '2026-05-04 00:00:00',
+            ],
         ];
 
         foreach ($profils as $profil) {

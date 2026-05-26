@@ -46,9 +46,9 @@
         </a>
 
         <div class="admin-sidebar__section-title">Dashboard</div>
-        <a href="{{ route('admin.dashboard') }}#metrics-section" class="admin-sidebar__link">
-            <i class="bi bi-ui-checks-grid"></i>
-            <span class="admin-sidebar__link-label">Indicateurs</span>
+        <a href="{{ route('admin.ministeres.index') }}" class="admin-sidebar__link {{ $currentRoute === 'admin.ministeres.index' ? 'active' : '' }}">
+            <i class="bi bi-building"></i>
+            <span class="admin-sidebar__link-label">Ministères</span>
         </a>
 
         <a href="{{ route('admin.dashboard') }}#motivations-section" class="admin-sidebar__link">
@@ -56,9 +56,9 @@
             <span class="admin-sidebar__link-label">Motivations</span>
         </a>
 
-        <a href="{{ route('admin.dashboard') }}#questions-section" class="admin-sidebar__link">
-            <i class="bi bi-patch-question"></i>
-            <span class="admin-sidebar__link-label">Questions dynamiques</span>
+        <a href="{{ route('admin.candidates.create') }}" class="admin-sidebar__link {{ $currentRoute === 'admin.candidates.create' ? 'active' : '' }}">
+            <i class="bi bi-person-plus"></i>
+            <span class="admin-sidebar__link-label">Nouvel agent</span>
         </a>
 
         <a href="{{ route('admin.dashboard') }}#regions-section" class="admin-sidebar__link">

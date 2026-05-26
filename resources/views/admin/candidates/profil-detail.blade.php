@@ -26,6 +26,42 @@
 
         <!-- Statistiques -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+            <!-- Source de création -->
+            <div style="background: white; border-radius: 12px; padding: 1.5rem; border: 1px solid #dce8dc;">
+                <h3 style="font-size: 14px; font-weight: 700; color: #1a2e1a; margin: 0 0 1rem;">Source de création</h3>
+                <div style="display: flex; flex-direction: column; gap: 0.7rem;">
+                    @forelse($sourceStats as $source)
+                        @php
+                            $sourceType = $source->source_type ?? 'manual';
+                            $label = $sourceType === 'import' ? 'Importé' : 'Inscrit';
+                            $badgeColor = $sourceType === 'import' ? '#e8f4eb' : '#f0f4f0';
+                            $textColor = $sourceType === 'import' ? '#1a4d2e' : '#1a2e1a';
+                        @endphp
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                            <span style="font-size: 13px; color: #4a5e4a;">{{ $label }}</span>
+                            <span style="display: inline-block; background: {{ $badgeColor }}; color: {{ $textColor }}; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 12px; font-weight: 600;">{{ $source->total }}</span>
+                        </div>
+                    @empty
+                        <p style="color: #8a9a8a; font-size: 14px; margin: 0;">Aucune donnée</p>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- Métiers -->
+            <div style="background: white; border-radius: 12px; padding: 1.5rem; border: 1px solid #dce8dc;">
+                <h3 style="font-size: 14px; font-weight: 700; color: #1a2e1a; margin: 0 0 1rem;">Métiers</h3>
+                <div style="display: flex; flex-direction: column; gap: 0.7rem;">
+                    @forelse($metierStats as $item)
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                            <span style="font-size: 13px; color: #4a5e4a;">{{ $item->metier_label }}</span>
+                            <span style="display: inline-block; background: #eef3ff; color: #1f3c88; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 12px; font-weight: 600;">{{ $item->total }}</span>
+                        </div>
+                    @empty
+                        <p style="color: #8a9a8a; font-size: 14px; margin: 0;">Aucune donnée</p>
+                    @endforelse
+                </div>
+            </div>
+
             <!-- Niveau numérique -->
             <div style="background: white; border-radius: 12px; padding: 1.5rem; border: 1px solid #dce8dc;">
                 <h3 style="font-size: 14px; font-weight: 700; color: #1a2e1a; margin: 0 0 1rem;">Distribution par niveau</h3>

@@ -93,6 +93,29 @@
         border-radius: 20px;
     }
 
+    .candidate-source {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-left: 0.5rem;
+        padding: 0.3rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .candidate-source.manual {
+        background: #eef3ff;
+        color: #1f3c88;
+    }
+
+    .candidate-source.import {
+        background: #e8f4eb;
+        color: #1a4d2e;
+    }
+
     .candidate-meta-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -426,16 +449,13 @@
                         <path d="M8 12h8"/>
                     </svg>
                     Matricule: {{ $user->matricule }}
+                    <span class="candidate-source {{ ($user->source_type ?? 'manual') === 'import' ? 'import' : 'manual' }}">
+                        {{ ($user->source_type ?? 'manual') === 'import' ? 'Importé' : 'Inscrit' }}
+                    </span>
                 </div>
             </div>
             <div>
-                @php
-                    $themeClass = 'theme-default';
-                    if (str_contains(strtolower($user->profil->libelle ?? ''), 'chef')) $themeClass = 'theme-chef';
-                    elseif (str_contains(strtolower($user->profil->libelle ?? ''), 'auditeur')) $themeClass = 'theme-auditeur';
-                    elseif (str_contains(strtolower($user->profil->libelle ?? ''), 'support')) $themeClass = 'theme-support';
-                @endphp
-                <div class="profile-premium-card {{ $themeClass }}">
+                <div class="profile-premium-card {{ $themeClass ?? 'theme-default' }}">
                     <div class="profile-premium-header">
                         <div class="profile-premium-icon">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
@@ -454,15 +474,6 @@
         </div>
 
         <div class="candidate-header-body">
-            @php
-                $dispoLabels = [
-                    'immediate' => 'Immédiate',
-                    'sous_7_jours' => 'Sous 7 jours',
-                    'sous_15_jours' => 'Sous 15 jours',
-                    'selon_calendrier' => 'Selon le calendrier'
-                ];
-            @endphp
-
             <div class="candidate-meta-grid">
                 <div class="candidate-meta-card">
                     <div class="info-label">Email</div>
@@ -480,11 +491,15 @@
                     <div class="info-label">Direction</div>
                     <div class="candidate-meta-value">{{ $user->direction ?? '—' }}</div>
                 </div>
+                    <div class="candidate-meta-card">
+                        <div class="info-label">Métier</div>
+                        <div class="candidate-meta-value">{{ $user->metier ?? '—' }}</div>
+                    </div>
                 <div class="candidate-meta-card">
                     <div class="info-label">Disponibilité</div>
                     <div class="candidate-meta-value">
                         <span class="tag tag-green" style="display: inline-flex; padding: 0.35rem 0.7rem; font-size: 0.75rem;">
-                            {{ $dispoLabels[$user->disponibilite] ?? '—' }}
+                            {{ ['immediate' => 'Immédiate', 'sous_7_jours' => 'Sous 7 jours', 'sous_15_jours' => 'Sous 15 jours', 'selon_calendrier' => 'Selon le calendrier'][$user->disponibilite] ?? '—' }}
                         </span>
                     </div>
                 </div>
@@ -504,7 +519,7 @@
         <div style="margin-bottom: 1.5rem;">
             <div class="info-label" style="margin-bottom: 0.75rem;">Niveau numérique</div>
             <span class="tag tag-green">
-                {{ ucfirst(str_replace('_', ' ', $user->niveau_numerique ?? '—')) }}
+                {{ $user->niveau_numerique ? ucfirst(str_replace('_', ' ', $user->niveau_numerique)) : '—' }}
             </span>
         </div>
 
