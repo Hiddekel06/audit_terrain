@@ -38,7 +38,6 @@ class AgentsImport implements ToCollection, WithHeadingRow
             'ministere en charge de la famille' => 'famille',
             'ministere en charge de la jeunesse' => 'jeunesse',
             'ministere en charge des affaires etrangeres' => 'affaires etrangeres',
-            'ministere de l education nationale' => 'Ministère de l’Enseignement supérieur, de la Recherche et de l’Innovation',
             'ministere des finances et du budget' => 'finances budget',
             'ministere des infrastructures' => 'infrastructures',
             'ministere de l interieur et de la securite publique' => 'interieur securite publique',

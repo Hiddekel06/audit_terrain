@@ -42,6 +42,7 @@ class MinistereSeeder extends Seeder
             ['id' => 56, 'nom' => 'ANSD', 'code' => null, 'parent_id' => null, 'region_id' => 1, 'departement_id' => 47, 'created_at' => '2025-12-09 08:48:04', 'updated_at' => '2025-12-09 08:48:04'],
             ['id' => 57, 'nom' => 'Synapsys', 'code' => null, 'parent_id' => null, 'region_id' => 1, 'departement_id' => 47, 'created_at' => '2025-12-09 08:48:04', 'updated_at' => '2025-12-09 08:48:04'],
             ['id' => 58, 'nom' => 'Senum', 'code' => null, 'parent_id' => null, 'region_id' => 1, 'departement_id' => 47, 'created_at' => '2025-12-09 08:48:04', 'updated_at' => '2025-12-09 08:48:04'],
+            ['id' => 59, 'nom' => 'Ministère de l\'Éducation nationale', 'code' => null, 'parent_id' => null, 'region_id' => 1, 'departement_id' => 47, 'created_at' => '2025-12-09 08:48:04', 'updated_at' => '2025-12-09 08:48:04'],
         ];
 
         foreach ($ministeres as $ministere) {

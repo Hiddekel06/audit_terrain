@@ -166,15 +166,26 @@
                     @endforeach
                 </select>
             </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold small text-uppercase text-muted ms-2">Téléphone</label>
+                <select name="telephone_status" class="form-select filter-input">
+                    <option value="">Tous</option>
+                    <option value="missing" @selected(request('telephone_status') === 'missing')>Sans téléphone</option>
+                    <option value="present" @selected(request('telephone_status') === 'present')>Avec téléphone</option>
+                </select>
+            </div>
             <div class="col-md-2 d-flex align-items-end gap-2">
                 <button type="submit" class="btn btn-modern-primary w-100 py-2">
                     <i class="bi bi-filter me-2"></i> Filtrer
                 </button>
-                @if(request()->anyFilled(['search', 'profil_id', 'experience', 'ministere_id', 'region_id', 'ready_to_deploy', 'niveau_numerique']))
+                @if(request()->anyFilled(['search', 'profil_id', 'experience', 'ministere_id', 'telephone_status', 'region_id', 'ready_to_deploy', 'niveau_numerique']))
                     <a href="{{ route('admin.candidates.index') }}" class="btn btn-modern-outline py-2" title="Réinitialiser">
                         <i class="bi bi-arrow-counterclockwise"></i>
                     </a>
                 @endif
+                <a href="{{ route('admin.candidates.export', request()->query()) }}" class="btn btn-modern-outline py-2" title="Exporter les résultats filtrés">
+                    <i class="bi bi-download me-1"></i> Export
+                </a>
             </div>
         </form>
     </div>
@@ -241,6 +252,7 @@
                                             <span class="text-muted"><i class="bi bi-geo-alt me-1"></i> {{ $candidate->regionChoices->first()?->region->nom ?? '—' }}</span>
                                         @endif
                                     </div>
+                                </td>
 
                                 <td class="text-center">
                                     <div style="display:flex; gap:0.5rem; justify-content:center; align-items:center;">
@@ -262,6 +274,7 @@
                                             data-user-prenom="{{ $candidate->prenom }}"
                                             data-user-nom="{{ $candidate->nom }}"
                                             data-user-matricule="{{ $candidate->matricule ?? '—' }}"
+                                            data-structure-id="{{ $candidate->ministere_id }}"
                                             data-structure-name="{{ $candidate->ministere?->nom ?? '—' }}"
                                             data-direction-name="{{ $candidate->direction ?? '—' }}"
                                             data-current-profil-id="{{ $candidate->profil_id }}"
@@ -350,8 +363,30 @@
     </div>
 </div>
 
-<!-- Profile edit modal (shared with operations page) -->
-
+<div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card border-0">
+            <form action="{{ route('admin.operations.profile.update') }}" method="POST">
+                @csrf
+                <div class="modal-header border-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold text-primary">Modifier le profil</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" name="user_id" id="profileUserId">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Structure</label>
+                        <select name="ministere_id" id="profileMinistereSelect" class="form-select rounded-pill border-light bg-light px-4">
+                            <option value="">— Sélectionner —</option>
+                            @foreach($ministeres as $ministere)
+                                <option value="{{ $ministere->id }}">{{ $ministere->nom }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Profil</label>
+                        <select name="profil_id" id="profileSelect" class="form-select rounded-pill border-light bg-light px-4" required>
+                            <option value="">Sélectionner un profil</option>
                             @foreach($profils as $profil)
                                 <option value="{{ $profil->id }}">{{ $profil->libelle }}</option>
                             @endforeach
@@ -544,12 +579,16 @@
                 const userNom = button.getAttribute('data-user-nom') || '';
                 const userPrenom = button.getAttribute('data-user-prenom') || '';
                 const userMatricule = button.getAttribute('data-user-matricule') || '';
+                const structureId = button.getAttribute('data-structure-id') || '';
                 const structureName = button.getAttribute('data-structure-name') || '';
                 const directionName = button.getAttribute('data-direction-name') || '';
 
                 if (profileUserId) profileUserId.value = userId || '';
                 if (profileSelect) profileSelect.value = currentProfilId || '';
                 if (profileDirectionInput) profileDirectionInput.value = directionName === '—' ? '' : directionName;
+
+                const profileMinistereSelect = document.getElementById('profileMinistereSelect');
+                if (profileMinistereSelect) profileMinistereSelect.value = structureId || '';
 
                 // Initial profil
                 const initialName = button.getAttribute('data-initial-profil-name') || '';

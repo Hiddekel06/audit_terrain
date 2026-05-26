@@ -13,14 +13,26 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Imports\AgentsImport;
 use App\Imports\AgentsPreviewImport;
+use App\Exports\CandidatesExport;
 use Maatwebsite\Excel\Facades\Excel;
 
 class AdminCandidateController extends Controller
 {
     /**
-     * Affiche la liste de tous les candidats avec filtres.
+     * Retourne les ministères affichables dans les listes de sélection.
      */
-    public function index(Request $request)
+    private function selectableMinisteres()
+    {
+        return Ministere::query()
+            ->whereRaw("NOT (LOWER(nom) LIKE '%education%' AND LOWER(nom) NOT LIKE '%nationale%')")
+            ->orderBy('nom')
+            ->get();
+    }
+
+    /**
+     * Construit la requête candidats avec les filtres actifs.
+     */
+    private function buildCandidatesQuery(Request $request)
     {
         $query = User::with([
             'profil',
@@ -31,7 +43,6 @@ class AdminCandidateController extends Controller
             'regionChoices.region',
         ]);
 
-        // Filtres
         if ($request->filled('profil_id')) {
             $query->where('profil_id', $request->profil_id);
         }
@@ -42,6 +53,20 @@ class AdminCandidateController extends Controller
 
         if ($request->filled('ministere_id')) {
             $query->where('ministere_id', $request->ministere_id);
+        }
+
+        if ($request->filled('telephone_status')) {
+            if ($request->telephone_status === 'missing') {
+                $query->where(function ($q) {
+                    $q->whereNull('telephone')
+                        ->orWhere('telephone', '');
+                });
+            } elseif ($request->telephone_status === 'present') {
+                $query->where(function ($q) {
+                    $q->whereNotNull('telephone')
+                        ->where('telephone', '!=', '');
+                });
+            }
         }
 
         if ($request->filled('experience')) {
@@ -70,11 +95,20 @@ class AdminCandidateController extends Controller
             });
         }
 
+        return $query;
+    }
+
+    /**
+     * Affiche la liste de tous les candidats avec filtres.
+     */
+    public function index(Request $request)
+    {
+        $query = $this->buildCandidatesQuery($request);
         $candidates = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
         // Données pour les filtres
         $profils = Profil::where('is_active', true)->get();
-        $ministeres = Ministere::orderBy('nom')->get();
+        $ministeres = $this->selectableMinisteres();
         $regions = Region::orderBy('nom')->get();
         $niveauxNumeriques = ['debutant', 'intermediaire', 'avance', 'expert'];
         $experiences = [
@@ -100,12 +134,26 @@ class AdminCandidateController extends Controller
     }
 
     /**
+     * Exporte les candidats filtrés au format Excel.
+     */
+    public function export(Request $request)
+    {
+        $candidates = $this->buildCandidatesQuery($request)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $filename = 'candidats_filtres_' . now()->format('Ymd_His') . '.xlsx';
+
+        return Excel::download(new CandidatesExport($candidates), $filename);
+    }
+
+    /**
      * Affiche le formulaire de création manuelle d'un agent.
      */
     public function create()
     {
         $profils = Profil::where('is_active', true)->orderBy('ordre')->get();
-        $ministeres = Ministere::orderBy('nom')->get();
+        $ministeres = $this->selectableMinisteres();
         
         return view('admin.candidates.create', compact('profils', 'ministeres'));
     }

@@ -31,6 +31,8 @@ Route::middleware('admin.auth')->group(function () {
     // Gestion candidats
     Route::get('/admin/candidates', [App\Http\Controllers\AdminCandidateController::class, 'index'])
         ->name('admin.candidates.index');
+    Route::get('/admin/candidates/export', [App\Http\Controllers\AdminCandidateController::class, 'export'])
+        ->name('admin.candidates.export');
     Route::get('/admin/candidates/create', [App\Http\Controllers\AdminCandidateController::class, 'create'])
         ->name('admin.candidates.create');
     Route::get('/admin/candidates/check-matricule', [App\Http\Controllers\AdminCandidateController::class, 'checkMatricule'])
@@ -47,6 +49,7 @@ Route::middleware('admin.auth')->group(function () {
         ->name('admin.candidates.template');
     Route::get('/admin/candidates/{user}', [App\Http\Controllers\AdminCandidateController::class, 'show'])
         ->name('admin.candidates.show');
+    
     Route::delete('/admin/candidates/{user}', [App\Http\Controllers\AdminCandidateController::class, 'destroy'])
         ->name('admin.candidates.destroy');
     Route::get('/admin/candidates/profil/{profil}', [App\Http\Controllers\AdminCandidateController::class, 'profilDetail'])

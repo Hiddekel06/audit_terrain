@@ -695,6 +695,7 @@ class AdminOperationsResearchController extends Controller
             'user_id' => 'required|exists:users,id',
             'profil_id' => 'required|exists:profil,id',
             'direction' => 'nullable|string|max:255',
+            'ministere_id' => 'nullable|exists:ministeres,id',
         ]);
 
         $user = User::findOrFail($validated['user_id']);
@@ -716,6 +717,9 @@ class AdminOperationsResearchController extends Controller
         $user->profil_id = $newProfilId;
         if (array_key_exists('direction', $validated)) {
             $user->direction = trim((string) $validated['direction']);
+        }
+        if (array_key_exists('ministere_id', $validated)) {
+            $user->ministere_id = $validated['ministere_id'] ?: null;
         }
         $user->save();
 

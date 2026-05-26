@@ -13,6 +13,8 @@ L'objectif principal est de permettre à une équipe de coordination de constitu
 - Affectation manuelle par glisser-déposer.
 - Prévisualisation de déploiement avant application.
 - Optimisation automatique du déploiement à partir des données disponibles.
+- Import Excel des candidats avec prévisualisation, normalisation et gestion des doublons.
+- Génération de rapports CSV pour les lignes ignorées lors des imports.
 - Visualisation de la répartition des agents par ministère et par profil.
 - Administration des questions dynamiques, motivations et vues de synthèse.
 
@@ -77,6 +79,18 @@ Le rendu est actuellement basé sur des icônes Bootstrap côté interface, sans
 
 L'idée métier est de ne plus penser uniquement en “nombre d'équipes fixe”, mais en “plan de déploiement” adaptable à la réalité du terrain.
 
+### 5. Import Excel Et Rapports
+Le module d'import des candidats repose sur une prévisualisation avant confirmation.
+
+Il permet notamment:
+- de normaliser les données importées,
+- de reconnaître les ministères à partir d'alias et de variantes,
+- de détecter les doublons de matricule ou de téléphone,
+- de conserver un historique des lignes ignorées dans un fichier CSV.
+
+Les rapports d'import sont consultables dans `/admin/import-reports`.
+La sidebar admin affiche désormais ce lien à la place de l'ancien accès aux motivations.
+
 ## Flux De Déploiement
 ### Mode 1 - Prévisualiser Des Blocs
 L'utilisateur définit un ou plusieurs blocs:
@@ -113,6 +127,9 @@ Ce mode créera les équipes et affectera réellement les candidats.
 - [resources/views/admin/candidates/index.blade.php](../resources/views/admin/candidates/index.blade.php) : liste des candidats et modale d'édition rapide.
 - [resources/views/admin/operations-research.blade.php](../resources/views/admin/operations-research.blade.php) : poste de pilotage du déploiement.
 - [resources/views/admin/ministeres.blade.php](../resources/views/admin/ministeres.blade.php) : tableau de bord ministériel compact.
+- [app/Http/Controllers/AdminImportReportsController.php](../app/Http/Controllers/AdminImportReportsController.php) : liste et téléchargement des rapports d'import.
+- [resources/views/admin/import_reports/index.blade.php](../resources/views/admin/import_reports/index.blade.php) : vue des rapports CSV générés par les imports.
+- [resources/views/partials/admin-sidebar.blade.php](../resources/views/partials/admin-sidebar.blade.php) : navigation admin avec le lien vers les rapports d'import.
 - [resources/views/utilisateur_form.blade.php](../resources/views/utilisateur_form.blade.php) : formulaire utilisateur avec direction et profil.
 - [database/migrations/](../database/migrations/) : historique des évolutions structurelles.
 
@@ -126,6 +143,7 @@ Ce mode créera les équipes et affectera réellement les candidats.
 - Répartition paramétrable par blocs.
 - Mode d'optimisation automatique basé sur les candidats disponibles.
 - Nouvelle vue ministères avec synthèse par profil.
+- Nouveau module de rapports d'import pour analyser les lignes ignorées.
 - Sidebar mise à jour pour pointer vers la répartition ministérielle.
 
 ## Installation Locale
@@ -170,4 +188,4 @@ Ce document décrit l'état fonctionnel actuel du projet et sert de base de comp
 
 ---
 
-Dernière mise à jour: 2026-05-22
+Dernière mise à jour: 2026-05-26
