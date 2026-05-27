@@ -143,19 +143,6 @@ class AgentsImport implements ToCollection, WithHeadingRow
             }
 
             $matriculeToStore = $parsed['matricule'] ?: null;
-            if (empty($matriculeToStore)) {
-                $this->skippedAgents[] = $parsed['display_name'] . ' (sans matricule) - Matricule manquant';
-                $this->skippedRows[] = [
-                    'line' => $parsed['line'] ?? null,
-                    'display_name' => $parsed['display_name'] ?? '',
-                    'matricule' => '',
-                    'telephone' => $parsed['telephone'] ?? '',
-                    'issues' => 'Matricule manquant',
-                    'warnings' => implode('; ', $parsed['warnings'] ?? []),
-                    'raw' => json_encode($arr, JSON_UNESCAPED_UNICODE),
-                ];
-                continue;
-            }
 
             if (User::where('matricule', $matriculeToStore)->exists()) {
                 $this->skippedAgents[] = $parsed['display_name'] . ' (' . $matriculeToStore . ') - Doublon matricule';
@@ -175,7 +162,7 @@ class AgentsImport implements ToCollection, WithHeadingRow
                 'prenom' => $parsed['prenom'],
                 'nom' => $parsed['nom'],
                 'matricule' => $matriculeToStore,
-                'telephone' => $parsed['telephone'],
+                'telephone' => $parsed['telephone'] !== '' ? $parsed['telephone'] : null,
                 'email' => $parsed['email'],
                 'ministere_id' => $parsed['ministere_id'],
                 'direction' => $parsed['direction'],
@@ -289,8 +276,8 @@ class AgentsImport implements ToCollection, WithHeadingRow
             $issues[] = 'Champ Membres ou prénom/nom manquant';
         }
 
-        if ($matricule === '') {
-            $issues[] = 'Matricule manquant ou invalide';
+        if ($matricule === '' && $telephone === '') {
+            $issues[] = 'Matricule et téléphone manquants';
         }
 
         $profilId = $this->findBestMatch($this->profils, $profilInput) ?: $this->profils->first();

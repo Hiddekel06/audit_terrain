@@ -372,18 +372,19 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label-modern">Matricule / CIN</label>
-                            <input type="text" name="matricule" id="matricule" class="form-control form-control-modern" placeholder="123456A" value="{{ old('matricule') }}" required pattern="[0-9]{6}[A-Z]" maxlength="7">
+                            <input type="text" name="matricule" id="matricule" class="form-control form-control-modern" placeholder="123456A" value="{{ old('matricule') }}" pattern="[0-9]{6}[A-Z]" maxlength="7">
                             <div class="invalid-feedback d-none" id="matricule-feedback"></div>
+                            <div class="form-text">Renseignez ce champ ou le numéro de téléphone.</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label-modern">Email</label>
-                            <input type="email" name="email" class="form-control form-control-modern" placeholder="adresse@email.com" value="{{ old('email') }}" required>
+                            <input type="email" name="email" class="form-control form-control-modern" placeholder="adresse@email.com" value="{{ old('email') }}">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label-modern">Téléphone</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-0 rounded-start-4 text-muted small">+221</span>
-                                <input type="text" name="telephone" id="telephone" class="form-control form-control-modern border-start-0 rounded-end-4 js-phone-9" placeholder="771234567" value="{{ old('telephone') }}" required inputmode="numeric" pattern="[0-9]{9}" maxlength="9">
+                                <input type="text" name="telephone" id="telephone" class="form-control form-control-modern border-start-0 rounded-end-4 js-phone-9" placeholder="771234567" value="{{ old('telephone') }}" inputmode="numeric" pattern="[0-9]{9}" maxlength="9">
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -397,7 +398,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label-modern">Direction</label>
-                            <input type="text" name="direction" class="form-control form-control-modern @error('direction') is-invalid @enderror" placeholder="Nom de la direction" value="{{ old('direction') }}" required>
+                            <input type="text" name="direction" class="form-control form-control-modern @error('direction') is-invalid @enderror" placeholder="Nom de la direction" value="{{ old('direction') }}">
                             @error('direction')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

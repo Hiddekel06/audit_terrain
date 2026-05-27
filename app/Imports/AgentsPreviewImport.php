@@ -26,12 +26,64 @@ class AgentsPreviewImport implements ToCollection, WithHeadingRow
             return trim($k, '_');
         };
 
-        $this->rows = $rows->map(function ($row) use ($normalizeKey) {
-            $raw = array_map(function ($v) { return is_string($v) ? trim($v) : $v; }, $row->toArray());
+        $normalizeValue = function ($value) {
+            if (!is_string($value)) {
+                return $value;
+            }
+
+            $trimmed = trim($value);
+            if ($trimmed === '') {
+                return null;
+            }
+
+            if (strtolower($trimmed) === 'null') {
+                return null;
+            }
+
+            return $trimmed;
+        };
+
+        $lastStructure = null;
+        $lastProfil = null;
+        $lastMetier = null;
+        $lastDirection = null;
+
+        $this->rows = $rows->map(function ($row) use ($normalizeKey, $normalizeValue, &$lastStructure, &$lastProfil, &$lastMetier, &$lastDirection) {
+            $raw = array_map(function ($v) use ($normalizeValue) { return $normalizeValue($v); }, $row->toArray());
 
             $arr = [];
             foreach ($raw as $k => $v) {
                 $arr[$normalizeKey($k)] = $v;
+            }
+
+            $structureRaw = $arr['structure'] ?? ($arr['ministere'] ?? null);
+            $profilRaw = $arr['profil'] ?? null;
+            $metierRaw = $arr['metier'] ?? null;
+            $directionRaw = $arr['direction'] ?? null;
+
+            if ($structureRaw !== null) {
+                $lastStructure = $structureRaw;
+            } else {
+                $arr['structure'] = $lastStructure;
+                $arr['ministere'] = $lastStructure;
+            }
+
+            if ($profilRaw !== null) {
+                $lastProfil = $profilRaw;
+            } else {
+                $arr['profil'] = $lastProfil;
+            }
+
+            if ($metierRaw !== null) {
+                $lastMetier = $metierRaw;
+            } else {
+                $arr['metier'] = $lastMetier;
+            }
+
+            if ($directionRaw !== null) {
+                $lastDirection = $directionRaw;
+            } else {
+                $arr['direction'] = $lastDirection;
             }
 
             return $arr;

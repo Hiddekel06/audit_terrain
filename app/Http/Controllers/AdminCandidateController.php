@@ -168,13 +168,13 @@ class AdminCandidateController extends Controller
         $validated = $request->validate([
             'prenom' => 'required|string|max:255',
             'nom' => 'required|string|max:255',
-            'telephone' => ['required', 'digits:9', 'unique:users,telephone'],
-            'email' => ['required', 'email:rfc', 'max:255'],
+            'telephone' => ['nullable', 'required_without:matricule', 'digits:9', 'unique:users,telephone'],
+            'email' => ['nullable', 'email:rfc', 'max:255'],
             'ministere_id' => ['required', 'exists:ministeres,id'],
             'direction' => ['nullable', 'string', 'max:255'],
             'metier' => ['nullable', 'string', 'max:255'],
             // Matricule: 6 chiffres + 1 lettre majuscule
-            'matricule' => ['required', 'unique:users,matricule', 'regex:/^[0-9]{6}[A-Z]$/'],
+            'matricule' => ['nullable', 'required_without:telephone', 'unique:users,matricule', 'regex:/^[0-9]{6}[A-Z]$/'],
             'profil_id' => ['required', 'exists:profil,id'],
             
             // Facultatifs
@@ -184,8 +184,10 @@ class AdminCandidateController extends Controller
         ], [
             'telephone.digits' => 'Le numéro de téléphone doit contenir exactement 9 chiffres.',
             'telephone.unique' => 'Ce numéro de téléphone est déjà utilisé par un autre agent.',
+            'telephone.required_without' => 'Renseignez un numéro de téléphone ou un matricule.',
             'matricule.unique' => 'Ce matricule est déjà utilisé par un autre agent.',
             'matricule.regex' => 'Le matricule doit être au format 6 chiffres suivis d\'une lettre majuscule, par ex. 123456A.',
+            'matricule.required_without' => 'Renseignez un matricule ou un numéro de téléphone.',
         ]);
 
         $user = User::create([
