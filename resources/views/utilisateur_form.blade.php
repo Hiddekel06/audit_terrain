@@ -467,13 +467,26 @@
             <form method="POST" action="{{ route('utilisateur.store') }}" id="userWizardForm" data-initial-step="{{ $initialStep }}">
                 @csrf
 
-                @if($selectedProfile)
+                @if(isset($selectedProfile) && $selectedProfile)
                     <input type="hidden" name="profil_id" value="{{ old('profil_id', $selectedProfile->id) }}">
                     <div class="field-group" style="margin-bottom: 1rem;">
                         <div style="border: 1px solid #dce8dc; background: #f7faf7; border-radius: 12px; padding: 0.85rem 1rem;">
                             <div class="id-label" style="margin-bottom: 0.2rem;">Profil choisi</div>
                             <div style="font-weight: 700; color: #1a2e1a;">{{ $selectedProfile->libelle }}</div>
                         </div>
+                    </div>
+                @else
+                    <div class="field-group" style="margin-bottom: 1rem;">
+                        <label for="profil_id" class="id-label">Profil souhaité <span class="text-danger">*</span></label>
+                        <select class="id-select @error('profil_id') is-invalid @enderror" id="profil_id" name="profil_id" required>
+                            <option value="">— Sélectionner le profil —</option>
+                            @foreach($profils as $profil)
+                                <option value="{{ $profil->id }}" @selected(old('profil_id') == $profil->id)>{{ $profil->libelle }}</option>
+                            @endforeach
+                        </select>
+                        @error('profil_id')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
                 @endif
 

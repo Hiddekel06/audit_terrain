@@ -62,6 +62,9 @@ Route::middleware('admin.auth')->group(function () {
         ->name('admin.operations.team.store');
     Route::post('/admin/recherche-operationnelle/assign', [App\Http\Controllers\AdminOperationsResearchController::class, 'assignMember'])
         ->name('admin.operations.assign');
+
+    Route::post('/admin/recherche-operationnelle/swap', [App\Http\Controllers\AdminOperationsResearchController::class, 'swapMembers'])
+        ->name('admin.operations.swap');
     // Allow a safe GET redirect to the research page to avoid 405 when someone navigates
     // directly to the simulate URL. The actual simulation runner expects POST data.
     Route::get('/admin/recherche-operationnelle/simulate', function () {

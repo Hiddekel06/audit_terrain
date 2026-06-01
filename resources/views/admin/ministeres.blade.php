@@ -142,18 +142,19 @@
         </div>
     </div>
 
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-4 row-cols-1 row-cols-md-2 row-cols-xl-5">
         @php
             $summaryCards = [
                 ['label' => 'Agents', 'value' => $totals['agents'] ?? 0, 'icon' => 'bi-people', 'class' => 'variant-indigo'],
                 ['label' => 'Chefs d\'équipe', 'value' => $totals['chefs'] ?? 0, 'icon' => 'bi-person-badge', 'class' => 'variant-emerald'],
                 ['label' => 'Auditeurs', 'value' => $totals['auditeurs'] ?? 0, 'icon' => 'bi-person-check', 'class' => 'variant-amber'],
                 ['label' => 'Supports', 'value' => $totals['supports'] ?? 0, 'icon' => 'bi-tools', 'class' => 'variant-violet'],
+                ['label' => 'Chauffeurs', 'value' => $totals['chauffeurs'] ?? 0, 'icon' => 'bi-car-front', 'class' => 'variant-rose'],
             ];
         @endphp
 
         @foreach($summaryCards as $card)
-            <div class="col-md-6 col-xl-3">
+            <div class="col">
                 <div class="glass-card p-2 h-100 {{ $card['class'] }}">
                     <div class="d-flex align-items-center gap-3">
                         <div class="ministere-icon">
@@ -178,6 +179,7 @@
                 $chefsPct = round(($ministere->chefs_count / $total) * 100);
                 $auditeursPct = round(($ministere->auditeurs_count / $total) * 100);
                 $supportsPct = round(($ministere->supports_count / $total) * 100);
+                $chauffeursPct = round(($ministere->chauffeurs_count / $total) * 100);
             @endphp
             <div class="col-xl-4 col-md-6">
                 <div class="glass-card p-3 h-100 d-flex flex-column variant-{{ $variant }}">
@@ -218,6 +220,13 @@
                                     <div class="fw-bold text-dark">{{ $ministere->supports_count }}</div>
                                 </div>
                                 <span class="badge rounded-pill text-bg-light">{{ $supportsPct }}%</span>
+                            </div>
+                            <div class="stat-tile d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="stat-label">Chauffeurs</div>
+                                    <div class="fw-bold text-dark">{{ $ministere->chauffeurs_count }}</div>
+                                </div>
+                                <span class="badge rounded-pill text-bg-light">{{ $chauffeursPct }}%</span>
                             </div>
                         </div>
                     </div>

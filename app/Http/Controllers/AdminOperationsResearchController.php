@@ -15,14 +15,18 @@ class AdminOperationsResearchController extends Controller
 {
     /**
      * Profils métier pris en compte dans le déploiement.
-     * Chauffeur reste volontairement exclu de la logique de répartition.
      */
     private function deploymentProfiles(): array
     {
-        $profileCodes = ['chef_equipe', 'auditeur', 'auditeur_it'];
+        $profileCodes = ['superviseur', 'chef_equipe', 'auditeur', 'auditeur_it', 'chauffeur'];
         $profilesByCode = Profil::whereIn('code', $profileCodes)->get()->keyBy('code');
 
         $definitions = [
+            'superviseur' => [
+                'label' => "Superviseur",
+                'icon' => 'bi-shield-check',
+                'summary' => 'Superviseurs',
+            ],
             'chef_equipe' => [
                 'label' => "Chef d'équipe",
                 'icon' => 'bi-person-badge',
@@ -37,6 +41,11 @@ class AdminOperationsResearchController extends Controller
                 'label' => 'Support',
                 'icon' => 'bi-tools',
                 'summary' => 'Supports',
+            ],
+            'chauffeur' => [
+                'label' => 'Chauffeur',
+                'icon' => 'bi-car-front',
+                'summary' => 'Chauffeurs',
             ],
         ];
 
@@ -143,7 +152,7 @@ class AdminOperationsResearchController extends Controller
         return [
             [
                 'team_count' => 3,
-                'team_size' => 3,
+                'team_size' => 5,
                 'quotas' => $quotas,
             ],
         ];
@@ -425,9 +434,11 @@ class AdminOperationsResearchController extends Controller
         }
 
         $summaryMap = [
+            'superviseur' => ['requested' => 'requestedSuperviseurs', 'available' => 'availableSuperviseurs', 'assigned' => 'assignedSuperviseurs'],
             'chef_equipe' => ['requested' => 'requestedChefs', 'available' => 'availableChefs', 'assigned' => 'assignedChefs'],
             'auditeur' => ['requested' => 'requestedAuditeurs', 'available' => 'availableAuditeurs', 'assigned' => 'assignedAuditeurs'],
             'auditeur_it' => ['requested' => 'requestedSupports', 'available' => 'availableSupports', 'assigned' => 'assignedSupports'],
+            'chauffeur' => ['requested' => 'requestedChauffeurs', 'available' => 'availableChauffeurs', 'assigned' => 'assignedChauffeurs'],
         ];
 
         $summary = [
@@ -495,9 +506,11 @@ class AdminOperationsResearchController extends Controller
             ];
 
             $summaryMap = [
+                'superviseur' => ['requested' => 'requestedSuperviseurs', 'available' => 'availableSuperviseurs', 'assigned' => 'assignedSuperviseurs'],
                 'chef_equipe' => ['requested' => 'requestedChefs', 'available' => 'availableChefs', 'assigned' => 'assignedChefs'],
                 'auditeur' => ['requested' => 'requestedAuditeurs', 'available' => 'availableAuditeurs', 'assigned' => 'assignedAuditeurs'],
                 'auditeur_it' => ['requested' => 'requestedSupports', 'available' => 'availableSupports', 'assigned' => 'assignedSupports'],
+                'chauffeur' => ['requested' => 'requestedChauffeurs', 'available' => 'availableChauffeurs', 'assigned' => 'assignedChauffeurs'],
             ];
 
             foreach ($profiles as $profile) {
@@ -576,9 +589,11 @@ class AdminOperationsResearchController extends Controller
         }
 
         $summaryMap = [
+            'superviseur' => ['requested' => 'requestedSuperviseurs', 'available' => 'availableSuperviseurs', 'assigned' => 'assignedSuperviseurs'],
             'chef_equipe' => ['requested' => 'requestedChefs', 'available' => 'availableChefs', 'assigned' => 'assignedChefs'],
             'auditeur' => ['requested' => 'requestedAuditeurs', 'available' => 'availableAuditeurs', 'assigned' => 'assignedAuditeurs'],
             'auditeur_it' => ['requested' => 'requestedSupports', 'available' => 'availableSupports', 'assigned' => 'assignedSupports'],
+            'chauffeur' => ['requested' => 'requestedChauffeurs', 'available' => 'availableChauffeurs', 'assigned' => 'assignedChauffeurs'],
         ];
 
         $summary = [
@@ -765,6 +780,38 @@ class AdminOperationsResearchController extends Controller
             'Déploiement appliqué: %d équipe(s) créée(s) avec %d agent(s).',
             $summary['teams'],
             $summary['assignedTotal']
+        ));
+    }
+
+    /**
+     * Permute deux membres d'équipe ou déplace un membre vers une position occupée.
+     */
+    public function swapMembers(Request $request)
+    {
+        $validated = $request->validate([
+            'user1_id' => 'required|exists:users,id',
+            'user2_id' => 'required|exists:users,id',
+        ]);
+
+        $user1 = User::findOrFail($validated['user1_id']);
+        $user2 = User::findOrFail($validated['user2_id']);
+
+        DB::transaction(function () use ($user1, $user2) {
+            $team1Id = $user1->team_id;
+            $team2Id = $user2->team_id;
+
+            // Permutation
+            $user1->team_id = $team2Id;
+            $user2->team_id = $team1Id;
+
+            $user1->save();
+            $user2->save();
+        });
+
+        return back()->with('success', sprintf(
+            'Échange réussi entre %s %s et %s %s.',
+            $user1->prenom, $user1->nom,
+            $user2->prenom, $user2->nom
         ));
     }
 

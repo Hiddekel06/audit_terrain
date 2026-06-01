@@ -57,8 +57,8 @@
         }
 
         .decision-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            display: flex;
+            justify-content: center;
             gap: 12px;
             margin-top: 1rem;
         }
@@ -77,6 +77,10 @@
             width: 100%;
             letter-spacing: 0.01em;
             background: #fbfdfb;
+        }
+
+        .id-btn--centered {
+            max-width: 320px;
         }
 
         .id-btn--primary {
@@ -111,7 +115,13 @@
         }
 
         @media (max-width: 640px) {
-            .decision-row { grid-template-columns: 1fr; }
+            .decision-row {
+                flex-direction: column;
+            }
+
+            .id-btn--centered {
+                max-width: none;
+            }
         }
 
         .back-btn {
@@ -152,19 +162,14 @@
         </button>
 
         <h2 class="deploy-title">Êtes-vous prêt(e) à être déployé(e) dans toutes les régions ?</h2>
-        <p class="deploy-subtitle">Choisissez « Oui » si vous êtes disponible pour être affecté(e) sur l'ensemble du territoire. Choisissez « Non » si vous souhaitez indiquer une seule région.</p>
+        <p class="deploy-subtitle">Cliquez sur « Oui » pour confirmer votre disponibilité sur l'ensemble du territoire national.</p>
 
         <form method="POST" action="{{ route('user_region_choice.decision.store') }}" class="decision-form">
             @csrf
             <div class="decision-row">
-                <button type="submit" name="ready_to_deploy" value="yes" class="id-btn id-btn--primary">
+                <button type="submit" name="ready_to_deploy" value="yes" class="id-btn id-btn--primary id-btn--centered">
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 10.8L3.2 8l-1 1.1L6 13l8-8-1-1.1L6 10.8z" fill="currentColor"/></svg>
-                    Oui, je suis prêt(e)
-                </button>
-
-                <button type="submit" name="ready_to_deploy" value="no" class="id-btn id-btn--secondary">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3l6 5-6 5V3z" fill="currentColor"/></svg>
-                    Non, je choisis une région
+                    Oui, je confirme
                 </button>
             </div>
         </form>

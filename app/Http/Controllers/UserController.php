@@ -12,7 +12,7 @@ class UserController extends Controller
     /**
      * Affiche le formulaire utilisateur avec les questions dynamiques actives.
      */
-    public function create()
+    public function create(Request $request)
     {
         $profils = Profil::where('is_active', true)
             ->where('code', '!=', 'chauffeur')
@@ -22,45 +22,41 @@ class UserController extends Controller
 
         $ministeres = Ministere::orderBy('nom')->get();
 
-        $selectedProfileId = (int) request()->query('profil_id', old('profil_id'));
-        $selectedProfile = $profils->firstWhere('id', $selectedProfileId) ?? $profils->first();
+        $selectedProfile = null;
+        if ($request->has('profil_id')) {
+            $selectedProfile = $profils->firstWhere('id', $request->profil_id);
+        }
 
-        return view('utilisateur_form', compact('profils', 'selectedProfile', 'ministeres'));
+        return view('utilisateur_form', compact('profils', 'ministeres', 'selectedProfile'));
     }
 
     /**
-        * Valide les informations utilisateur et les conserve temporairement en session.
-        * L'inscription en base est finalisée uniquement après le formulaire de choix des régions.
+     * Enregistre temporairement les données utilisateur en session.
+     * Redirige ensuite vers le questionnaire ou le choix de région.
      */
     public function store(Request $request)
     {
-        $rules = [
-            'prenom' => 'required|string|max:255',
-            'nom' => 'required|string|max:255',
-            'telephone' => ['required', 'digits:9'],
-            'email' => ['required', 'email:rfc', 'max:255'],
-            'ministere_id' => ['required', 'integer', 'exists:ministeres,id'],
-            'direction' => ['required', 'string', 'max:255'],
-
-            'no_matricule' => ['nullable', 'boolean'],
-            'matricule' => ['required_without:no_matricule', 'nullable', 'regex:/^\d{6}[A-Za-z]$/'],
-            'cin' => ['required_if:no_matricule,1', 'nullable', 'digits:13'],
-            'profil_id' => ['required', 'integer', 'exists:profil,id'],
-            'niveau_numerique' => ['required', 'in:debutant,intermediaire,avance,expert'],
-            'experiences' => ['required', 'array', 'min:1'],
-            'experiences.*' => ['in:audit_recensement,biometrie,projets_it,aucune'],
-            'competences_techniques' => ['required', 'array', 'min:1'],
-            'competences_techniques.*' => ['in:tablette_smartphone,kit_biometrique,reseau_4g_hotspot,support_technique,excel_donnees,aucune'],
-        ];
-        $validated = $request->validate($rules, [
-            'telephone.digits' => 'Le numéro de téléphone doit contenir exactement 9 chiffres.',            'ministere_id.required' => 'Veuillez sélectionner un ministère.',
-            'ministere_id.exists' => 'Le ministère sélectionné est invalide.',            'matricule.required_without' => 'Le matricule est obligatoire si vous ne cochez pas la case "Pas de matricule".',
-            'telephone.unique' => 'Ce numéro de téléphone est déjà utilisé. Vous avez déjà choisi.',
-            'email.unique' => 'Cette adresse email est déjà utilisée. Vous avez déjà choisi.',
-            'matricule.regex' => 'Le matricule doit contenir 6 chiffres suivis d’une lettre.',
-            'direction.required' => 'Veuillez renseigner votre direction.',
-            'cin.digits' => 'Le CIN doit contenir exactement 13 chiffres.',
-            'cin.required_if' => 'Le CIN est obligatoire lorsque vous cochez "Pas de matricule".',
+        $validated = $request->validate([
+            'prenom' => 'required|string|max:100',
+            'nom' => 'required|string|max:100',
+            'telephone' => 'required|string|max:20',
+            'email' => 'required|email|max:150',
+            'ministere_id' => 'required|exists:ministeres,id',
+            'direction' => 'required|string|max:255',
+            'profil_id' => 'required|exists:profil,id',
+            'niveau_numerique' => 'required|string|in:debutant,intermediaire,avance,expert',
+            'experiences' => 'required|array|min:1',
+            'competences_techniques' => 'required|array|min:1',
+        ], [
+            'prenom.required' => 'Votre prénom est requis.',
+            'nom.required' => 'Votre nom est requis.',
+            'telephone.required' => 'Votre numéro de téléphone est requis.',
+            'email.required' => 'Votre adresse email est requise.',
+            'email.email' => 'Veuillez saisir une adresse email valide.',
+            'ministere_id.required' => 'Veuillez sélectionner votre structure de provenance.',
+            'direction.required' => 'Veuillez préciser votre direction ou service.',
+            'profil_id.required' => 'Veuillez choisir le profil souhaité.',
+            'niveau_numerique.required' => 'Veuillez indiquer votre niveau numérique.',
             'experiences.required' => 'Veuillez sélectionner au moins une expérience.',
             'competences_techniques.required' => 'Veuillez sélectionner au moins une compétence technique.',
         ]);
@@ -74,29 +70,25 @@ class UserController extends Controller
 
         $hasNoMatricule = $request->boolean('no_matricule');
         $identityNumber = $hasNoMatricule
-            ? $validated['cin']
-            : strtoupper(trim($validated['matricule']));
+            ? 'NONE_' . time() . '_' . rand(100, 999)
+            : $request->input('matricule');
 
-        if (User::where('matricule', $identityNumber)->exists()) {
+        if (!$hasNoMatricule && empty($identityNumber)) {
+            return back()->withErrors(['matricule' => 'Le matricule est requis si vous en possédez un.'])->withInput();
+        }
+
+        // Vérification d'existence (par matricule ou téléphone)
+        $existing = User::where('matricule', $identityNumber)
+            ->orWhere('telephone', $validated['telephone'])
+            ->first();
+
+        if ($existing) {
             return back()->withErrors([
-                $hasNoMatricule ? 'cin' : 'matricule' => $hasNoMatricule
-                    ? 'Ce CIN a déjà été utilisé. Vous avez déjà choisi.'
-                    : 'Ce matricule a déjà été utilisé. Vous avez déjà choisi.',
+                'matricule' => 'Un agent avec ce matricule ou ce numéro de téléphone est déjà enregistré.',
             ])->withInput();
         }
 
-        if (User::where('telephone', $validated['telephone'])->exists()) {
-            return back()->withErrors([
-                'telephone' => 'Ce numéro de téléphone est déjà utilisé. Vous avez déjà choisi.',
-            ])->withInput();
-        }
-
-        if (User::where('email', $validated['email'])->exists()) {
-            return back()->withErrors([
-                'email' => 'Cette adresse email est déjà utilisée. Vous avez déjà choisi.',
-            ])->withInput();
-        }
-
+        // Stockage en session pour le wizard multi-étapes
         session([
             'pending_user_payload' => [
                 'prenom' => $validated['prenom'],

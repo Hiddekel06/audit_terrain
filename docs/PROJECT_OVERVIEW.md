@@ -142,6 +142,11 @@ Ce mode créera les équipes et affectera réellement les candidats.
 - [database/migrations/](../database/migrations/) : historique des évolutions structurelles.
 
 ## Évolutions Récentes Notables
+- **Refonte Design "Clean Enterprise"** : Migration du module candidats vers le thème Émeraude (Glass-cards, bordures fines).
+- **Intégration Chauffeur & Superviseur** : Ces profils sont maintenant des contraintes majeures du script de répartition automatique.
+- **Système de Permutation (Swap)** : Possibilité d'échanger deux agents par drag & drop avec confirmation dynamique.
+- **Cartes d'Équipes Minimalistes** : Passage à un design en liste avec points de statut pour une meilleure lisibilité.
+- **Sécurisation des Profils Admin** : Chauffeurs et Superviseurs exclus du formulaire public et protégés côté serveur.
 - Suppression d'un candidat depuis l'administration.
 - Edition du profil et de la direction depuis la vue candidat et la vue opérationnelle.
 - Conservation du profil initial.
