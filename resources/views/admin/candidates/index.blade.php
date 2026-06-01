@@ -7,110 +7,127 @@
     
 <style>
     .glass-card {
-        background: rgba(255, 255, 255, 0.8);
+        background: rgba(255, 255, 255, 0.9);
         backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 1.5rem;
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        border: 1px solid rgba(16, 185, 129, 0.1);
+        border-radius: 1.25rem;
+        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
         transition: all 0.3s ease;
     }
     .btn-modern-primary {
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
         color: white;
         border: none;
-        border-radius: 9999px;
+        border-radius: 0.75rem;
         padding: 0.6rem 1.5rem;
         font-weight: 600;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
     }
     .btn-modern-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(5, 150, 105, 0.3);
         color: white;
     }
     .btn-modern-outline {
-        background: rgba(255, 255, 255, 0.5);
-        border: 1px solid rgba(37, 99, 235, 0.2);
-        color: #2563eb;
-        border-radius: 9999px;
+        background: white;
+        border: 1px solid #e2e8f0;
+        color: #334155;
+        border-radius: 0.75rem;
         padding: 0.6rem 1.5rem;
         font-weight: 600;
         transition: all 0.3s ease;
     }
     .btn-modern-outline:hover {
         background: #f8fafc;
-        border-color: #2563eb;
-        transform: translateY(-2px);
+        border-color: #059669;
+        color: #059669;
+        transform: translateY(-1px);
     }
     .table-modern thead th {
-        background: rgba(37, 99, 235, 0.03);
-        border-bottom: 2px solid rgba(37, 99, 235, 0.05);
+        background: #f8fafc;
+        border-bottom: 1px solid #edf2f7;
         color: #64748b;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        padding: 1.25rem 1rem;
+        padding: 1rem;
     }
     .table-modern tbody td {
-        padding: 1.25rem 1rem;
+        padding: 1rem;
         vertical-align: middle;
         color: #1e293b;
-        border-bottom: 1px solid rgba(0,0,0,0.03);
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.875rem;
     }
     .table-modern tbody tr:hover {
-        background: rgba(37, 99, 235, 0.02);
+        background: rgba(16, 185, 129, 0.03);
     }
     .badge-modern {
-        padding: 0.4rem 0.8rem;
-        border-radius: 9999px;
-        font-size: 0.75rem;
+        padding: 0.35rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.7rem;
         font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
     }
     .filter-input {
-        background: rgba(255, 255, 255, 0.5) !important;
-        border: 1px solid rgba(0, 0, 0, 0.05) !important;
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
         border-radius: 0.75rem !important;
         padding: 0.6rem 1rem !important;
         font-size: 0.875rem !important;
         transition: all 0.2s ease;
     }
     .filter-input:focus {
-        background: white !important;
-        border-color: #2563eb !important;
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1) !important;
+        border-color: #059669 !important;
+        box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1) !important;
     }
     .action-mini-btn {
-        width: 34px;
-        height: 34px;
-        border-radius: 9999px;
+        width: 32px;
+        height: 32px;
+        border-radius: 0.5rem;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border: 1px solid rgba(37, 99, 235, 0.12);
+        border: 1px solid #e2e8f0;
         background: white;
-        color: #2563eb;
-        transition: all 0.15s ease;
+        color: #64748b;
+        transition: all 0.2s ease;
     }
-    .action-mini-btn:hover { transform: translateY(-1px); background:#eff6ff; }
+    .action-mini-btn:hover { 
+        border-color: #059669; 
+        color: #059669; 
+        background: #ecfdf5; 
+    }
+    .avatar-modern {
+        width: 40px;
+        height: 40px;
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.875rem;
+    }
     .source-badge {
         display: inline-flex;
         align-items: center;
         gap: 0.35rem;
         padding: 0.25rem 0.6rem;
-        border-radius: 9999px;
-        font-size: 0.72rem;
+        border-radius: 0.5rem;
+        font-size: 0.65rem;
         font-weight: 700;
-        letter-spacing: 0.02em;
+        text-transform: uppercase;
     }
     .source-badge.manual {
-        background: #f0f4f0;
-        color: #1a2e1a;
+        background: #f1f5f9;
+        color: #475569;
     }
     .source-badge.import {
-        background: #e8f4eb;
-        color: #1a4d2e;
+        background: #ecfdf5;
+        color: #059669;
     }
 </style>
 
@@ -210,7 +227,7 @@
                             <tr>
                                 <td>
                                     <div class="d-flex align-items-center gap-3">
-                                        <div class="avatar-modern bg-primary bg-opacity-10 text-primary">
+                                        <div class="avatar-modern" style="background: #ecfdf5; color: #059669;">
                                             {{ substr($candidate->prenom, 0, 1) }}{{ substr($candidate->nom, 0, 1) }}
                                         </div>
                                         <div>
@@ -228,12 +245,12 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge-modern bg-primary bg-opacity-10 text-primary">
+                                    <span class="badge-modern" style="background: #ecfdf5; color: #059669;">
                                         {{ $candidate->profil->libelle ?? '—' }}
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="badge-modern bg-light text-dark">
+                                    <span class="badge-modern" style="background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;">
                                         {{ $candidate->niveau_numerique ? ucfirst(str_replace('_', ' ', $candidate->niveau_numerique)) : '—' }}
                                     </span>
                                 </td>
@@ -245,9 +262,9 @@
                                 <td>
                                     <div class="small">
                                         @if($candidate->team)
-                                            <span class="text-success fw-bold"><i class="bi bi-people-fill me-1"></i> {{ $candidate->team->nom }}</span>
+                                            <span style="color: #059669; font-weight: 700;"><i class="bi bi-people-fill me-1"></i> {{ $candidate->team->nom }}</span>
                                         @elseif(!empty($candidate->ready_to_deploy_all_regions))
-                                            <span class="text-primary"><i class="bi bi-globe2 me-1"></i> National</span>
+                                            <span style="color: #059669;"><i class="bi bi-globe2 me-1"></i> National</span>
                                         @else
                                             <span class="text-muted"><i class="bi bi-geo-alt me-1"></i> {{ $candidate->regionChoices->first()?->region->nom ?? '—' }}</span>
                                         @endif
@@ -285,7 +302,7 @@
                                             <i class="bi bi-pencil-square" style="font-size:0.9rem"></i>
                                         </button>
 
-                                        <button type="button" title="Supprimer" class="btn btn-sm btn-modern-outline btn-delete" style="padding:0.45rem 0.6rem; background:#fff5f5; border-color: rgba(155,28,28,0.08); color:#9b1c1c;" data-action="{{ route('admin.candidates.destroy', $candidate) }}" data-name="{{ $candidate->nom }} {{ $candidate->prenom }}">
+                                        <button type="button" title="Supprimer" class="btn btn-sm btn-modern-outline btn-delete" style="padding:0.45rem 0.6rem; background:#fff5f5; border-color: rgba(153,27,27,0.1); color:#991b1b;" data-action="{{ route('admin.candidates.destroy', $candidate) }}" data-name="{{ $candidate->nom }} {{ $candidate->prenom }}">
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
                                                 <polyline points="3 6 5 6 21 6"></polyline>
                                                 <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
@@ -455,7 +472,7 @@
                     <style>
                         .form-label-modern { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 0.4rem; margin-left: 0.5rem; }
                         .form-control-modern, .form-select-modern { background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(0, 0, 0, 0.05); border-radius: 1rem; padding: 0.75rem 1.25rem; transition: all 0.2s ease; }
-                        .form-control-modern:focus, .form-select-modern:focus { background: white; border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); outline: none; }
+                        .form-control-modern:focus, .form-select-modern:focus { background: white; border-color: #059669; box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1); outline: none; }
                     </style>
                     <div class="row g-3">
                         <div class="col-md-6">

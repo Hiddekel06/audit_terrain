@@ -10,16 +10,16 @@
         :root {
             --admin-sidebar-width: 280px;
             --admin-sidebar-collapsed-width: 88px;
-            --admin-sidebar-bg: #2f5f3d;
-            --admin-sidebar-bg-soft: #3e7750;
-            --admin-sidebar-border: rgba(255, 255, 255, 0.10);
-            --admin-sidebar-text: #f6fbf7;
-            --admin-sidebar-muted: #d7eadc;
-            --admin-content-bg: #ffffff;
-            --admin-sidebar-active: rgba(255, 255, 255, 0.16);
-            --admin-sidebar-hover: rgba(255, 255, 255, 0.10);
+            --admin-sidebar-bg: #065f46;
+            --admin-sidebar-bg-soft: #064e3b;
+            --admin-sidebar-border: rgba(255, 255, 255, 0.08);
+            --admin-sidebar-text: #ecfdf5;
+            --admin-sidebar-muted: #a7f3d0;
+            --admin-content-bg: #f8fafc;
+            --admin-sidebar-active: rgba(255, 255, 255, 0.12);
+            --admin-sidebar-hover: rgba(255, 255, 255, 0.08);
             --admin-card-bg: #ffffff;
-            --admin-card-border: rgba(47, 95, 61, 0.08);
+            --admin-card-border: rgba(6, 95, 70, 0.08);
             --admin-surface: #ffffff;
         }
 

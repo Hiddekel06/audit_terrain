@@ -17,52 +17,52 @@
     }
 
     .glass-card-mini {
-        background: rgba(255, 255, 255, 0.8);
+        background: rgba(255, 255, 255, 0.9);
         backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.4);
-        border-radius: 1.5rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(16, 185, 129, 0.1);
+        border-radius: 1.25rem;
+        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
         max-width: 500px;
         margin: 0 auto;
         padding: 2.5rem !important;
     }
     
     .btn-modern-primary {
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
         color: white;
         border: none;
-        border-radius: 9999px;
+        border-radius: 0.75rem;
         padding: 0.8rem 2rem;
         font-weight: 600;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
     }
     
     .btn-modern-primary:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+        box-shadow: 0 8px 20px rgba(5, 150, 105, 0.3);
         color: white;
     }
 
     .add-illustration-small {
         width: 80px;
         height: 80px;
-        background: rgba(37, 99, 235, 0.08);
-        border-radius: 20px;
+        background: rgba(5, 150, 105, 0.08);
+        border-radius: 1rem;
         display: flex;
         align-items: center;
         justify-content: center;
         margin: 0 auto 1.5rem;
-        color: #2563eb;
+        color: #059669;
         font-size: 2rem;
     }
 
     /* Modal Elegance */
     .modal-content-premium {
-        background: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.6);
-        border-radius: 2rem;
+        border: 1px solid rgba(16, 185, 129, 0.1);
+        border-radius: 1.5rem;
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
     }
 
@@ -71,7 +71,7 @@
         font-weight: 800; 
         text-transform: uppercase; 
         letter-spacing: 0.08em; 
-        color: #94a3b8; 
+        color: #64748b; 
         margin-bottom: 0.5rem; 
         margin-left: 0.75rem; 
     }
@@ -86,8 +86,8 @@
     }
     
     .form-control-modern:focus, .form-select-modern:focus { 
-        border-color: #2563eb; 
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08); 
+        border-color: #059669; 
+        box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.08); 
         outline: none; 
     }
 </style>
