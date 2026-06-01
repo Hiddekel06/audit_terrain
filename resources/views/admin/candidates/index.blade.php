@@ -280,37 +280,39 @@
                                             </svg>
                                         </a>
                                         
-                                        <button
-                                            type="button"
-                                            class="action-mini-btn"
-                                            title="Modifier le profil"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#profileModal"
-                                            data-user-id="{{ $candidate->id }}"
-                                            data-user-name="{{ $candidate->prenom }} {{ $candidate->nom }}"
-                                            data-user-prenom="{{ $candidate->prenom }}"
-                                            data-user-nom="{{ $candidate->nom }}"
-                                            data-user-matricule="{{ $candidate->matricule ?? '—' }}"
-                                            data-structure-id="{{ $candidate->ministere_id }}"
-                                            data-structure-name="{{ $candidate->ministere?->nom ?? '—' }}"
-                                            data-direction-name="{{ $candidate->direction ?? '—' }}"
-                                            data-current-profil-id="{{ $candidate->profil_id }}"
-                                            data-region-choices='@json($candidate->regionChoices->sortBy("ordre")->pluck("region.nom"))'
-                                            data-initial-profil-name="{{ $candidate->initialProfil?->libelle ?? '' }}"
-                                            style="margin-left:4px;"
-                                        >
-                                            <i class="bi bi-pencil-square" style="font-size:0.9rem"></i>
-                                        </button>
+                                        @if(Auth::guard('admin')->user()?->role === 'super_admin')
+                                            <button
+                                                type="button"
+                                                class="action-mini-btn"
+                                                title="Modifier le profil"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#profileModal"
+                                                data-user-id="{{ $candidate->id }}"
+                                                data-user-name="{{ $candidate->prenom }} {{ $candidate->nom }}"
+                                                data-user-prenom="{{ $candidate->prenom }}"
+                                                data-user-nom="{{ $candidate->nom }}"
+                                                data-user-matricule="{{ $candidate->matricule ?? '—' }}"
+                                                data-structure-id="{{ $candidate->ministere_id }}"
+                                                data-structure-name="{{ $candidate->ministere?->nom ?? '—' }}"
+                                                data-direction-name="{{ $candidate->direction ?? '—' }}"
+                                                data-current-profil-id="{{ $candidate->profil_id }}"
+                                                data-region-choices='@json($candidate->regionChoices->sortBy("ordre")->pluck("region.nom"))'
+                                                data-initial-profil-name="{{ $candidate->initialProfil?->libelle ?? '' }}"
+                                                style="margin-left:4px;"
+                                            >
+                                                <i class="bi bi-pencil-square" style="font-size:0.9rem"></i>
+                                            </button>
 
-                                        <button type="button" title="Supprimer" class="btn btn-sm btn-modern-outline btn-delete" style="padding:0.45rem 0.6rem; background:#fff5f5; border-color: rgba(153,27,27,0.1); color:#991b1b;" data-action="{{ route('admin.candidates.destroy', $candidate) }}" data-name="{{ $candidate->nom }} {{ $candidate->prenom }}">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                                                <polyline points="3 6 5 6 21 6"></polyline>
-                                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-                                                <path d="M10 11v6"></path>
-                                                <path d="M14 11v6"></path>
-                                                <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
-                                            </svg>
-                                        </button>
+                                            <button type="button" title="Supprimer" class="btn btn-sm btn-modern-outline btn-delete" style="padding:0.45rem 0.6rem; background:#fff5f5; border-color: rgba(153,27,27,0.1); color:#991b1b;" data-action="{{ route('admin.candidates.destroy', $candidate) }}" data-name="{{ $candidate->nom }} {{ $candidate->prenom }}">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                                    <path d="M10 11v6"></path>
+                                                    <path d="M14 11v6"></path>
+                                                    <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+                                                </svg>
+                                            </button>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

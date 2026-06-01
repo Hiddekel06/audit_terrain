@@ -167,6 +167,7 @@ class UserRegionChoiceController extends Controller
                 'disponibilite' => $pendingUser['disponibilite'] ?? null,
                 'matricule' => $pendingUser['matricule'],
                 'profil_id' => $pendingUser['profil_id'] ?? null,
+                'profil_initial_id' => $pendingUser['profil_id'] ?? null,
                 'niveau_numerique' => $pendingUser['niveau_numerique'] ?? null,
                 'experiences' => $pendingUser['experiences'] ?? null,
                 'competences_techniques' => $pendingUser['competences_techniques'] ?? null,

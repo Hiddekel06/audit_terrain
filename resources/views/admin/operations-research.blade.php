@@ -986,18 +986,34 @@
         document.querySelectorAll('.drop-slot').forEach(slot => {
             slot.addEventListener('dragover', (e) => {
                 if (!draggedPayload) return;
-                // Allow if same profile type (either vacant or swap)
-                if (draggedPayload.profilId === slot.dataset.profilId) {
-                    e.preventDefault(); slot.classList.add('drop-ready');
-                } else { slot.classList.add('drop-blocked'); }
-            });
-            slot.addEventListener('dragleave', () => clearDropStates());
+
+                const occupiedBy = slot.querySelector('.drag-card');
+                const sameTeamDrop = draggedPayload.sourceTeamId === slot.dataset.teamId;
+                const isSelfDrop = occupiedBy && occupiedBy.dataset.userId === draggedPayload.userId;
+
+                // Autorise la permutation dans la même équipe uniquement sur un autre agent.
+                if (sameTeamDrop && (!occupiedBy || isSelfDrop)) {
+                    return;
+                }
+
+                e.preventDefault();
+                slot.classList.add('drop-ready');
+            }, true);
+            slot.addEventListener('dragleave', () => clearDropStates(), true);
             slot.addEventListener('drop', (e) => {
                 e.preventDefault();
-                if (!draggedPayload || draggedPayload.sourceTeamId === slot.dataset.teamId) return;
+                if (!draggedPayload) return;
                 
                 const targetTeamName = slot.closest('.glass-card').querySelector('.team-title').textContent.trim();
                 const occupiedBy = slot.querySelector('.drag-card');
+
+                const sameTeamDrop = draggedPayload.sourceTeamId === slot.dataset.teamId;
+                const isSelfDrop = occupiedBy && occupiedBy.dataset.userId === draggedPayload.userId;
+
+                // Bloque le no-op (déposer sur soi) et le dépôt vide dans la même équipe.
+                if (isSelfDrop || (sameTeamDrop && !occupiedBy)) {
+                    return;
+                }
                 
                 if (occupiedBy) {
                     // It's a swap
@@ -1008,7 +1024,7 @@
                     // It's a simple move
                     openMoveConfirm(draggedPayload.userId, slot.dataset.teamId, draggedPayload.userName, targetTeamName);
                 }
-            });
+            }, true);
         });
 
         document.querySelectorAll('.drop-zone-unassigned').forEach(zone => {
@@ -1020,21 +1036,62 @@
         });
 
         // Simulation logic
+        function swapSimulationMembers(memberA, memberB) {
+            const parentA = memberA.parentNode;
+            const parentB = memberB.parentNode;
+
+            if (!parentA || !parentB) return;
+
+            const marker = document.createElement('span');
+            parentA.insertBefore(marker, memberA);
+            parentB.insertBefore(memberA, memberB);
+            parentA.insertBefore(memberB, marker);
+            marker.remove();
+        }
+
+        function syncSimulationMemberTeam(member) {
+            const teamIndex = member.closest('.simulation-members')?.dataset.simTeamIndex;
+            if (teamIndex !== undefined) {
+                member.dataset.simTeamIndex = teamIndex;
+            }
+        }
+
         document.querySelectorAll('.simulation-members').forEach(container => {
             container.addEventListener('dragover', e => e.preventDefault());
             container.addEventListener('drop', e => {
                 e.preventDefault();
                 const simDragged = document.querySelector('.sim-member.dragging');
-                if (!simDragged || simDragged.dataset.simTeamIndex === container.dataset.simTeamIndex) return;
+                if (!simDragged) return;
+
+                const simTarget = e.target.closest('.sim-member');
+                if (simTarget && simTarget === simDragged) return;
                 
-                const mName = simDragged.querySelector('.member-name').textContent;
+                const draggedName = simDragged.querySelector('.member-name')?.textContent?.trim() || 'cet agent';
                 const cModalElement = document.getElementById('confirmSimMoveModal');
                 const cModal = new bootstrap.Modal(cModalElement);
-                document.getElementById('confirmSimMoveMessage').textContent = `Transférer ${mName} ?`;
+                const cModalTitle = cModalElement.querySelector('.modal-title');
+
+                if (simTarget) {
+                    const targetName = simTarget.querySelector('.member-name')?.textContent?.trim() || 'cet agent';
+                    if (cModalTitle) cModalTitle.textContent = "Permutation d'agent";
+                    document.getElementById('confirmSimMoveMessage').textContent = `Permuter ${draggedName} avec ${targetName} ?`;
+                } else {
+                    if (simDragged.dataset.simTeamIndex === container.dataset.simTeamIndex) return;
+                    if (cModalTitle) cModalTitle.textContent = "Transfert d'agent";
+                    document.getElementById('confirmSimMoveMessage').textContent = `Transférer ${draggedName} ?`;
+                }
+
                 cModal.show();
                 document.getElementById('confirmSimMoveConfirm').onclick = () => {
-                    container.appendChild(simDragged);
-                    simDragged.dataset.simTeamIndex = container.dataset.simTeamIndex;
+                    if (simTarget) {
+                        swapSimulationMembers(simDragged, simTarget);
+                        syncSimulationMemberTeam(simDragged);
+                        syncSimulationMemberTeam(simTarget);
+                    } else {
+                        container.appendChild(simDragged);
+                        syncSimulationMemberTeam(simDragged);
+                    }
+
                     cModal.hide();
                 };
             });

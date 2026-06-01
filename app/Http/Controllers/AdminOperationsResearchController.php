@@ -715,6 +715,11 @@ class AdminOperationsResearchController extends Controller
         $user = User::findOrFail($validated['user_id']);
         $newProfilId = (int) $validated['profil_id'];
 
+        // Si le profil initial est vide, on le fige avec la valeur actuelle avant le changement
+        if (empty($user->profil_initial_id)) {
+            $user->profil_initial_id = $user->profil_id;
+        }
+
         if (!empty($user->team_id)) {
             $teamHasProfile = User::where('team_id', $user->team_id)
                 ->where('profil_id', $newProfilId)
@@ -798,10 +803,14 @@ class AdminOperationsResearchController extends Controller
         DB::transaction(function () use ($user1, $user2) {
             $team1Id = $user1->team_id;
             $team2Id = $user2->team_id;
+            $profil1Id = $user1->profil_id;
+            $profil2Id = $user2->profil_id;
 
-            // Permutation
+            // Permutation de position complète: équipe + profil.
             $user1->team_id = $team2Id;
+            $user1->profil_id = $profil2Id;
             $user2->team_id = $team1Id;
+            $user2->profil_id = $profil1Id;
 
             $user1->save();
             $user2->save();

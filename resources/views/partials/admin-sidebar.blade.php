@@ -27,10 +27,12 @@
             <span class="admin-sidebar__link-label">Gestion des candidats</span>
         </a>
 
-        <a href="{{ route('admin.operations.research') }}" class="admin-sidebar__link {{ $currentRoute === 'admin.operations.research' ? 'active' : '' }}">
-            <i class="bi bi-diagram-3"></i>
-            <span class="admin-sidebar__link-label">Recherche opérationnelle</span>
-        </a>
+        @if(Auth::guard('admin')->user()?->role === 'super_admin')
+            <a href="{{ route('admin.operations.research') }}" class="admin-sidebar__link {{ $currentRoute === 'admin.operations.research' ? 'active' : '' }}">
+                <i class="bi bi-diagram-3"></i>
+                <span class="admin-sidebar__link-label">Recherche opérationnelle</span>
+            </a>
+        @endif
 
         <a
             href="{{ route('admin.regions.priorities') }}"
@@ -56,10 +58,12 @@
             <span class="admin-sidebar__link-label">Rapports d'import</span>
         </a>
 
-        <a href="{{ route('admin.candidates.create') }}" class="admin-sidebar__link {{ $currentRoute === 'admin.candidates.create' ? 'active' : '' }}">
-            <i class="bi bi-person-plus"></i>
-            <span class="admin-sidebar__link-label">Nouvel agent</span>
-        </a>
+        @if(Auth::guard('admin')->user()?->role === 'super_admin')
+            <a href="{{ route('admin.candidates.create') }}" class="admin-sidebar__link {{ $currentRoute === 'admin.candidates.create' ? 'active' : '' }}">
+                <i class="bi bi-person-plus"></i>
+                <span class="admin-sidebar__link-label">Nouvel agent</span>
+            </a>
+        @endif
 
         <a href="{{ route('admin.dashboard') }}#regions-section" class="admin-sidebar__link">
             <i class="bi bi-geo-alt"></i>
