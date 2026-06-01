@@ -18,15 +18,10 @@ class AdminOperationsResearchController extends Controller
      */
     private function deploymentProfiles(): array
     {
-        $profileCodes = ['superviseur', 'chef_equipe', 'auditeur', 'auditeur_it', 'chauffeur'];
+        $profileCodes = ['chef_equipe', 'auditeur', 'auditeur_it', 'chauffeur'];
         $profilesByCode = Profil::whereIn('code', $profileCodes)->get()->keyBy('code');
 
         $definitions = [
-            'superviseur' => [
-                'label' => "Superviseur",
-                'icon' => 'bi-shield-check',
-                'summary' => 'Superviseurs',
-            ],
             'chef_equipe' => [
                 'label' => "Chef d'équipe",
                 'icon' => 'bi-person-badge',
@@ -281,6 +276,12 @@ class AdminOperationsResearchController extends Controller
                     ]);
                 }
 
+                if ($q > $block['team_size']) {
+                    throw ValidationException::withMessages([
+                        "deployment_blocks.$index.quotas.$pid" => 'Un quota par profil ne peut pas dépasser la taille d\'équipe.',
+                    ]);
+                }
+
                 $sum += $q;
             }
 
@@ -434,7 +435,6 @@ class AdminOperationsResearchController extends Controller
         }
 
         $summaryMap = [
-            'superviseur' => ['requested' => 'requestedSuperviseurs', 'available' => 'availableSuperviseurs', 'assigned' => 'assignedSuperviseurs'],
             'chef_equipe' => ['requested' => 'requestedChefs', 'available' => 'availableChefs', 'assigned' => 'assignedChefs'],
             'auditeur' => ['requested' => 'requestedAuditeurs', 'available' => 'availableAuditeurs', 'assigned' => 'assignedAuditeurs'],
             'auditeur_it' => ['requested' => 'requestedSupports', 'available' => 'availableSupports', 'assigned' => 'assignedSupports'],
@@ -506,7 +506,6 @@ class AdminOperationsResearchController extends Controller
             ];
 
             $summaryMap = [
-                'superviseur' => ['requested' => 'requestedSuperviseurs', 'available' => 'availableSuperviseurs', 'assigned' => 'assignedSuperviseurs'],
                 'chef_equipe' => ['requested' => 'requestedChefs', 'available' => 'availableChefs', 'assigned' => 'assignedChefs'],
                 'auditeur' => ['requested' => 'requestedAuditeurs', 'available' => 'availableAuditeurs', 'assigned' => 'assignedAuditeurs'],
                 'auditeur_it' => ['requested' => 'requestedSupports', 'available' => 'availableSupports', 'assigned' => 'assignedSupports'],
@@ -589,7 +588,6 @@ class AdminOperationsResearchController extends Controller
         }
 
         $summaryMap = [
-            'superviseur' => ['requested' => 'requestedSuperviseurs', 'available' => 'availableSuperviseurs', 'assigned' => 'assignedSuperviseurs'],
             'chef_equipe' => ['requested' => 'requestedChefs', 'available' => 'availableChefs', 'assigned' => 'assignedChefs'],
             'auditeur' => ['requested' => 'requestedAuditeurs', 'available' => 'availableAuditeurs', 'assigned' => 'assignedAuditeurs'],
             'auditeur_it' => ['requested' => 'requestedSupports', 'available' => 'availableSupports', 'assigned' => 'assignedSupports'],
@@ -640,11 +638,12 @@ class AdminOperationsResearchController extends Controller
      */
     public function optimizeDistribute(Request $request)
     {
+        $blocks = $this->validateDeploymentBlocks($this->resolveDeploymentBlocks($request));
         $pageContext = $this->buildPageContext($request);
-        $deploymentPlan = $this->buildOptimalPlan();
+        $deploymentPlan = $this->buildPlanFromBlocks($blocks);
 
         return view('admin.operations-research', $pageContext + $deploymentPlan + [
-            'deploymentBlocks' => $this->defaultDeploymentBlocks(),
+            'deploymentBlocks' => $blocks,
             'deploymentProfiles' => $this->deploymentProfiles(),
             'deploymentMode' => 'auto',
         ]);

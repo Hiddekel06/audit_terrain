@@ -138,22 +138,58 @@
 
     /* Modale de déploiement */
     .deploy-modal .modal-content {
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        box-shadow: 0 30px 80px rgba(15, 23, 42, 0.18);
+        overflow: hidden;
+        height: min(92vh, 920px);
+        display: flex;
+        flex-direction: column;
+        background:
+            radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 32%),
+            radial-gradient(circle at top right, rgba(16, 185, 129, 0.08), transparent 28%),
+            linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    }
+
+    .deploy-modal .modal-dialog {
+        max-width: 1120px;
+    }
+
+    .deploy-modal .modal-header,
+    .deploy-modal .modal-footer {
+        flex: 0 0 auto;
+    }
+
+    .deploy-modal .modal-content > form {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        min-height: 0;
+        width: 100%;
     }
 
     .deploy-modal__header {
-        background: #f8fafc;
-        padding: 1.5rem 1.75rem;
+        position: relative;
+        padding: 1.75rem 1.9rem 1.55rem;
         color: #0f172a;
-        border-bottom: 1px solid #e5e7eb;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+        background:
+            linear-gradient(135deg, rgba(239, 246, 255, 0.98), rgba(255, 255, 255, 0.98)),
+            radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 34%);
+    }
+
+    .deploy-modal__header::before {
+        content: '';
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 6px;
+        background: linear-gradient(180deg, #2563eb 0%, #10b981 100%);
     }
 
     .deploy-modal__eyebrow {
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        color: #6b7280;
+        color: #2563eb;
         font-size: 0.72rem;
         font-weight: 700;
         letter-spacing: 0.08em;
@@ -161,30 +197,143 @@
     }
 
     .deploy-modal .modal-title {
-        color: #111827;
+        color: #0f172a;
+        letter-spacing: -0.03em;
+    }
+
+    .deploy-modal__subtitle {
+        color: #475569;
+        font-size: 0.95rem;
+        max-width: 42rem;
+    }
+
+    .deploy-modal__topline {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        margin-top: 1.05rem;
+    }
+
+    .deploy-modal__chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        border-radius: 999px;
+        padding: 0.45rem 0.8rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+        background: rgba(37, 99, 235, 0.08);
+        color: #1d4ed8;
+        border: 1px solid rgba(37, 99, 235, 0.12);
+    }
+
+    .deploy-modal__body {
+        padding: 1.5rem 1.9rem 1.15rem;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
     }
 
     .deploy-block-row {
-        background: #ffffff !important;
-        border-color: #e5e7eb !important;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        position: relative;
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.96)) !important;
+        border-color: rgba(148, 163, 184, 0.18) !important;
+        box-shadow: 0 16px 35px rgba(15, 23, 42, 0.06);
+        backdrop-filter: blur(8px);
+        padding-left: 1.4rem !important;
+    }
+
+    .deploy-block-row::before {
+        content: '';
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 5px;
+        border-radius: 1rem 0 0 1rem;
+        background: linear-gradient(180deg, #2563eb, #10b981);
+        opacity: 0.9;
+    }
+
+    .deploy-block-row__head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1.15rem;
+    }
+
+    .deploy-block-row__meta {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .deploy-block-row__index {
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        font-size: 0.86rem;
+        font-weight: 800;
+        color: #0f172a;
+        background: linear-gradient(180deg, #e0f2fe, #dbeafe);
+        border: 1px solid rgba(37, 99, 235, 0.12);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    .deploy-block-row__title {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.1;
+    }
+
+    .deploy-block-row__hint {
+        font-size: 0.78rem;
+        color: #64748b;
+        margin-top: 0.2rem;
     }
 
     .deploy-block-row .form-control,
     .deploy-block-row .form-select {
-        border-color: #d1d5db;
-        background: #fff;
+        border-color: rgba(148, 163, 184, 0.28);
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: none;
+        border-radius: 0.95rem;
     }
 
     .deploy-block-row .form-control:focus,
     .deploy-block-row .form-select:focus {
-        border-color: #6b7280;
-        box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.12);
+        border-color: #2563eb;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
     }
 
     .quota-card {
-        background: #fafafa;
-        border-color: #e5e7eb !important;
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.98));
+        border-color: rgba(148, 163, 184, 0.18) !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+
+    .quota-card__label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.85rem;
+    }
+
+    .quota-card__badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.7rem;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #334155;
+        background: #eef2ff;
     }
 
     .quota-card .bi,
@@ -196,29 +345,46 @@
     }
 
     .deploy-modal .btn-deploy-neutral {
-        background: #ffffff;
-        border: 1px solid #d1d5db;
-        color: #374151;
-        font-weight: 600;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        color: #334155;
+        font-weight: 700;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
     }
 
     .deploy-modal .btn-deploy-neutral:hover {
-        background: #f9fafb;
-        border-color: #9ca3af;
+        background: #ffffff;
+        border-color: rgba(37, 99, 235, 0.28);
         color: #111827;
     }
 
     .deploy-modal .btn-deploy-dark {
-        background: #111827;
-        border: 1px solid #111827;
+        background: #16a34a;
+        border: 1px solid #16a34a;
         color: #ffffff;
-        font-weight: 700;
+        font-weight: 800;
+        box-shadow: 0 10px 22px rgba(22, 163, 74, 0.18);
     }
 
     .deploy-modal .btn-deploy-dark:hover {
-        background: #0f172a;
-        border-color: #0f172a;
+        background: #15803d;
+        border-color: #15803d;
         color: #ffffff;
+    }
+
+    .deploy-modal__footer {
+        padding-top: 1rem;
+        padding-bottom: 1.35rem;
+        background: linear-gradient(180deg, rgba(248, 250, 252, 0.3), rgba(241, 245, 249, 0.78));
+        border-top: 1px solid rgba(148, 163, 184, 0.14);
+        position: sticky;
+        bottom: 0;
+        backdrop-filter: blur(12px);
+    }
+
+    .deploy-modal__footnote {
+        font-size: 0.8rem;
+        color: #64748b;
     }
 
     .team-header-label {
@@ -585,8 +751,8 @@
 
 <!-- Modal Config IA -->
 <div class="modal fade deploy-modal" id="autoDeployModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content glass-card border-0 shadow-lg">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+        <div class="modal-content border-0">
             <form action="{{ route('admin.operations.simulate') }}" method="POST">
                 @csrf
                 @php
@@ -595,21 +761,29 @@
                         $blocks = [['team_count' => 3, 'team_size' => 5]];
                     }
                 @endphp
-                <div class="modal-header border-0 pt-4 px-4 deploy-modal__header">
-                    <div>
+                <div class="modal-header border-0 deploy-modal__header">
+                    <div class="w-100">
                         <div class="deploy-modal__eyebrow mb-2">
-                            <i class="bi bi-sliders2"></i> Paramétrage IA
+                            <i class="bi bi-sliders2"></i> Paramétrage intelligent
                         </div>
-                        <h5 class="modal-title fw-bold text-white mb-0">Configuration du Déploiement</h5>
+                        <h5 class="modal-title fw-bold mb-2">Configuration du Déploiement</h5>
+                        <p class="deploy-modal__subtitle mb-0">
+                            Composez vos équipes avec une logique lisible, maîtrisée et immédiatement exploitable.
+                        </p>
+                        <div class="deploy-modal__topline">
+                            <span class="deploy-modal__chip"><i class="bi bi-people-fill"></i> 3 profils principaux</span>
+                            <span class="deploy-modal__chip"><i class="bi bi-car-front-fill"></i> Chauffeur inclus</span>
+                            <span class="deploy-modal__chip"><i class="bi bi-shield-check"></i> Quotas contrôlés</span>
+                        </div>
                     </div>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
-                <div class="modal-body p-4">
-                    <div class="d-flex align-items-center justify-content-between mb-4">
+                <div class="modal-body deploy-modal__body">
+                    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
                         <div>
                             <div class="fw-bold text-dark h6 mb-1">Groupes d'équipes</div>
-                            <div class="small text-muted">Définissez la composition cible pour vos futures équipes.</div>
+                            <div class="small text-muted">Définissez une base claire avant la simulation automatique.</div>
                         </div>
                         <button type="button" class="btn btn-sm btn-deploy-neutral rounded-pill px-3" id="addDeploymentBlockBtn">
                             <i class="bi bi-plus-lg me-1"></i> Ajouter un bloc
@@ -619,38 +793,46 @@
                     <div id="deploymentBlocksContainer" class="d-grid gap-4">
                         @foreach($blocks as $index => $block)
                             <div class="deploy-block-row p-4 border rounded-4" data-deployment-block>
-                                <div class="d-flex justify-content-between align-items-center mb-4">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <span class="badge bg-light text-dark border rounded-pill">Bloc {{ $index + 1 }}</span>
-                                        <span class="fw-bold text-dark small text-uppercase">Règles de composition</span>
+                                <div class="deploy-block-row__head">
+                                    <div class="deploy-block-row__meta">
+                                        <div class="deploy-block-row__index">{{ $index + 1 }}</div>
+                                        <div>
+                                            <div class="deploy-block-row__title">Bloc {{ $index + 1 }}</div>
+                                            <div class="deploy-block-row__hint">Une équipe sur mesure, sans surcharge ni flou de répartition.</div>
+                                        </div>
                                     </div>
                                     <button type="button" class="deploy-block-remove btn btn-sm btn-outline-danger border-0 rounded-circle" data-remove-deployment-block title="Supprimer ce bloc" @if($loop->first) style="display:none;" @endif>
                                         <i class="bi bi-trash-fill"></i>
                                     </button>
                                 </div>
 
-                                <div class="row g-4 mb-4">
+                                <div class="row g-3 mb-4">
                                     <div class="col-md-6">
                                         <label class="form-label fw-bold text-muted small text-uppercase mb-2">Nombre d'équipes</label>
                                         <input type="number" name="deployment_blocks[{{ $index }}][team_count]" class="form-control rounded-3" min="1" max="100" value="{{ $block['team_count'] ?? 1 }}" required>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label fw-bold text-muted small text-uppercase mb-2">Membres par équipe</label>
-                                        <input type="number" name="deployment_blocks[{{ $index }}][team_size]" class="form-control rounded-3" min="3" max="20" value="{{ $block['team_size'] ?? 5 }}" required>
+                                        <input type="number" name="deployment_blocks[{{ $index }}][team_size]" class="form-control rounded-3" min="3" max="20" value="{{ $block['team_size'] ?? 5 }}" required data-team-size-input>
                                     </div>
                                 </div>
 
                                 <div class="quota-card bg-white p-3 rounded-4 border shadow-sm">
-                                    <label class="form-label fw-bold text-muted small text-uppercase mb-3 px-1">Quotas par équipe</label>
+                                    <div class="quota-card__label">
+                                        <label class="form-label fw-bold text-muted small text-uppercase mb-0 px-1">Quotas par équipe</label>
+                                        <span class="quota-card__badge"><i class="bi bi-sliders"></i> Répartition par profil</span>
+                                    </div>
                                     <div class="row g-3 row-cols-1 row-cols-md-2">
                                         @foreach($deploymentProfiles as $profile)
                                             <div class="col">
-                                                <div class="d-flex align-items-center justify-content-between p-2 border rounded-3">
+                                                <div class="d-flex align-items-center justify-content-between p-2 border rounded-3 bg-white">
                                                     <div class="d-flex align-items-center gap-2">
-                                                        <i class="bi {{ $profile['icon'] }} text-secondary"></i>
-                                                        <span class="small fw-semibold">{{ $profile['label'] }}</span>
+                                                        <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-light" style="width: 2rem; height: 2rem;">
+                                                            <i class="bi {{ $profile['icon'] }} text-secondary"></i>
+                                                        </span>
+                                                        <span class="small fw-semibold text-dark">{{ $profile['label'] }}</span>
                                                     </div>
-                                                    <input type="number" name="deployment_blocks[{{ $index }}][quotas][{{ $profile['id'] }}]" class="form-control form-control-sm border-0 bg-transparent text-end fw-bold" style="width: 50px;" min="0" value="{{ $block['quotas'][$profile['id']] ?? 1 }}" data-quota-default="1">
+                                                    <input type="number" name="deployment_blocks[{{ $index }}][quotas][{{ $profile['id'] }}]" class="form-control form-control-sm border-0 bg-transparent text-end fw-bold" style="width: 50px;" min="0" max="{{ $block['team_size'] ?? 5 }}" value="{{ min((int) ($block['quotas'][$profile['id']] ?? 1), (int) ($block['team_size'] ?? 5)) }}" data-quota-default="1" data-quota-input>
                                                 </div>
                                             </div>
                                         @endforeach
@@ -661,9 +843,12 @@
                     </div>
                 </div>
 
-                <div class="modal-footer border-0 pb-4 px-4 justify-content-between">
-                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Annuler</button>
-                    <div class="d-flex gap-2">
+                <div class="modal-footer border-0 px-4 justify-content-between align-items-center deploy-modal__footer">
+                    <div class="deploy-modal__footnote d-none d-md-block">
+                        La somme des quotas ne peut pas dépasser la taille d’équipe. La simulation reste alignée sur vos blocs.
+                    </div>
+                    <div class="d-flex gap-2 ms-auto">
+                        <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Annuler</button>
                         <button type="submit" class="btn btn-deploy-neutral">Simuler</button>
                         <button type="submit" class="btn btn-deploy-dark" formaction="{{ route('admin.operations.optimize') }}">Optimiser</button>
                     </div>
@@ -873,13 +1058,44 @@
                     btn.closest('[data-deployment-block]').remove(); refreshIndexes();
                 }
             };
+
+            function syncQuotaLimits(block) {
+                const teamSizeInput = block.querySelector('[data-team-size-input]');
+                const quotas = block.querySelectorAll('[data-quota-input]');
+                const teamSize = Math.max(3, parseInt(teamSizeInput?.value || '3', 10) || 3);
+
+                if (teamSizeInput) {
+                    teamSizeInput.value = teamSize;
+                }
+
+                quotas.forEach((quotaInput) => {
+                    quotaInput.max = String(teamSize);
+                    const currentValue = parseInt(quotaInput.value || '0', 10) || 0;
+                    if (currentValue > teamSize) {
+                        quotaInput.value = teamSize;
+                    }
+                });
+            }
+
             function refreshIndexes() {
                 blockContainer.querySelectorAll('[data-deployment-block]').forEach((b, i) => {
                     b.querySelectorAll('input').forEach(inp => inp.name = inp.name.replace(/deployment_blocks\[\d+\]/, `deployment_blocks[${i}]`));
                     b.querySelector('.badge').textContent = `Bloc ${i+1}`;
                     b.querySelector('[data-remove-deployment-block]').style.display = i === 0 ? 'none' : 'block';
+                    syncQuotaLimits(b);
                 });
             }
+
+            blockContainer.addEventListener('input', (event) => {
+                const block = event.target.closest('[data-deployment-block]');
+                if (!block) return;
+
+                if (event.target.matches('[data-team-size-input]')) {
+                    syncQuotaLimits(block);
+                }
+            });
+
+            blockContainer.querySelectorAll('[data-deployment-block]').forEach(syncQuotaLimits);
         }
     })();
 </script>
