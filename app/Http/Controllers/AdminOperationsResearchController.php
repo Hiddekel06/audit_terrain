@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\SimulationExport;
 
 class AdminOperationsResearchController extends Controller
 {
@@ -18,10 +20,15 @@ class AdminOperationsResearchController extends Controller
      */
     private function deploymentProfiles(): array
     {
-        $profileCodes = ['chef_equipe', 'auditeur', 'auditeur_it', 'chauffeur'];
+        $profileCodes = ['superviseur', 'chef_equipe', 'auditeur', 'auditeur_it', 'chauffeur'];
         $profilesByCode = Profil::whereIn('code', $profileCodes)->get()->keyBy('code');
 
         $definitions = [
+            'superviseur' => [
+                'label' => 'Superviseur',
+                'icon' => 'bi-shield-shaded',
+                'summary' => 'Superviseurs',
+            ],
             'chef_equipe' => [
                 'label' => "Chef d'équipe",
                 'icon' => 'bi-person-badge',
@@ -120,7 +127,10 @@ class AdminOperationsResearchController extends Controller
 
         $unassignedUsers = $unassignedUsersQuery->get();
 
-        return compact('teams', 'regions', 'profils', 'unassignedUsers', 'selectedRegionId');
+        // On calcule le stock disponible par profil pour le moteur d'aide à la décision
+        $availablePoolCounts = $unassignedUsers->groupBy('profil_id')->map->count();
+
+        return compact('teams', 'regions', 'profils', 'unassignedUsers', 'selectedRegionId', 'availablePoolCounts');
     }
 
     /**
@@ -185,23 +195,24 @@ class AdminOperationsResearchController extends Controller
 
             foreach ($rawBlocks as $block) {
                 $teamCount = (int) ($block['team_count'] ?? 0);
-                $teamSize = (int) ($block['team_size'] ?? 0);
 
-                if ($teamCount > 0 && $teamSize > 0) {
+                if ($teamCount > 0) {
                     $quotas = [];
+                    $teamSize = 0;
 
-                    foreach ($profiles as $index => $profile) {
-                        $fallbackQuota = $index === count($profiles) - 1
-                            ? max(0, $teamSize - max(0, count($profiles) - 1))
-                            : 1;
-                        $quotas[$profile['id']] = max(0, (int) ($block['quotas'][$profile['id']] ?? $fallbackQuota));
+                    foreach ($profiles as $profile) {
+                        $q = max(0, (int) ($block['quotas'][$profile['id']] ?? 0));
+                        $quotas[$profile['id']] = $q;
+                        $teamSize += $q;
                     }
 
-                    $normalizedBlocks[] = [
-                        'team_count' => $teamCount,
-                        'team_size' => $teamSize,
-                        'quotas' => $quotas,
-                    ];
+                    if ($teamSize > 0) {
+                        $normalizedBlocks[] = [
+                            'team_count' => $teamCount,
+                            'team_size' => $teamSize,
+                            'quotas' => $quotas,
+                        ];
+                    }
                 }
             }
 
@@ -210,21 +221,18 @@ class AdminOperationsResearchController extends Controller
             }
         }
 
-        $teamCount = (int) $request->input('team_count', $this->defaultDeploymentBlocks()[0]['team_count']);
-        $teamSize = (int) $request->input('team_size', $this->defaultDeploymentBlocks()[0]['team_size']);
-
-        $tc = max(1, $teamCount);
-        $ts = max(3, $teamSize);
+        $teamCount = (int) $request->input('team_count', 1);
         $quotas = [];
-        foreach ($profiles as $index => $profile) {
-            $quotas[$profile['id']] = $index === count($profiles) - 1
-                ? max(0, $ts - max(0, count($profiles) - 1))
-                : 1;
+        $ts = 0;
+        foreach ($profiles as $profile) {
+            $q = 1; 
+            $quotas[$profile['id']] = $q;
+            $ts += $q;
         }
 
         return [
             [
-                'team_count' => $tc,
+                'team_count' => max(1, $teamCount),
                 'team_size' => $ts,
                 'quotas' => $quotas,
             ],
@@ -257,12 +265,6 @@ class AdminOperationsResearchController extends Controller
                 ]);
             }
 
-            if ($block['team_size'] < 3) {
-                throw ValidationException::withMessages([
-                    "deployment_blocks.$index.team_size" => 'Une équipe doit avoir au moins 3 membres.',
-                ]);
-            }
-
             $quotas = $block['quotas'] ?? [];
             $sum = 0;
 
@@ -276,18 +278,12 @@ class AdminOperationsResearchController extends Controller
                     ]);
                 }
 
-                if ($q > $block['team_size']) {
-                    throw ValidationException::withMessages([
-                        "deployment_blocks.$index.quotas.$pid" => 'Un quota par profil ne peut pas dépasser la taille d\'équipe.',
-                    ]);
-                }
-
                 $sum += $q;
             }
 
-            if ($sum > $block['team_size']) {
+            if ($sum < 1) {
                 throw ValidationException::withMessages([
-                    "deployment_blocks.$index" => 'La somme des quotas par profil ne peut pas dépasser la taille d\'équipe.',
+                    "deployment_blocks.$index" => 'La somme des quotas par bloc doit être au moins de 1 agent.',
                 ]);
             }
         }
@@ -308,44 +304,6 @@ class AdminOperationsResearchController extends Controller
             'name' => trim($user->prenom . ' ' . $user->nom),
             'profil' => $user->profil?->libelle,
         ];
-    }
-
-    /**
-     * Choisit le profil disponible le plus abondant pour remplir un slot.
-     */
-    private function nextProfileToFill(array $pools): ?int
-    {
-        $ordered = collect(array_keys($pools))->sortByDesc(function ($profilId) use ($pools) {
-            return $pools[$profilId]->count();
-        })->values();
-
-        foreach ($ordered as $profilId) {
-            if ($pools[$profilId]->isNotEmpty()) {
-                return $profilId;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Choisit l'équipe la moins remplie pour recevoir un membre supplémentaire.
-     */
-    private function nextTeamToFill(array $simulationTeams): ?int
-    {
-        $candidateIndex = null;
-        $candidateSize = null;
-
-        foreach ($simulationTeams as $index => $team) {
-            $size = count($team['members']);
-
-            if ($candidateIndex === null || $size < $candidateSize) {
-                $candidateIndex = $index;
-                $candidateSize = $size;
-            }
-        }
-
-        return $candidateIndex;
     }
 
     /**
@@ -387,7 +345,7 @@ class AdminOperationsResearchController extends Controller
             for ($i = 0; $i < $block['team_count']; $i++) {
                 $members = [];
 
-                // Respect per-profile quotas first
+                // Respect per-profile quotas strictly
                 foreach ($profiles as $profile) {
                     $profilId = $profile['id'];
                     $want = isset($quotas[$profilId]) ? (int) $quotas[$profilId] : 0;
@@ -395,24 +353,10 @@ class AdminOperationsResearchController extends Controller
                         if ($pools[$profilId]->isNotEmpty()) {
                             $user = $pools[$profilId]->shift();
                             $members[] = $this->makeDeploymentMember($user, $roleLabels[$profilId]);
-                        } else {
-                            break;
                         }
                     }
                     // Count requested slots even if not available
                     $requestedCounts[$profilId] += $want;
-                }
-
-                // Fill remaining slots with most abundant profiles
-                while (count($members) < $block['team_size']) {
-                    $nextProfilId = $this->nextProfileToFill($pools);
-
-                    if ($nextProfilId === null) {
-                        break;
-                    }
-
-                    $user = $pools[$nextProfilId]->shift();
-                    $members[] = $this->makeDeploymentMember($user, $roleLabels[$nextProfilId]);
                 }
 
                 $simulationTeams[] = [
@@ -435,6 +379,7 @@ class AdminOperationsResearchController extends Controller
         }
 
         $summaryMap = [
+            'superviseur' => ['requested' => 'requestedSuperviseurs', 'available' => 'availableSuperviseurs', 'assigned' => 'assignedSuperviseurs'],
             'chef_equipe' => ['requested' => 'requestedChefs', 'available' => 'availableChefs', 'assigned' => 'assignedChefs'],
             'auditeur' => ['requested' => 'requestedAuditeurs', 'available' => 'availableAuditeurs', 'assigned' => 'assignedAuditeurs'],
             'auditeur_it' => ['requested' => 'requestedSupports', 'available' => 'availableSupports', 'assigned' => 'assignedSupports'],
@@ -466,166 +411,18 @@ class AdminOperationsResearchController extends Controller
     }
 
     /**
-     * Construit un plan automatique à partir des données disponibles.
-     */
-    private function buildOptimalPlan(): array
-    {
-        $profiles = $this->deploymentProfiles();
-
-        if (empty($profiles)) {
-            return [
-                'simulationTeams' => [],
-                'simulationSummary' => [
-                    'teams' => 0,
-                    'requestedTotal' => 0,
-                    'assignedTotal' => 0,
-                    'missingTotal' => 0,
-                    'mode' => 'auto',
-                ],
-            ];
-        }
-
-        $pools = $this->availablePools();
-        $roleLabels = $this->deploymentRoleLabels();
-
-        $availableCounts = [];
-
-        foreach ($profiles as $profile) {
-            $availableCounts[$profile['id']] = $pools[$profile['id']]->count();
-        }
-
-        $teamCount = min($availableCounts);
-
-        if ($teamCount < 1) {
-            $summary = [
-                'teams' => 0,
-                'requestedTotal' => 0,
-                'assignedTotal' => 0,
-                'missingTotal' => 0,
-                'mode' => 'auto',
-            ];
-
-            $summaryMap = [
-                'chef_equipe' => ['requested' => 'requestedChefs', 'available' => 'availableChefs', 'assigned' => 'assignedChefs'],
-                'auditeur' => ['requested' => 'requestedAuditeurs', 'available' => 'availableAuditeurs', 'assigned' => 'assignedAuditeurs'],
-                'auditeur_it' => ['requested' => 'requestedSupports', 'available' => 'availableSupports', 'assigned' => 'assignedSupports'],
-                'chauffeur' => ['requested' => 'requestedChauffeurs', 'available' => 'availableChauffeurs', 'assigned' => 'assignedChauffeurs'],
-            ];
-
-            foreach ($profiles as $profile) {
-                $map = $summaryMap[$profile['code']] ?? null;
-
-                if ($map) {
-                    $summary[$map['requested']] = 0;
-                    $summary[$map['available']] = $availableCounts[$profile['id']] ?? 0;
-                    $summary[$map['assigned']] = 0;
-                }
-            }
-
-            return [
-                'simulationTeams' => [],
-                'simulationSummary' => $summary,
-            ];
-        }
-
-        $simulationTeams = [];
-        for ($i = 0; $i < $teamCount; $i++) {
-            $simulationTeams[] = [
-                'nom' => 'Équipe ' . ($i + 1),
-                'members' => [],
-                'target_size' => null,
-            ];
-        }
-
-        // Base équilibrée: un membre de chaque profil par équipe quand c'est possible.
-        foreach ($simulationTeams as &$team) {
-            foreach ($profiles as $profile) {
-                $profilId = $profile['id'];
-
-                if ($pools[$profilId]->isNotEmpty()) {
-                    $user = $pools[$profilId]->shift();
-                    $team['members'][] = $this->makeDeploymentMember($user, $roleLabels[$profilId]);
-                }
-            }
-        }
-        unset($team);
-
-        $totalAvailable = array_sum($availableCounts);
-        $targetTeamSize = max(3, (int) ceil($totalAvailable / $teamCount));
-
-        // On remplit ensuite les équipes les moins chargées avec les profils les plus disponibles.
-        while (true) {
-            $teamIndex = $this->nextTeamToFill($simulationTeams);
-            $nextProfilId = $this->nextProfileToFill($pools);
-
-            if ($teamIndex === null || $nextProfilId === null) {
-                break;
-            }
-
-            $currentSize = count($simulationTeams[$teamIndex]['members']);
-
-            if ($currentSize >= $targetTeamSize) {
-                $isAnyTeamBelowTarget = collect($simulationTeams)->contains(function ($team) use ($targetTeamSize) {
-                    return count($team['members']) < $targetTeamSize;
-                });
-
-                if (!$isAnyTeamBelowTarget) {
-                    $targetTeamSize++;
-                }
-            }
-
-            $user = $pools[$nextProfilId]->shift();
-            $simulationTeams[$teamIndex]['members'][] = $this->makeDeploymentMember($user, $roleLabels[$nextProfilId]);
-        }
-
-        $assignedTotals = array_fill_keys(array_column($profiles, 'id'), 0);
-        foreach ($simulationTeams as $team) {
-            foreach ($team['members'] as $member) {
-                if (!empty($member['profil_id']) && array_key_exists($member['profil_id'], $assignedTotals)) {
-                    $assignedTotals[$member['profil_id']]++;
-                }
-            }
-        }
-
-        $summaryMap = [
-            'chef_equipe' => ['requested' => 'requestedChefs', 'available' => 'availableChefs', 'assigned' => 'assignedChefs'],
-            'auditeur' => ['requested' => 'requestedAuditeurs', 'available' => 'availableAuditeurs', 'assigned' => 'assignedAuditeurs'],
-            'auditeur_it' => ['requested' => 'requestedSupports', 'available' => 'availableSupports', 'assigned' => 'assignedSupports'],
-            'chauffeur' => ['requested' => 'requestedChauffeurs', 'available' => 'availableChauffeurs', 'assigned' => 'assignedChauffeurs'],
-        ];
-
-        $summary = [
-            'teams' => count($simulationTeams),
-            'requestedTotal' => array_sum(array_map(fn ($team) => count($team['members']), $simulationTeams)),
-            'assignedTotal' => array_sum($assignedTotals),
-            'missingTotal' => max(0, array_sum($availableCounts) - array_sum($assignedTotals)),
-            'mode' => 'auto',
-        ];
-
-        foreach ($profiles as $profile) {
-            $map = $summaryMap[$profile['code']] ?? null;
-
-            if ($map) {
-                $summary[$map['requested']] = $availableCounts[$profile['id']] ?? 0;
-                $summary[$map['available']] = $availableCounts[$profile['id']] ?? 0;
-                $summary[$map['assigned']] = $assignedTotals[$profile['id']] ?? 0;
-            }
-        }
-
-        return [
-            'simulationTeams' => $simulationTeams,
-            'simulationSummary' => $summary,
-        ];
-    }
-
-    /**
      * Simule une répartition sans écrire en base.
      */
     public function simulateDistribute(Request $request)
     {
         $blocks = $this->validateDeploymentBlocks($this->resolveDeploymentBlocks($request));
         $pageContext = $this->buildPageContext($request);
+        
+        $pageContext['teams'] = collect();
+
         $deploymentPlan = $this->buildPlanFromBlocks($blocks);
+
+        $pageContext = $this->filterSimulatedUsers($pageContext, $deploymentPlan);
 
         return view('admin.operations-research', $pageContext + $deploymentPlan + [
             'deploymentBlocks' => $blocks,
@@ -634,13 +431,49 @@ class AdminOperationsResearchController extends Controller
     }
 
     /**
-     * Prévisualise le meilleur déploiement possible sans paramètres saisis.
+     * Exporte la simulation en cours au format Excel.
+     */
+    public function exportSimulation(Request $request)
+    {
+        $blocks = $this->validateDeploymentBlocks($this->resolveDeploymentBlocks($request));
+        $deploymentPlan = $this->buildPlanFromBlocks($blocks);
+
+        $filename = 'simulation_deploiement_' . now()->format('Ymd_His') . '.xlsx';
+
+        return Excel::download(new SimulationExport($deploymentPlan['simulationTeams']), $filename);
+    }
+
+    /**
+     * Filtre les utilisateurs déjà assignés dans une simulation.
+     */
+    private function filterSimulatedUsers(array $pageContext, array $deploymentPlan): array
+    {
+        $simulatedUserIds = collect($deploymentPlan['simulationTeams'])
+            ->pluck('members')
+            ->flatten(1)
+            ->pluck('id')
+            ->toArray();
+
+        $pageContext['unassignedUsers'] = $pageContext['unassignedUsers']->filter(function ($user) use ($simulatedUserIds) {
+            return !in_array($user->id, $simulatedUserIds);
+        });
+
+        return $pageContext;
+    }
+
+    /**
+     * Prévisualise le déploiement.
      */
     public function optimizeDistribute(Request $request)
     {
         $blocks = $this->validateDeploymentBlocks($this->resolveDeploymentBlocks($request));
         $pageContext = $this->buildPageContext($request);
+
+        $pageContext['teams'] = collect();
+
         $deploymentPlan = $this->buildPlanFromBlocks($blocks);
+
+        $pageContext = $this->filterSimulatedUsers($pageContext, $deploymentPlan);
 
         return view('admin.operations-research', $pageContext + $deploymentPlan + [
             'deploymentBlocks' => $blocks,
@@ -676,7 +509,6 @@ class AdminOperationsResearchController extends Controller
 
         $user = User::findOrFail($validated['user_id']);
 
-        // Empêche les doublons de profil dans une même équipe.
         if (!empty($validated['team_id'])) {
             $targetTeamId = (int) $validated['team_id'];
 
@@ -715,7 +547,6 @@ class AdminOperationsResearchController extends Controller
         $user = User::findOrFail($validated['user_id']);
         $newProfilId = (int) $validated['profil_id'];
 
-        // Si le profil initial est vide, on le fige avec la valeur actuelle avant le changement
         if (empty($user->profil_initial_id)) {
             $user->profil_initial_id = $user->profil_id;
         }
@@ -747,7 +578,6 @@ class AdminOperationsResearchController extends Controller
 
     /**
      * Algorithme de répartition automatique flexible.
-     * Crée des équipes basées sur le nombre d'auditeurs disponibles.
      */
     public function autoDistribute(Request $request)
     {
@@ -788,7 +618,7 @@ class AdminOperationsResearchController extends Controller
     }
 
     /**
-     * Permute deux membres d'équipe ou déplace un membre vers une position occupée.
+     * Permute deux membres d'équipe.
      */
     public function swapMembers(Request $request)
     {
@@ -806,7 +636,6 @@ class AdminOperationsResearchController extends Controller
             $profil1Id = $user1->profil_id;
             $profil2Id = $user2->profil_id;
 
-            // Permutation de position complète: équipe + profil.
             $user1->team_id = $team2Id;
             $user1->profil_id = $profil2Id;
             $user2->team_id = $team1Id;
@@ -825,7 +654,6 @@ class AdminOperationsResearchController extends Controller
 
     /**
      * Réinitialise complètement le déploiement.
-     * Vide toutes les affectations et supprime les équipes existantes.
      */
     public function resetDeployment()
     {

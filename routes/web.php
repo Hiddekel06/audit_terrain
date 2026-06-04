@@ -73,6 +73,8 @@ Route::middleware('admin.auth')->group(function () {
 
     Route::post('/admin/recherche-operationnelle/simulate', [App\Http\Controllers\AdminOperationsResearchController::class, 'simulateDistribute'])
         ->name('admin.operations.simulate');
+    Route::post('/admin/recherche-operationnelle/export-simulation', [App\Http\Controllers\AdminOperationsResearchController::class, 'exportSimulation'])
+        ->name('admin.operations.export_simulation');
     Route::get('/admin/recherche-operationnelle/optimize', function () {
         return redirect()->route('admin.operations.research')->with('info', 'L’optimisation automatique se lance depuis la modale de déploiement.');
     })->name('admin.operations.optimize.get');

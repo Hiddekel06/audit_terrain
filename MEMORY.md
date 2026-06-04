@@ -1,5 +1,21 @@
 # Mémoire du Projet - Audit Terrain
 
+## 02/06/2026 : Optimisation du Moteur de Déploiement & Refonte Quotas
+
+### 1. Intelligence Opérationnelle (Moteur OR)
+- **Modèle "Quota-Driven"** : Suppression de la saisie manuelle de la taille d'équipe. La structure des unités est désormais définie exclusivement par la somme des quotas par profil, garantissant une précision métier totale.
+- **Unification des Algorithmes** : Fusion des logiques "Simuler" et "Optimiser". Les deux modes utilisent désormais `buildPlanFromBlocks`, assurant la cohérence des données même lors de l'utilisation de plusieurs blocs de déploiement distincts.
+- **Gestion des Vacances** : Le système privilégie désormais le nombre d'équipes demandées par l'utilisateur. En cas de manque d'effectif, les postes sont marqués comme "Vacants" au lieu de réduire le nombre d'équipes créées.
+
+### 2. Évolutions Profils & UI
+- **Intégration du Superviseur** : Ajout complet du profil `superviseur` dans le flux de recherche opérationnelle (algorithme, icônes `bi-shield-shaded`, et rapports d'export).
+- **Calculateur Temps Réel** : Ajout d'un indicateur dynamique dans l'interface de paramétrage affichant le total de membres par équipe en fonction des quotas saisis.
+- **Design Alignment** : Harmonisation visuelle des champs de paramétrage pour respecter la charte "Emerald".
+
+### 3. Corrections Techniques
+- **Sanitisation du Contrôleur** : Nettoyage complet de `AdminOperationsResearchController.php` pour éliminer les corruptions de fichiers et les erreurs de syntaxe Blade.
+- **Fiabilisation des Exports** : Mise en conformité de l'export Excel avec la nouvelle logique de répartition par blocs.
+
 ## 01/06/2026 : Refonte Design & Optimisation Opérationnelle
 
 ### 1. Identité Visuelle "Clean Enterprise"

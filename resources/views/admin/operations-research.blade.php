@@ -478,6 +478,35 @@
                     <span class="badge bg-primary rounded-pill px-3 py-2 shadow-sm fw-bold" id="simCountBadge">
                         {{ count($simulationTeams) }} Équipes simulées
                     </span>
+                    
+                    <form action="{{ route('admin.operations.export_simulation') }}" method="POST" class="d-inline">
+                        @csrf
+                        @foreach(request()->except('_token') as $key => $value)
+                            @if(is_array($value))
+                                @foreach($value as $k => $v)
+                                    @if(is_array($v))
+                                        @foreach($v as $k2 => $v2)
+                                            @if(is_array($v2))
+                                                @foreach($v2 as $k3 => $v3)
+                                                    <input type="hidden" name="{{ $key }}[{{ $k }}][{{ $k2 }}][{{ $k3 }}]" value="{{ $v3 }}">
+                                                @endforeach
+                                            @else
+                                                <input type="hidden" name="{{ $key }}[{{ $k }}][{{ $k2 }}]" value="{{ $v2 }}">
+                                            @endif
+                                        @endforeach
+                                    @else
+                                        <input type="hidden" name="{{ $key }}[{{ $k }}]" value="{{ $v }}">
+                                    @endif
+                                @endforeach
+                            @else
+                                <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                            @endif
+                        @endforeach
+                        <button type="submit" class="btn btn-sm btn-modern-outline" style="border-color: #10b981; color: #10b981;">
+                            <i class="bi bi-file-earmark-excel me-1"></i> Exporter Excel
+                        </button>
+                    </form>
+
                     <button type="button" class="btn btn-sm btn-modern-outline" onclick="window.location.reload()">
                         <i class="bi bi-x-lg"></i> Annuler
                     </button>
@@ -809,11 +838,21 @@
                                 <div class="row g-3 mb-4">
                                     <div class="col-md-6">
                                         <label class="form-label fw-bold text-muted small text-uppercase mb-2">Nombre d'équipes</label>
-                                        <input type="number" name="deployment_blocks[{{ $index }}][team_count]" class="form-control rounded-3" min="1" max="100" value="{{ $block['team_count'] ?? 1 }}" required>
+                                        <input type="number" name="deployment_blocks[{{ $index }}][team_count]" class="form-control rounded-3 border-light bg-light px-3" style="height: 46px;" min="1" max="100" value="{{ $block['team_count'] ?? 1 }}" required>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label fw-bold text-muted small text-uppercase mb-2">Membres par équipe</label>
-                                        <input type="number" name="deployment_blocks[{{ $index }}][team_size]" class="form-control rounded-3" min="3" max="20" value="{{ $block['team_size'] ?? 5 }}" required data-team-size-input>
+                                        <label class="form-label fw-bold text-muted small text-uppercase mb-2">Format de l'unité</label>
+                                        <div class="d-flex align-items-center justify-content-between bg-light rounded-3 px-3 border border-dashed border-primary border-opacity-25" style="height: 46px;">
+                                            <div class="d-flex align-items-center">
+                                                <span class="text-muted small fw-bold text-uppercase">Total :</span>
+                                                <span class="h6 mb-0 fw-800 text-primary ms-2" data-block-total-display>0</span>
+                                                <span class="text-muted small fw-bold ms-1">membres</span>
+                                            </div>
+                                            <div class="d-flex align-items-center border-start ps-3 ms-2 py-1" style="border-color: rgba(37, 99, 235, 0.1) !important;">
+                                                <span class="text-muted small fw-bold text-uppercase me-2" style="font-size: 0.6rem;">Potentiel :</span>
+                                                <span class="badge rounded-pill bg-white text-primary border border-primary border-opacity-25 fw-800" data-block-potential-display>0</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -832,7 +871,7 @@
                                                         </span>
                                                         <span class="small fw-semibold text-dark">{{ $profile['label'] }}</span>
                                                     </div>
-                                                    <input type="number" name="deployment_blocks[{{ $index }}][quotas][{{ $profile['id'] }}]" class="form-control form-control-sm border-0 bg-transparent text-end fw-bold" style="width: 50px;" min="0" max="{{ $block['team_size'] ?? 5 }}" value="{{ min((int) ($block['quotas'][$profile['id']] ?? 1), (int) ($block['team_size'] ?? 5)) }}" data-quota-default="1" data-quota-input>
+                                                    <input type="number" name="deployment_blocks[{{ $index }}][quotas][{{ $profile['id'] }}]" class="form-control form-control-sm border-0 bg-transparent text-end fw-bold" style="width: 50px;" min="0" value="{{ (int) ($block['quotas'][$profile['id']] ?? 1) }}" data-quota-input>
                                                 </div>
                                             </div>
                                         @endforeach
@@ -845,7 +884,7 @@
 
                 <div class="modal-footer border-0 px-4 justify-content-between align-items-center deploy-modal__footer">
                     <div class="deploy-modal__footnote d-none d-md-block">
-                        La somme des quotas ne peut pas dépasser la taille d’équipe. La simulation reste alignée sur vos blocs.
+                        La somme des quotas reste alignée sur vos blocs.
                     </div>
                     <div class="d-flex gap-2 ms-auto">
                         <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Annuler</button>
@@ -905,6 +944,7 @@
 @push('scripts')
 <script>
     (function () {
+        const availablePoolCounts = @json($availablePoolCounts);
         let draggedPayload = null;
         let pendingMove = null;
 
@@ -991,7 +1031,6 @@
                 const sameTeamDrop = draggedPayload.sourceTeamId === slot.dataset.teamId;
                 const isSelfDrop = occupiedBy && occupiedBy.dataset.userId === draggedPayload.userId;
 
-                // Autorise la permutation dans la même équipe uniquement sur un autre agent.
                 if (sameTeamDrop && (!occupiedBy || isSelfDrop)) {
                     return;
                 }
@@ -1010,18 +1049,15 @@
                 const sameTeamDrop = draggedPayload.sourceTeamId === slot.dataset.teamId;
                 const isSelfDrop = occupiedBy && occupiedBy.dataset.userId === draggedPayload.userId;
 
-                // Bloque le no-op (déposer sur soi) et le dépôt vide dans la même équipe.
                 if (isSelfDrop || (sameTeamDrop && !occupiedBy)) {
                     return;
                 }
                 
                 if (occupiedBy) {
-                    // It's a swap
                     const targetUserId = occupiedBy.dataset.userId;
                     const targetUserName = occupiedBy.dataset.userName || occupiedBy.textContent.trim();
                     openMoveConfirm(draggedPayload.userId, slot.dataset.teamId, draggedPayload.userName, targetTeamName, targetUserId, targetUserName);
                 } else {
-                    // It's a simple move
                     openMoveConfirm(draggedPayload.userId, slot.dataset.teamId, draggedPayload.userName, targetTeamName);
                 }
             }, true);
@@ -1091,7 +1127,6 @@
                         container.appendChild(simDragged);
                         syncSimulationMemberTeam(simDragged);
                     }
-
                     cModal.hide();
                 };
             });
@@ -1117,27 +1152,60 @@
             };
 
             function syncQuotaLimits(block) {
-                const teamSizeInput = block.querySelector('[data-team-size-input]');
                 const quotas = block.querySelectorAll('[data-quota-input]');
-                const teamSize = Math.max(3, parseInt(teamSizeInput?.value || '3', 10) || 3);
+                const totalDisplay = block.querySelector('[data-block-total-display]');
+                const potentialDisplay = block.querySelector('[data-block-potential-display]');
+                
+                let total = 0;
+                let potential = Infinity;
+                let hasQuotas = false;
 
-                if (teamSizeInput) {
-                    teamSizeInput.value = teamSize;
-                }
+                quotas.forEach(q => {
+                    const want = parseInt(q.value || '0', 10);
+                    const profileId = q.name.match(/quotas\]\[(\d+)\]/)?.[1];
+                    const available = availablePoolCounts[profileId] || 0;
 
-                quotas.forEach((quotaInput) => {
-                    quotaInput.max = String(teamSize);
-                    const currentValue = parseInt(quotaInput.value || '0', 10) || 0;
-                    if (currentValue > teamSize) {
-                        quotaInput.value = teamSize;
+                    total += want;
+                    
+                    if (want > 0) {
+                        hasQuotas = true;
+                        const canMake = Math.floor(available / want);
+                        if (canMake < potential) {
+                            potential = canMake;
+                        }
                     }
                 });
+
+                if (totalDisplay) totalDisplay.textContent = total;
+                
+                if (potentialDisplay) {
+                    const finalPotential = hasQuotas ? (potential === Infinity ? 0 : potential) : 0;
+                    potentialDisplay.textContent = finalPotential;
+                    
+                    // Alerte visuelle si on demande plus que le potentiel
+                    const teamCountInput = block.querySelector('input[name*="[team_count]"]');
+                    const requested = parseInt(teamCountInput?.value || '0', 10);
+                    
+                    if (requested > finalPotential) {
+                        potentialDisplay.classList.replace('text-primary', 'text-danger');
+                        potentialDisplay.classList.add('bg-danger', 'bg-opacity-10');
+                    } else {
+                        potentialDisplay.classList.replace('text-danger', 'text-primary');
+                        potentialDisplay.classList.remove('bg-danger', 'bg-opacity-10');
+                    }
+                }
             }
 
             function refreshIndexes() {
                 blockContainer.querySelectorAll('[data-deployment-block]').forEach((b, i) => {
-                    b.querySelectorAll('input').forEach(inp => inp.name = inp.name.replace(/deployment_blocks\[\d+\]/, `deployment_blocks[${i}]`));
-                    b.querySelector('.badge').textContent = `Bloc ${i+1}`;
+                    b.querySelectorAll('input').forEach(inp => {
+                        inp.name = inp.name.replace(/deployment_blocks\[\d+\]/, `deployment_blocks[${i}]`);
+                    });
+                    const titleEl = b.querySelector('.deploy-block-row__title');
+                    const indexEl = b.querySelector('.deploy-block-row__index');
+                    if (titleEl) titleEl.textContent = `Bloc ${i+1}`;
+                    if (indexEl) indexEl.textContent = i+1;
+                    
                     b.querySelector('[data-remove-deployment-block]').style.display = i === 0 ? 'none' : 'block';
                     syncQuotaLimits(b);
                 });
@@ -1146,8 +1214,7 @@
             blockContainer.addEventListener('input', (event) => {
                 const block = event.target.closest('[data-deployment-block]');
                 if (!block) return;
-
-                if (event.target.matches('[data-team-size-input]')) {
+                if (event.target.matches('[data-quota-input]') || event.target.matches('input[name*="[team_count]"]')) {
                     syncQuotaLimits(block);
                 }
             });
