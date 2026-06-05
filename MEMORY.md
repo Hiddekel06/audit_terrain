@@ -1,22 +1,28 @@
 # Mémoire du Projet - Audit Terrain
 
-## 02/06/2026 : Optimisation du Moteur de Déploiement & Refonte Quotas
+## 02/06/2026 : Intelligence Opérationnelle & Aide à la Décision
 
-### 1. Intelligence Opérationnelle (Moteur OR)
-- **Modèle "Quota-Driven"** : Suppression de la saisie manuelle de la taille d'équipe. La structure des unités est désormais définie exclusivement par la somme des quotas par profil, garantissant une précision métier totale.
-- **Unification des Algorithmes** : Fusion des logiques "Simuler" et "Optimiser". Les deux modes utilisent désormais `buildPlanFromBlocks`, assurant la cohérence des données même lors de l'utilisation de plusieurs blocs de déploiement distincts.
-- **Gestion des Vacances** : Le système privilégie désormais le nombre d'équipes demandées par l'utilisateur. En cas de manque d'effectif, les postes sont marqués comme "Vacants" au lieu de réduire le nombre d'équipes créées.
+### 1. Moteur OR & Aide à la Décision
+- **Analyse de Capacité en Temps Réel** : Implémentation d'un calculateur de "Potentiel" global. Le système déduit automatiquement les agents consommés bloc par bloc pour afficher la capacité réelle restante du vivier.
+- **Modèle "Quota-Driven"** : Abandon de la saisie manuelle de la taille d'équipe au profit d'un calcul automatique basé sur les quotas par profil.
+- **Permutations Avancées** : Optimisation du Drag & Drop pour permettre le remplacement direct d'un agent en poste par un agent libre (permutation atomique équipe <-> vivier).
 
-### 2. Évolutions Profils & UI
-- **Intégration du Superviseur** : Ajout complet du profil `superviseur` dans le flux de recherche opérationnelle (algorithme, icônes `bi-shield-shaded`, et rapports d'export).
-- **Calculateur Temps Réel** : Ajout d'un indicateur dynamique dans l'interface de paramétrage affichant le total de membres par équipe en fonction des quotas saisis.
-- **Design Alignment** : Harmonisation visuelle des champs de paramétrage pour respecter la charte "Emerald".
+### 2. Expérience Utilisateur (UX) & Échanges
+- **Édition de Profil In-Situ** : Ajout d'un bouton d'édition rapide sur chaque agent. Permet de modifier le profil, la structure ou la direction sans quitter le module de déploiement (avec rechargement automatique).
+- **Export Excel Enrichi** : Ajout des colonnes administratives critiques dans le plan de déploiement : **Matricule**, **Téléphone** et **Structure (Ministère)**.
 
-### 3. Corrections Techniques
-- **Sanitisation du Contrôleur** : Nettoyage complet de `AdminOperationsResearchController.php` pour éliminer les corruptions de fichiers et les erreurs de syntaxe Blade.
-- **Fiabilisation des Exports** : Mise en conformité de l'export Excel avec la nouvelle logique de répartition par blocs.
+### 3. Fiabilisation Technique
+- **Correction de Schéma** : Correction des références à la table `ministeres` (utilisation de `nom` au lieu de `libelle`).
+- **Sanitisation Blade** : Résolution des erreurs de "push stack" via une réécriture complète et propre de la vue principale.
+- **Unification des logiques** : Fusion des moteurs de simulation et d'optimisation pour une cohérence totale des données.
+
+### Perspectives & Evolutions
+- **Contraintes Ministérielles** : Option pour interdire le mélange de différents ministères au sein d'une même unité opérationnelle.
+- **Algorithmes de Priorisation** : Intégrer l'ancienneté ou le mérite dans le choix automatique des agents.
+- **Optimisation Géographique** : Mise en correspondance stricte entre les vœux de régions des agents et le déploiement.
 
 ## 01/06/2026 : Refonte Design & Optimisation Opérationnelle
+
 
 ### 1. Identité Visuelle "Clean Enterprise"
 - **Thème Émeraude** : Application de la nouvelle charte graphique sur le module Candidats (Index, Détails, Création, Analyse par profil).

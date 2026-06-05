@@ -479,8 +479,9 @@
                         {{ count($simulationTeams) }} Équipes simulées
                     </span>
                     
-                    <form action="{{ route('admin.operations.export_simulation') }}" method="POST" class="d-inline">
+                    <form action="{{ route('admin.operations.export_simulation') }}" method="POST" class="d-inline" id="exportSimulationForm">
                         @csrf
+                        <input type="hidden" name="simulation_state" id="simulationStateInput">
                         @foreach(request()->except('_token') as $key => $value)
                             @if(is_array($value))
                                 @foreach($value as $k => $v)
@@ -622,20 +623,36 @@
                                                 draggable="true"
                                                 data-user-id="{{ $member->id }}"
                                                 data-user-name="{{ $member->prenom }} {{ $member->nom }}"
-                                                data-profil-id="{{ $id }}"
+                                                data-profil-id="{{ $member->profil_id }}"
+                                                data-ministere-id="{{ $member->ministere_id }}"
+                                                data-direction="{{ $member->direction }}"
                                                 data-source-team-id="{{ $team->id }}"
                                                 title="Glisser pour déplacer"
                                             >
                                                 {{ $member->prenom }} {{ $member->nom }}
                                             </div>
-                                            <form action="{{ route('admin.operations.assign') }}" method="POST" class="m-0">
-                                                @csrf
-                                                <input type="hidden" name="user_id" value="{{ $member->id }}">
-                                                <input type="hidden" name="team_id" value="">
-                                                <button type="submit" class="btn btn-sm btn-link p-0 text-muted opacity-50 hover-opacity-100">
-                                                    <i class="bi bi-x"></i>
+                                            <div class="d-flex align-items-center gap-1">
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-link p-0 text-primary opacity-50 hover-opacity-100"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#editAgentProfileModal"
+                                                        data-user-id="{{ $member->id }}"
+                                                        data-user-name="{{ $member->prenom }} {{ $member->nom }}"
+                                                        data-profil-id="{{ $member->profil_id }}"
+                                                        data-ministere-id="{{ $member->ministere_id }}"
+                                                        data-direction="{{ $member->direction }}"
+                                                        title="Modifier le profil">
+                                                    <i class="bi bi-pencil-square"></i>
                                                 </button>
-                                            </form>
+                                                <form action="{{ route('admin.operations.assign') }}" method="POST" class="m-0">
+                                                    @csrf
+                                                    <input type="hidden" name="user_id" value="{{ $member->id }}">
+                                                    <input type="hidden" name="team_id" value="">
+                                                    <button type="submit" class="btn btn-sm btn-link p-0 text-muted opacity-50 hover-opacity-100" title="Retirer de l'équipe">
+                                                        <i class="bi bi-x"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
                                         @else
                                             <div class="member-name member-name--empty flex-grow-1">Poste vacant</div>
                                         @endif
@@ -644,11 +661,7 @@
                             </div>
                         </div>
                     </div>
-                @empty
-                    <div class="col-12 text-center py-5">
-                        <p class="text-muted">Aucune équipe active pour cette région.</p>
-                    </div>
-                @endforelse
+                @endforeach
             </div>
         </div>
 
@@ -670,6 +683,8 @@
                             data-user-id="{{ $user->id }}"
                             data-user-name="{{ $user->prenom }} {{ $user->nom }}"
                             data-profil-id="{{ $user->profil_id }}"
+                            data-ministere-id="{{ $user->ministere_id }}"
+                            data-direction="{{ $user->direction }}"
                             data-source-team-id=""
                         >
                             <div class="d-flex align-items-center gap-3">
@@ -680,25 +695,39 @@
                                         {{ $user->profil?->libelle }}
                                     </div>
                                 </div>
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-light border rounded-pill px-2 py-0" type="button" data-bs-toggle="dropdown" style="font-size: 0.7rem; font-weight: 700;">
-                                        Assigner
+                                <div class="d-flex align-items-center gap-1">
+                                    <button type="button" 
+                                            class="btn btn-sm btn-light border rounded-pill p-1" 
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editAgentProfileModal"
+                                            data-user-id="{{ $user->id }}"
+                                            data-user-name="{{ $user->prenom }} {{ $user->nom }}"
+                                            data-profil-id="{{ $user->profil_id }}"
+                                            data-ministere-id="{{ $user->ministere_id }}"
+                                            data-direction="{{ $user->direction }}"
+                                            title="Modifier">
+                                        <i class="bi bi-pencil small"></i>
                                     </button>
-                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-xl rounded-4 overflow-hidden" style="max-height: 250px; overflow-y: auto;">
-                                        @foreach($teams as $team)
-                                            <li>
-                                                <form action="{{ route('admin.operations.assign') }}" method="POST">
-                                                    @csrf
-                                                    <input type="hidden" name="user_id" value="{{ $user->id }}">
-                                                    <input type="hidden" name="team_id" value="{{ $team->id }}">
-                                                    <button type="submit" class="dropdown-item py-2 px-3 small d-flex justify-content-between align-items-center">
-                                                        <span>{{ $team->nom }}</span>
-                                                        <i class="bi bi-plus text-primary"></i>
-                                                    </button>
-                                                </form>
-                                            </li>
-                                        @endforeach
-                                    </ul>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-light border rounded-pill px-2 py-0" type="button" data-bs-toggle="dropdown" style="font-size: 0.7rem; font-weight: 700;">
+                                            Assigner
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow-xl rounded-4 overflow-hidden" style="max-height: 250px; overflow-y: auto;">
+                                            @foreach($teams as $team)
+                                                <li>
+                                                    <form action="{{ route('admin.operations.assign') }}" method="POST">
+                                                        @csrf
+                                                        <input type="hidden" name="user_id" value="{{ $user->id }}">
+                                                        <input type="hidden" name="team_id" value="{{ $team->id }}">
+                                                        <button type="submit" class="dropdown-item py-2 px-3 small d-flex justify-content-between align-items-center">
+                                                            <span>{{ $team->nom }}</span>
+                                                            <i class="bi bi-plus text-primary"></i>
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -897,6 +926,59 @@
     </div>
 </div>
 
+<!-- Modal Modifier Profil Agent -->
+<div class="modal fade" id="editAgentProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card border-0">
+            <form action="{{ route('admin.operations.profile.update') }}" method="POST">
+                @csrf
+                <input type="hidden" name="user_id" id="editAgentId">
+                <div class="modal-header border-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold text-primary">Modifier l'agent</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-4 text-center">
+                        <div class="h6 fw-bold text-dark mb-1" id="editAgentNameDisplay">---</div>
+                        <div class="small text-muted">Mise à jour des informations métier</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Profil Principal</label>
+                        <select name="profil_id" id="editAgentProfilId" class="form-select rounded-3 border-light bg-light px-4 py-2" required>
+                            @foreach($profils as $p)
+                                <option value="{{ $p->id }}">{{ $p->libelle }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    @php
+                        $ministeres = \App\Models\Ministere::orderBy('nom')->get();
+                    @endphp
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Ministère / Structure</label>
+                        <select name="ministere_id" id="editAgentMinistereId" class="form-select rounded-3 border-light bg-light px-4 py-2">
+                            <option value="">Non défini</option>
+                            @foreach($ministeres as $m)
+                                <option value="{{ $m->id }}">{{ $m->nom }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Direction</label>
+                        <input type="text" name="direction" id="editAgentDirection" class="form-control rounded-3 border-light bg-light px-4 py-2" placeholder="Ex: DRH, DAGE...">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pb-4 px-4 justify-content-between">
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-modern-primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Confirmation Reset -->
 <div class="modal fade" id="resetDeploymentModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -1026,39 +1108,51 @@
         document.querySelectorAll('.drop-slot').forEach(slot => {
             slot.addEventListener('dragover', (e) => {
                 if (!draggedPayload) return;
-
-                const occupiedBy = slot.querySelector('.drag-card');
-                const sameTeamDrop = draggedPayload.sourceTeamId === slot.dataset.teamId;
+                
+                const occupiedBy = slot.querySelector('.drag-card[data-user-id]');
                 const isSelfDrop = occupiedBy && occupiedBy.dataset.userId === draggedPayload.userId;
 
-                if (sameTeamDrop && (!occupiedBy || isSelfDrop)) {
-                    return;
-                }
+                if (isSelfDrop) return;
 
-                e.preventDefault();
-                slot.classList.add('drop-ready');
+                // Autoriser le drop si c'est une autre équipe, ou le vivier, ou un échange sur place occupée
+                if (draggedPayload.sourceTeamId !== slot.dataset.teamId || occupiedBy) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    slot.classList.add('drop-ready');
+                }
             }, true);
-            slot.addEventListener('dragleave', () => clearDropStates(), true);
+
+            slot.addEventListener('dragleave', (e) => {
+                slot.classList.remove('drop-ready');
+            }, true);
+
             slot.addEventListener('drop', (e) => {
                 e.preventDefault();
+                slot.classList.remove('drop-ready');
                 if (!draggedPayload) return;
-                
-                const targetTeamName = slot.closest('.glass-card').querySelector('.team-title').textContent.trim();
-                const occupiedBy = slot.querySelector('.drag-card');
 
-                const sameTeamDrop = draggedPayload.sourceTeamId === slot.dataset.teamId;
-                const isSelfDrop = occupiedBy && occupiedBy.dataset.userId === draggedPayload.userId;
-
-                if (isSelfDrop || (sameTeamDrop && !occupiedBy)) {
-                    return;
-                }
+                // On cible l'élément slot même si on a lâché sur un enfant (nom, icône...)
+                const currentSlot = e.currentTarget;
+                const targetTeamId = currentSlot.dataset.teamId;
+                const targetTeamName = currentSlot.closest('.glass-card').querySelector('.team-title').textContent.trim();
                 
-                if (occupiedBy) {
-                    const targetUserId = occupiedBy.dataset.userId;
-                    const targetUserName = occupiedBy.dataset.userName || occupiedBy.textContent.trim();
-                    openMoveConfirm(draggedPayload.userId, slot.dataset.teamId, draggedPayload.userName, targetTeamName, targetUserId, targetUserName);
+                // On cherche si un agent occupe déjà cette place précise dans le slot
+                const occupant = currentSlot.querySelector('.drag-card[data-user-id]');
+
+                if (occupant) {
+                    const targetUserId = occupant.dataset.userId;
+                    const targetUserName = occupant.dataset.userName || occupant.textContent.trim();
+                    
+                    // Empêcher de swapper avec soi-même
+                    if (targetUserId === draggedPayload.userId) return;
+
+                    // CAS : Remplacement direct (Swap)
+                    openMoveConfirm(draggedPayload.userId, targetTeamId, draggedPayload.userName, targetTeamName, targetUserId, targetUserName);
                 } else {
-                    openMoveConfirm(draggedPayload.userId, slot.dataset.teamId, draggedPayload.userName, targetTeamName);
+                    // CAS : Assignation simple (Place vide)
+                    if (draggedPayload.sourceTeamId !== targetTeamId) {
+                        openMoveConfirm(draggedPayload.userId, targetTeamId, draggedPayload.userName, targetTeamName);
+                    }
                 }
             }, true);
         });
@@ -1072,6 +1166,31 @@
         });
 
         // Simulation logic
+        const simulationStateInput = document.getElementById('simulationStateInput');
+
+        function syncSimulationState() {
+            if (!simulationStateInput) return;
+            
+            const state = [];
+            document.querySelectorAll('.simulation-team').forEach(teamEl => {
+                const teamName = teamEl.querySelector('.team-title')?.textContent?.trim();
+                const memberIds = [];
+                
+                teamEl.querySelectorAll('.sim-member').forEach(memberEl => {
+                    if (memberEl.dataset.simUserId) {
+                        memberIds.push(memberEl.dataset.simUserId);
+                    }
+                });
+                
+                state.push({
+                    nom: teamName,
+                    user_ids: memberIds
+                });
+            });
+            
+            simulationStateInput.value = JSON.stringify(state);
+        }
+
         function swapSimulationMembers(memberA, memberB) {
             const parentA = memberA.parentNode;
             const parentB = memberB.parentNode;
@@ -1127,10 +1246,29 @@
                         container.appendChild(simDragged);
                         syncSimulationMemberTeam(simDragged);
                     }
+                    syncSimulationState();
                     cModal.hide();
                 };
             });
         });
+
+        // Initialize state if simulation is present
+        syncSimulationState();
+
+        // Agent Profile Editing Logic
+        const editAgentProfileModalElement = document.getElementById('editAgentProfileModal');
+        if (editAgentProfileModalElement) {
+            editAgentProfileModalElement.addEventListener('show.bs.modal', (event) => {
+                const trigger = event.relatedTarget;
+                const ds = trigger.dataset;
+                
+                document.getElementById('editAgentId').value = ds.userId;
+                document.getElementById('editAgentNameDisplay').textContent = ds.userName;
+                document.getElementById('editAgentProfilId').value = ds.profilId;
+                document.getElementById('editAgentMinistereId').value = ds.ministereId || '';
+                document.getElementById('editAgentDirection').value = ds.direction || '';
+            });
+        }
 
         // Block Management
         const blockContainer = document.getElementById('deploymentBlocksContainer');
@@ -1151,49 +1289,65 @@
                 }
             };
 
-            function syncQuotaLimits(block) {
-                const quotas = block.querySelectorAll('[data-quota-input]');
-                const totalDisplay = block.querySelector('[data-block-total-display]');
-                const potentialDisplay = block.querySelector('[data-block-potential-display]');
-                
-                let total = 0;
-                let potential = Infinity;
-                let hasQuotas = false;
+            function refreshAllBlocks() {
+                const blocks = blockContainer.querySelectorAll('[data-deployment-block]');
+                // On travaille sur une copie du stock initial
+                let remainingPool = { ...availablePoolCounts };
 
-                quotas.forEach(q => {
-                    const want = parseInt(q.value || '0', 10);
-                    const profileId = q.name.match(/quotas\]\[(\d+)\]/)?.[1];
-                    const available = availablePoolCounts[profileId] || 0;
-
-                    total += want;
+                blocks.forEach((block, index) => {
+                    const quotas = block.querySelectorAll('[data-quota-input]');
+                    const teamCountInput = block.querySelector('input[name*="[team_count]"]');
+                    const totalDisplay = block.querySelector('[data-block-total-display]');
+                    const potentialDisplay = block.querySelector('[data-block-potential-display]');
                     
-                    if (want > 0) {
-                        hasQuotas = true;
-                        const canMake = Math.floor(available / want);
-                        if (canMake < potential) {
-                            potential = canMake;
+                    let blockTeamSize = 0;
+                    let blockPotential = Infinity;
+                    let hasQuotas = false;
+                    const requestedTeams = parseInt(teamCountInput?.value || '0', 10);
+
+                    // 1. Calcul de la taille d'équipe et du potentiel basé sur le stock RESTANT
+                    quotas.forEach(q => {
+                        const want = parseInt(q.value || '0', 10);
+                        const profileId = q.name.match(/quotas\]\[(\d+)\]/)?.[1];
+                        const available = remainingPool[profileId] || 0;
+
+                        blockTeamSize += want;
+                        
+                        if (want > 0) {
+                            hasQuotas = true;
+                            const canMake = Math.floor(available / want);
+                            if (canMake < blockPotential) {
+                                blockPotential = canMake;
+                            }
+                        }
+                    });
+
+                    // 2. Mise à jour de l'affichage pour ce bloc
+                    if (totalDisplay) totalDisplay.textContent = blockTeamSize;
+                    
+                    const finalPotential = hasQuotas ? (blockPotential === Infinity ? 0 : blockPotential) : 0;
+                    if (potentialDisplay) {
+                        potentialDisplay.textContent = finalPotential;
+                        
+                        if (requestedTeams > finalPotential) {
+                            potentialDisplay.classList.replace('text-primary', 'text-danger');
+                            potentialDisplay.classList.add('bg-danger', 'bg-opacity-10');
+                        } else {
+                            potentialDisplay.classList.replace('text-danger', 'text-primary');
+                            potentialDisplay.classList.remove('bg-danger', 'bg-opacity-10');
                         }
                     }
-                });
 
-                if (totalDisplay) totalDisplay.textContent = total;
-                
-                if (potentialDisplay) {
-                    const finalPotential = hasQuotas ? (potential === Infinity ? 0 : potential) : 0;
-                    potentialDisplay.textContent = finalPotential;
-                    
-                    // Alerte visuelle si on demande plus que le potentiel
-                    const teamCountInput = block.querySelector('input[name*="[team_count]"]');
-                    const requested = parseInt(teamCountInput?.value || '0', 10);
-                    
-                    if (requested > finalPotential) {
-                        potentialDisplay.classList.replace('text-primary', 'text-danger');
-                        potentialDisplay.classList.add('bg-danger', 'bg-opacity-10');
-                    } else {
-                        potentialDisplay.classList.replace('text-danger', 'text-primary');
-                        potentialDisplay.classList.remove('bg-danger', 'bg-opacity-10');
-                    }
-                }
+                    // 3. "Consommation" des agents pour les blocs suivants
+                    // On déduit ce qui est DEMANDÉ par ce bloc du stock restant
+                    quotas.forEach(q => {
+                        const want = parseInt(q.value || '0', 10);
+                        const profileId = q.name.match(/quotas\]\[(\d+)\]/)?.[1];
+                        if (profileId && want > 0) {
+                            remainingPool[profileId] = Math.max(0, (remainingPool[profileId] || 0) - (want * requestedTeams));
+                        }
+                    });
+                });
             }
 
             function refreshIndexes() {
@@ -1207,19 +1361,19 @@
                     if (indexEl) indexEl.textContent = i+1;
                     
                     b.querySelector('[data-remove-deployment-block]').style.display = i === 0 ? 'none' : 'block';
-                    syncQuotaLimits(b);
                 });
+                refreshAllBlocks();
             }
 
             blockContainer.addEventListener('input', (event) => {
                 const block = event.target.closest('[data-deployment-block]');
                 if (!block) return;
                 if (event.target.matches('[data-quota-input]') || event.target.matches('input[name*="[team_count]"]')) {
-                    syncQuotaLimits(block);
+                    refreshAllBlocks();
                 }
             });
 
-            blockContainer.querySelectorAll('[data-deployment-block]').forEach(syncQuotaLimits);
+            refreshAllBlocks();
         }
     })();
 </script>

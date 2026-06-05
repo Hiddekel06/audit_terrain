@@ -303,6 +303,9 @@ class AdminOperationsResearchController extends Controller
             'role' => $roleLabel,
             'name' => trim($user->prenom . ' ' . $user->nom),
             'profil' => $user->profil?->libelle,
+            'matricule' => $user->matricule ?? '',
+            'telephone' => $user->telephone ?? '',
+            'structure' => $user->ministere?->nom ?? '',
         ];
     }
 
@@ -435,6 +438,41 @@ class AdminOperationsResearchController extends Controller
      */
     public function exportSimulation(Request $request)
     {
+        // On vérifie si un état manuel (Drag & Drop) a été envoyé depuis le JS
+        $manualState = $request->input('simulation_state');
+
+        if (!empty($manualState)) {
+            $decodedState = json_decode($manualState, true);
+            
+            if (is_array($decodedState)) {
+                $simulationTeams = [];
+                $roleLabels = $this->deploymentRoleLabels();
+
+                foreach ($decodedState as $teamData) {
+                    $userIds = $teamData['user_ids'] ?? [];
+                    
+                    // On recharge les membres complets depuis la DB pour avoir matricule, tel, etc.
+                    $users = User::with(['profil', 'ministere'])->whereIn('id', $userIds)->get()->keyBy('id');
+                    
+                    $members = [];
+                    foreach ($userIds as $uid) {
+                        if ($user = $users->get($uid)) {
+                            $members[] = $this->makeDeploymentMember($user, $roleLabels[$user->profil_id] ?? 'Agent');
+                        }
+                    }
+
+                    $simulationTeams[] = [
+                        'nom' => $teamData['nom'] ?? 'Équipe',
+                        'members' => $members,
+                    ];
+                }
+
+                $filename = 'simulation_deploiement_manuelle_' . now()->format('Ymd_His') . '.xlsx';
+                return Excel::download(new SimulationExport($simulationTeams), $filename);
+            }
+        }
+
+        // Sinon, on retombe sur la logique par blocs classique
         $blocks = $this->validateDeploymentBlocks($this->resolveDeploymentBlocks($request));
         $deploymentPlan = $this->buildPlanFromBlocks($blocks);
 
@@ -636,6 +674,8 @@ class AdminOperationsResearchController extends Controller
             $profil1Id = $user1->profil_id;
             $profil2Id = $user2->profil_id;
 
+            // Échange complet de position (Équipe + Profil)
+            // Fonctionne même si l'un des deux (ou les deux) n'a pas d'équipe (null)
             $user1->team_id = $team2Id;
             $user1->profil_id = $profil2Id;
             $user2->team_id = $team1Id;

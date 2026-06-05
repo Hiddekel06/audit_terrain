@@ -31,11 +31,14 @@ class SimulationExport implements FromArray, WithHeadings, WithStyles, ShouldAut
                     'role' => $member['role'] ?? $member['profil'] ?? '',
                     'name' => $member['name'] ?? '',
                     'profil' => $member['profil'] ?? '',
+                    'matricule' => $member['matricule'] ?? '',
+                    'telephone' => $member['telephone'] ?? '',
+                    'structure' => $member['structure'] ?? '',
                 ];
             }
 
             // Ajouter une ligne vide entre les équipes pour la lisibilité
-            $data[] = ['', '', '', ''];
+            $data[] = ['', '', '', '', '', '', ''];
         }
 
         return $data;
@@ -48,6 +51,9 @@ class SimulationExport implements FromArray, WithHeadings, WithStyles, ShouldAut
             'Rôle (Affectation)',
             'Nom & Prénom',
             'Profil Métier',
+            'Matricule',
+            'Téléphone',
+            'Structure',
         ];
     }
 
