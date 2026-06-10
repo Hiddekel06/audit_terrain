@@ -508,6 +508,10 @@
                         </button>
                     </form>
 
+                    <button type="button" class="btn btn-sm btn-modern-primary" data-bs-toggle="modal" data-bs-target="#savePlanModal">
+                        <i class="bi bi-bookmark-fill me-1"></i> Sauvegarder
+                    </button>
+
                     <button type="button" class="btn btn-sm btn-modern-outline" onclick="window.location.reload()">
                         <i class="bi bi-x-lg"></i> Annuler
                     </button>
@@ -926,6 +930,61 @@
     </div>
 </div>
 
+<!-- Modal Sauvegarder Plan -->
+<div class="modal fade" id="savePlanModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card border-0">
+            <form action="{{ route('admin.operations.save_plan') }}" method="POST" id="savePlanForm">
+                @csrf
+                <input type="hidden" name="simulation_state" id="savePlanStateInput">
+                {{-- On propage les paramètres de la requête pour les metadata --}}
+                @foreach(request()->except('_token') as $key => $value)
+                    @if(is_array($value))
+                        @foreach($value as $k => $v)
+                            @if(is_array($v))
+                                @foreach($v as $k2 => $v2)
+                                    @if(is_array($v2))
+                                        @foreach($v2 as $k3 => $v3)
+                                            <input type="hidden" name="{{ $key }}[{{ $k }}][{{ $k2 }}][{{ $k3 }}]" value="{{ $v3 }}">
+                                        @endforeach
+                                    @else
+                                        <input type="hidden" name="{{ $key }}[{{ $k }}][{{ $k2 }}]" value="{{ $v2 }}">
+                                    @endif
+                                @endforeach
+                            @else
+                                <input type="hidden" name="{{ $key }}[{{ $k }}]" value="{{ $v }}">
+                            @endif
+                        @endforeach
+                    @else
+                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endif
+                @endforeach
+
+                <div class="modal-header border-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold text-primary">Sauvegarder la simulation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Nom du scénario</label>
+                        <input type="text" name="nom" class="form-control rounded-3 border-light bg-light px-4 py-2" placeholder="Ex: Déploiement Sud - Version 1" required>
+                    </div>
+                    <p class="text-muted small mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Le plan sera enregistré avec sa structure actuelle (équipes et agents affectés).
+                    </p>
+                </div>
+                <div class="modal-footer border-0 pb-4 px-4 justify-content-between">
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-modern-primary" id="submitSavePlan">
+                        <i class="bi bi-check-lg me-1"></i> Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Modifier Profil Agent -->
 <div class="modal fade" id="editAgentProfileModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -1167,9 +1226,10 @@
 
         // Simulation logic
         const simulationStateInput = document.getElementById('simulationStateInput');
+        const savePlanStateInput = document.getElementById('savePlanStateInput');
 
         function syncSimulationState() {
-            if (!simulationStateInput) return;
+            if (!simulationStateInput && !savePlanStateInput) return;
             
             const state = [];
             document.querySelectorAll('.simulation-team').forEach(teamEl => {
@@ -1188,7 +1248,9 @@
                 });
             });
             
-            simulationStateInput.value = JSON.stringify(state);
+            const jsonState = JSON.stringify(state);
+            if (simulationStateInput) simulationStateInput.value = jsonState;
+            if (savePlanStateInput) savePlanStateInput.value = jsonState;
         }
 
         function swapSimulationMembers(memberA, memberB) {

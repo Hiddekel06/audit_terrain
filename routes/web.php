@@ -75,6 +75,8 @@ Route::middleware('admin.auth')->group(function () {
         ->name('admin.operations.simulate');
     Route::post('/admin/recherche-operationnelle/export-simulation', [App\Http\Controllers\AdminOperationsResearchController::class, 'exportSimulation'])
         ->name('admin.operations.export_simulation');
+    Route::post('/admin/recherche-operationnelle/save-plan', [App\Http\Controllers\AdminOperationsResearchController::class, 'storePlan'])
+        ->name('admin.operations.save_plan');
     Route::get('/admin/recherche-operationnelle/optimize', function () {
         return redirect()->route('admin.operations.research')->with('info', 'L’optimisation automatique se lance depuis la modale de déploiement.');
     })->name('admin.operations.optimize.get');
@@ -111,7 +113,16 @@ Route::middleware('admin.auth')->group(function () {
         ->name('admin.import_reports.download');
 
     // Questions dynamiques (admin)
-    Route::post('/admin/questions', [App\Http\Controllers\AdminDynamicQuestionController::class, 'store'])->name('admin.questions.store');
+    // Plans de déploiement sauvegardés
+    Route::get('/admin/deployment-plans', [App\Http\Controllers\AdminDeploymentPlanController::class, 'index'])
+        ->name('admin.deployment_plans.index');
+    Route::get('/admin/deployment-plans/{plan}/download', [App\Http\Controllers\AdminDeploymentPlanController::class, 'download'])
+        ->name('admin.deployment_plans.download');
+    Route::delete('/admin/deployment-plans/{plan}', [App\Http\Controllers\AdminDeploymentPlanController::class, 'destroy'])
+        ->name('admin.deployment_plans.destroy');
+
+    Route::get('/admin/questions', [App\Http\Controllers\AdminDynamicQuestionController::class, 'index'])->name('admin.questions.index');
+
     Route::put('/admin/questions/{question}', [App\Http\Controllers\AdminDynamicQuestionController::class, 'update'])->name('admin.questions.update');
     Route::post('/admin/questions/{question}/toggle', [App\Http\Controllers\AdminDynamicQuestionController::class, 'toggle'])->name('admin.questions.toggle');
     Route::post('/admin/questions/{question}/order', [App\Http\Controllers\AdminDynamicQuestionController::class, 'updateOrder'])->name('admin.questions.order');

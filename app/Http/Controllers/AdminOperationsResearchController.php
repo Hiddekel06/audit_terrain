@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Team;
 use App\Models\Region;
 use App\Models\Profil;
+use App\Models\DeploymentPlan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
@@ -352,9 +353,25 @@ class AdminOperationsResearchController extends Controller
                 foreach ($profiles as $profile) {
                     $profilId = $profile['id'];
                     $want = isset($quotas[$profilId]) ? (int) $quotas[$profilId] : 0;
+                    
                     for ($r = 0; $r < $want; $r++) {
                         if ($pools[$profilId]->isNotEmpty()) {
-                            $user = $pools[$profilId]->shift();
+                            // On cherche un agent dont le ministère n'est pas encore représenté dans l'équipe
+                            $currentMinistereIds = collect($members)->pluck('ministere_id')->filter()->all();
+                            
+                            $foundIndex = $pools[$profilId]->search(function($u) use ($currentMinistereIds) {
+                                // On accepte si c'est un nouveau ministère ou si l'agent n'a pas de ministère renseigné
+                                return $u->ministere_id === null || !in_array($u->ministere_id, $currentMinistereIds);
+                            });
+
+                            if ($foundIndex !== false) {
+                                // On tire cet agent précis de la collection
+                                $user = $pools[$profilId]->pull($foundIndex);
+                            } else {
+                                // Fallback: on prend le premier disponible (plus de diversité possible)
+                                $user = $pools[$profilId]->shift();
+                            }
+                            
                             $members[] = $this->makeDeploymentMember($user, $roleLabels[$profilId]);
                         }
                     }
@@ -703,6 +720,42 @@ class AdminOperationsResearchController extends Controller
         });
 
         return back()->with('success', 'Déploiement réinitialisé. Tous les agents sont à nouveau sans équipe.');
+    }
+
+    /**
+     * Enregistre un plan de déploiement (scénario) en base de données.
+     */
+    public function storePlan(Request $request)
+    {
+        $validated = $request->validate([
+            'nom' => 'required|string|max:255',
+            'simulation_state' => 'required|json',
+        ]);
+
+        $decodedState = json_decode($validated['simulation_state'], true);
+        
+        // Calcul du résumé pour la bibliothèque
+        $nbTeams = count($decodedState);
+        $nbMembers = collect($decodedState)->pluck('user_ids')->flatten()->count();
+        
+        // On récupère les quotas d'origine depuis les blocs pour le metadata
+        $blocks = $this->resolveDeploymentBlocks($request);
+
+        DeploymentPlan::create([
+            'nom' => $validated['nom'],
+            'data' => $decodedState,
+            'summary' => [
+                'teams_count' => $nbTeams,
+                'members_count' => $nbMembers,
+                'created_at_human' => now()->format('d/m/Y H:i'),
+            ],
+            'metadata' => [
+                'blocks' => $blocks,
+                'region_id' => $request->input('region_id'),
+            ],
+        ]);
+
+        return back()->with('success', 'Plan de déploiement "' . $validated['nom'] . '" enregistré avec succès.');
     }
 
     /**

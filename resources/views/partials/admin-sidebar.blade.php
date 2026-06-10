@@ -53,10 +53,24 @@
             <span class="admin-sidebar__link-label">Ministères</span>
         </a>
 
-        <a href="{{ route('admin.import_reports.index') }}" class="admin-sidebar__link {{ $currentRoute === 'admin.import_reports.index' ? 'active' : '' }}">
-            <i class="bi bi-file-earmark-text"></i>
-            <span class="admin-sidebar__link-label">Rapports d'import</span>
-        </a>
+        {{-- Groupe Rapports & Archives --}}
+        <div class="admin-sidebar__dropdown {{ str_contains($currentRoute, 'import_reports') || str_contains($currentRoute, 'deployment_plans') ? 'show' : '' }}">
+            <button type="button" class="admin-sidebar__link admin-sidebar__dropdown-toggle" data-admin-sidebar-dropdown>
+                <i class="bi bi-archive"></i>
+                <span class="admin-sidebar__link-label">Archives & Rapports</span>
+                <i class="bi bi-chevron-down ms-auto admin-sidebar__dropdown-icon"></i>
+            </button>
+            <div class="admin-sidebar__dropdown-menu">
+                <a href="{{ route('admin.import_reports.index') }}" class="admin-sidebar__dropdown-link {{ $currentRoute === 'admin.import_reports.index' ? 'active' : '' }}">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span>Rapports d'import</span>
+                </a>
+                <a href="{{ route('admin.deployment_plans.index') }}" class="admin-sidebar__dropdown-link {{ $currentRoute === 'admin.deployment_plans.index' ? 'active' : '' }}">
+                    <i class="bi bi-diagram-3"></i>
+                    <span>Plans sauvegardés</span>
+                </a>
+            </div>
+        </div>
 
         @if(Auth::guard('admin')->user()?->role === 'super_admin')
             <a href="{{ route('admin.candidates.create') }}" class="admin-sidebar__link {{ $currentRoute === 'admin.candidates.create' ? 'active' : '' }}">
