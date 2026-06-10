@@ -1100,7 +1100,12 @@
         const moveMemberModalElement = document.getElementById('moveMemberModal');
         const moveMemberModalMessage = document.getElementById('moveMemberModalMessage');
         const confirmMoveButton = document.getElementById('confirmMoveButton');
-        const moveMemberModal = moveMemberModalElement && window.bootstrap ? new bootstrap.Modal(moveMemberModalElement) : null;
+        
+        // Initialisation unique des modales
+        const moveMemberModal = moveMemberModalElement && typeof bootstrap !== 'undefined' ? new bootstrap.Modal(moveMemberModalElement) : null;
+        
+        const confirmSimMoveModalElement = document.getElementById('confirmSimMoveModal');
+        const confirmSimMoveModal = confirmSimMoveModalElement && typeof bootstrap !== 'undefined' ? new bootstrap.Modal(confirmSimMoveModalElement) : null;
 
         function clearDropStates() {
             document.querySelectorAll('.drop-slot').forEach(s => s.classList.remove('drop-ready', 'drop-blocked'));
@@ -1132,8 +1137,13 @@
                 moveMemberModalMessage.textContent = teamId ? `Déplacer ${userName} vers ${teamName} ?` : `Retirer ${userName} ?`;
             }
             
-            if (moveMemberModal) moveMemberModal.show(); else {
-                if (targetUserId) submitSwap(userId, targetUserId); else submitMove(userId, teamId);
+            if (moveMemberModal) {
+                moveMemberModal.show();
+            } else {
+                // Fallback de sécurité si bootstrap n'est pas prêt, mais on évite de soumettre sans confirmation si possible
+                if (confirm("Confirmer cette action ?")) {
+                    if (targetUserId) submitSwap(userId, targetUserId); else submitMove(userId, teamId);
+                }
             }
         }
 
@@ -1179,41 +1189,36 @@
                     e.dataTransfer.dropEffect = 'move';
                     slot.classList.add('drop-ready');
                 }
-            }, true);
+            });
 
             slot.addEventListener('dragleave', (e) => {
                 slot.classList.remove('drop-ready');
-            }, true);
+            });
 
             slot.addEventListener('drop', (e) => {
                 e.preventDefault();
                 slot.classList.remove('drop-ready');
                 if (!draggedPayload) return;
 
-                // On cible l'élément slot même si on a lâché sur un enfant (nom, icône...)
+                // On cible l'élément slot même si on a lâché sur un enfant
                 const currentSlot = e.currentTarget;
                 const targetTeamId = currentSlot.dataset.teamId;
-                const targetTeamName = currentSlot.closest('.glass-card').querySelector('.team-title').textContent.trim();
+                const glassCard = currentSlot.closest('.glass-card');
+                const targetTeamName = glassCard ? glassCard.querySelector('.team-title').textContent.trim() : 'l\'équipe';
                 
-                // On cherche si un agent occupe déjà cette place précise dans le slot
                 const occupant = currentSlot.querySelector('.drag-card[data-user-id]');
 
                 if (occupant) {
                     const targetUserId = occupant.dataset.userId;
                     const targetUserName = occupant.dataset.userName || occupant.textContent.trim();
-                    
-                    // Empêcher de swapper avec soi-même
                     if (targetUserId === draggedPayload.userId) return;
-
-                    // CAS : Remplacement direct (Swap)
                     openMoveConfirm(draggedPayload.userId, targetTeamId, draggedPayload.userName, targetTeamName, targetUserId, targetUserName);
                 } else {
-                    // CAS : Assignation simple (Place vide)
                     if (draggedPayload.sourceTeamId !== targetTeamId) {
                         openMoveConfirm(draggedPayload.userId, targetTeamId, draggedPayload.userName, targetTeamName);
                     }
                 }
-            }, true);
+            });
         });
 
         document.querySelectorAll('.drop-zone-unassigned').forEach(zone => {
@@ -1284,9 +1289,10 @@
                 if (simTarget && simTarget === simDragged) return;
                 
                 const draggedName = simDragged.querySelector('.member-name')?.textContent?.trim() || 'cet agent';
-                const cModalElement = document.getElementById('confirmSimMoveModal');
-                const cModal = new bootstrap.Modal(cModalElement);
-                const cModalTitle = cModalElement.querySelector('.modal-title');
+                
+                if (!confirmSimMoveModal) return;
+
+                const cModalTitle = confirmSimMoveModalElement.querySelector('.modal-title');
 
                 if (simTarget) {
                     const targetName = simTarget.querySelector('.member-name')?.textContent?.trim() || 'cet agent';
@@ -1298,7 +1304,9 @@
                     document.getElementById('confirmSimMoveMessage').textContent = `Transférer ${draggedName} ?`;
                 }
 
-                cModal.show();
+                confirmSimMoveModal.show();
+                
+                // On utilise une fonction nommée pour pouvoir la retirer ou l'écraser proprement
                 document.getElementById('confirmSimMoveConfirm').onclick = () => {
                     if (simTarget) {
                         swapSimulationMembers(simDragged, simTarget);
@@ -1309,7 +1317,7 @@
                         syncSimulationMemberTeam(simDragged);
                     }
                     syncSimulationState();
-                    cModal.hide();
+                    confirmSimMoveModal.hide();
                 };
             });
         });

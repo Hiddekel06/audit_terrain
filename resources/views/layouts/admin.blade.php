@@ -271,6 +271,56 @@
             padding-inline: 0.5rem;
         }
 
+        .admin-sidebar__dropdown {
+            margin-bottom: 0.25rem;
+        }
+
+        .admin-sidebar__dropdown-menu {
+            display: none;
+            padding: 0.25rem 0 0.5rem 2.75rem;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .admin-sidebar__dropdown.show .admin-sidebar__dropdown-menu {
+            display: flex;
+        }
+
+        .admin-sidebar__dropdown.show .admin-sidebar__dropdown-icon {
+            transform: rotate(180deg);
+        }
+
+        .admin-sidebar__dropdown-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 0.85rem;
+            color: var(--admin-sidebar-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .admin-sidebar__dropdown-link:hover,
+        .admin-sidebar__dropdown-link.active {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .admin-sidebar__dropdown-link i {
+            font-size: 1rem;
+        }
+
+        .admin-sidebar__dropdown-icon {
+            transition: transform 0.2s ease;
+            font-size: 0.8rem;
+        }
+
+        body.admin-sidebar-collapsed .admin-sidebar__dropdown-menu {
+            display: none !important;
+        }
+
         @media (max-width: 991.98px) {
             .admin-sidebar {
                 transform: translateX(-100%);
@@ -418,34 +468,4 @@
     @stack('scripts')
 </body>
 </html>
-       if (!mq.matches) {
-                const collapsed = localStorage.getItem(storageKey) === '1';
-                body.classList.toggle('admin-sidebar-collapsed', collapsed);
-            }
 
-            syncCollapseIcons();
-
-            toggleButtons.forEach(function (button) {
-                button.addEventListener('click', toggleSidebar);
-            });
-
-            if (overlay) {
-                overlay.addEventListener('click', closeMobileSidebar);
-            }
-
-            window.addEventListener('resize', function () {
-                if (!mq.matches) {
-                    body.classList.remove('admin-sidebar-open');
-                    const collapsed = localStorage.getItem(storageKey) === '1';
-                    body.classList.toggle('admin-sidebar-collapsed', collapsed);
-                } else {
-                    body.classList.remove('admin-sidebar-collapsed');
-                }
-
-                syncCollapseIcons();
-            });
-        })();
-    </script>
-    @stack('scripts')
-</body>
-</html>
