@@ -17,7 +17,7 @@
         <!-- LIGNE 3 : Copyright -->
         <div>
             <p class="text-muted small mb-0" style="font-size: 0.7rem;">
-                &copy; {{ date('Y') }} MFPTSP-DSI
+                &copy; {{ date('Y') }} MFPTRSP. Tous droits réservés.
             </p>
         </div>
     </div>

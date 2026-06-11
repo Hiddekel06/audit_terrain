@@ -69,12 +69,20 @@ class UserController extends Controller
         }
 
         $hasNoMatricule = $request->boolean('no_matricule');
-        $identityNumber = $hasNoMatricule
-            ? 'NONE_' . time() . '_' . rand(100, 999)
-            : $request->input('matricule');
-
-        if (!$hasNoMatricule && empty($identityNumber)) {
-            return back()->withErrors(['matricule' => 'Le matricule est requis si vous en possédez un.'])->withInput();
+        
+        if ($hasNoMatricule) {
+            $request->validate([
+                'cin' => ['required', 'string', 'regex:/^\d{13,14}$/'],
+            ], [
+                'cin.required' => 'Le numéro de CNI est requis si vous n\'avez pas de matricule.',
+                'cin.regex' => 'Le numéro de CNI doit comporter 13 ou 14 chiffres.',
+            ]);
+            $identityNumber = $request->input('cin');
+        } else {
+            if (!$request->filled('matricule')) {
+                return back()->withErrors(['matricule' => 'Le matricule est requis si vous en possédez un.'])->withInput();
+            }
+            $identityNumber = $request->input('matricule');
         }
 
         // Vérification d'existence (par matricule ou téléphone)

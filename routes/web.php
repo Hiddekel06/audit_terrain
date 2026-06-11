@@ -49,6 +49,9 @@ Route::middleware('admin.auth')->group(function () {
         ->name('admin.candidates.template');
     Route::get('/admin/candidates/{user}', [App\Http\Controllers\AdminCandidateController::class, 'show'])
         ->name('admin.candidates.show');
+    Route::get('/admin/candidates/{user}/json', function (\App\Models\User $user) {
+        return $user->load(['profil', 'ministere']);
+    })->name('admin.candidates.json');
     
     Route::delete('/admin/candidates/{user}', [App\Http\Controllers\AdminCandidateController::class, 'destroy'])
         ->name('admin.candidates.destroy');
@@ -73,6 +76,10 @@ Route::middleware('admin.auth')->group(function () {
 
     Route::post('/admin/recherche-operationnelle/simulate', [App\Http\Controllers\AdminOperationsResearchController::class, 'simulateDistribute'])
         ->name('admin.operations.simulate');
+    Route::post('/admin/recherche-operationnelle/update-draft', [App\Http\Controllers\AdminOperationsResearchController::class, 'updateDraftState'])
+        ->name('admin.operations.update_draft');
+    Route::post('/admin/recherche-operationnelle/discard-draft', [App\Http\Controllers\AdminOperationsResearchController::class, 'discardDraft'])
+        ->name('admin.operations.discard_draft');
     Route::post('/admin/recherche-operationnelle/export-simulation', [App\Http\Controllers\AdminOperationsResearchController::class, 'exportSimulation'])
         ->name('admin.operations.export_simulation');
     Route::post('/admin/recherche-operationnelle/save-plan', [App\Http\Controllers\AdminOperationsResearchController::class, 'storePlan'])

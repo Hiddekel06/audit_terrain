@@ -90,6 +90,7 @@ class AdminOperationsResearchController extends Controller
 
         $regions = Region::orderBy('nom')->get();
         $profils = Profil::orderBy('ordre')->orderBy('libelle')->get();
+        $allMinisteres = \App\Models\Ministere::orderBy('nom')->get();
 
         $teamsQuery = Team::with([
             'members' => function ($query) {
@@ -131,7 +132,41 @@ class AdminOperationsResearchController extends Controller
         // On calcule le stock disponible par profil pour le moteur d'aide à la décision
         $availablePoolCounts = $unassignedUsers->groupBy('profil_id')->map->count();
 
-        return compact('teams', 'regions', 'profils', 'unassignedUsers', 'selectedRegionId', 'availablePoolCounts');
+        // CHARGEMENT DU BROUILLON SI EXISTANT
+        $draftPlan = DeploymentPlan::where('is_draft', true)->orderBy('updated_at', 'desc')->first();
+        $simulationTeams = null;
+        $simulationSummary = null;
+
+        if ($draftPlan) {
+            $decodedState = $draftPlan->data;
+            $simulationTeams = [];
+            $roleLabels = $this->deploymentRoleLabels();
+
+            foreach ($decodedState as $teamData) {
+                $userIds = $teamData['user_ids'] ?? [];
+                $users = User::with(['profil', 'ministere'])->whereIn('id', $userIds)->get()->keyBy('id');
+                
+                $members = [];
+                foreach ($userIds as $uid) {
+                    if ($user = $users->get($uid)) {
+                        $members[] = $this->makeDeploymentMember($user, $roleLabels[$user->profil_id] ?? 'Agent');
+                    }
+                }
+
+                $simulationTeams[] = [
+                    'nom' => $teamData['nom'] ?? 'Équipe',
+                    'members' => $members,
+                ];
+            }
+            $simulationSummary = $draftPlan->summary;
+            
+            // On injecte les blocs du brouillon dans la requête pour qu'ils soient repris par le formulaire
+            if (isset($draftPlan->metadata['blocks'])) {
+                $request->merge(['deployment_blocks' => $draftPlan->metadata['blocks']]);
+            }
+        }
+
+        return compact('teams', 'regions', 'profils', 'unassignedUsers', 'selectedRegionId', 'availablePoolCounts', 'allMinisteres', 'simulationTeams', 'simulationSummary', 'draftPlan');
     }
 
     /**
@@ -139,8 +174,9 @@ class AdminOperationsResearchController extends Controller
      */
     public function index(Request $request)
     {
-        return view('admin.operations-research', $this->buildPageContext($request) + [
-            'deploymentBlocks' => $this->defaultDeploymentBlocks(),
+        $context = $this->buildPageContext($request);
+        return view('admin.operations-research', $context + [
+            'deploymentBlocks' => $context['draftPlan'] ? ($context['draftPlan']->metadata['blocks'] ?? $this->defaultDeploymentBlocks()) : $this->defaultDeploymentBlocks(),
             'deploymentProfiles' => $this->deploymentProfiles(),
         ]);
     }
@@ -306,6 +342,7 @@ class AdminOperationsResearchController extends Controller
             'profil' => $user->profil?->libelle,
             'matricule' => $user->matricule ?? '',
             'telephone' => $user->telephone ?? '',
+            'ministere_id' => $user->ministere_id,
             'structure' => $user->ministere?->nom ?? '',
         ];
     }
@@ -331,6 +368,12 @@ class AdminOperationsResearchController extends Controller
         }
 
         $pools = $this->availablePools();
+        
+        // On mélange les pools dès le départ pour garantir l'aléatoire total (Random)
+        foreach ($pools as $id => $collection) {
+            $pools[$id] = $collection->shuffle();
+        }
+
         $roleLabels = $this->deploymentRoleLabels();
         $simulationTeams = [];
         $teamIndex = 1;
@@ -343,39 +386,23 @@ class AdminOperationsResearchController extends Controller
             $requestedCounts[$profile['id']] = 0;
         }
 
+        // --- ÉTAPE 1 : FORMATION ALÉATOIRE (RANDOM) ---
+        // On remplit les équipes en piochant simplement dans les pools mélangés
         foreach ($blocks as $block) {
             $quotas = $block['quotas'] ?? [];
 
             for ($i = 0; $i < $block['team_count']; $i++) {
                 $members = [];
-
-                // Respect per-profile quotas strictly
                 foreach ($profiles as $profile) {
                     $profilId = $profile['id'];
                     $want = isset($quotas[$profilId]) ? (int) $quotas[$profilId] : 0;
                     
                     for ($r = 0; $r < $want; $r++) {
                         if ($pools[$profilId]->isNotEmpty()) {
-                            // On cherche un agent dont le ministère n'est pas encore représenté dans l'équipe
-                            $currentMinistereIds = collect($members)->pluck('ministere_id')->filter()->all();
-                            
-                            $foundIndex = $pools[$profilId]->search(function($u) use ($currentMinistereIds) {
-                                // On accepte si c'est un nouveau ministère ou si l'agent n'a pas de ministère renseigné
-                                return $u->ministere_id === null || !in_array($u->ministere_id, $currentMinistereIds);
-                            });
-
-                            if ($foundIndex !== false) {
-                                // On tire cet agent précis de la collection
-                                $user = $pools[$profilId]->pull($foundIndex);
-                            } else {
-                                // Fallback: on prend le premier disponible (plus de diversité possible)
-                                $user = $pools[$profilId]->shift();
-                            }
-                            
+                            $user = $pools[$profilId]->shift();
                             $members[] = $this->makeDeploymentMember($user, $roleLabels[$profilId]);
                         }
                     }
-                    // Count requested slots even if not available
                     $requestedCounts[$profilId] += $want;
                 }
 
@@ -384,11 +411,11 @@ class AdminOperationsResearchController extends Controller
                     'members' => $members,
                     'target_size' => $block['team_size'],
                 ];
-
                 $requestedTotal += $block['team_size'];
             }
         }
 
+        // Calcul du résumé final
         $assignedTotals = array_fill_keys(array_column($profiles, 'id'), 0);
         foreach ($simulationTeams as $team) {
             foreach ($team['members'] as $member) {
@@ -431,27 +458,171 @@ class AdminOperationsResearchController extends Controller
     }
 
     /**
-     * Simule une répartition sans écrire en base.
+     * Simule une répartition et l'enregistre comme brouillon.
      */
     public function simulateDistribute(Request $request)
     {
         $blocks = $this->validateDeploymentBlocks($this->resolveDeploymentBlocks($request));
-        $pageContext = $this->buildPageContext($request);
         
-        $pageContext['teams'] = collect();
-
         $deploymentPlan = $this->buildPlanFromBlocks($blocks);
 
-        $pageContext = $this->filterSimulatedUsers($pageContext, $deploymentPlan);
+        // Si on demande un regroupement immédiat
+        $regroupMinistereId = $request->input('regroup_ministere_id');
+        if ($regroupMinistereId) {
+            $deploymentPlan['simulationTeams'] = $this->regroupSimulatedTeams($deploymentPlan['simulationTeams'], $regroupMinistereId);
+        }
 
-        return view('admin.operations-research', $pageContext + $deploymentPlan + [
-            'deploymentBlocks' => $blocks,
-            'deploymentProfiles' => $this->deploymentProfiles(),
-        ]);
+        // ENREGISTREMENT DU BROUILLON
+        DeploymentPlan::updateOrCreate(
+            ['is_draft' => true],
+            [
+                'nom' => 'Brouillon en cours',
+                'data' => collect($deploymentPlan['simulationTeams'])->map(function($team) {
+                    return [
+                        'nom' => $team['nom'],
+                        'user_ids' => collect($team['members'])->pluck('id')->toArray()
+                    ];
+                })->toArray(),
+                'summary' => $deploymentPlan['simulationSummary'],
+                'metadata' => [
+                    'blocks' => $blocks,
+                    'region_id' => $request->input('region_id'),
+                    'regroup_ministere_id' => $regroupMinistereId
+                ],
+            ]
+        );
+
+        return redirect()->route('admin.operations.research', ['region_id' => $request->input('region_id')]);
     }
 
     /**
-     * Exporte la simulation en cours au format Excel.
+     * Met à jour l'état du brouillon (AJAX).
+     */
+    public function updateDraftState(Request $request)
+    {
+        $validated = $request->validate([
+            'simulation_state' => 'required|json',
+        ]);
+
+        $decodedState = json_decode($validated['simulation_state'], true);
+        
+        $draft = DeploymentPlan::where('is_draft', true)->first();
+        if ($draft) {
+            $draft->update([
+                'data' => $decodedState,
+                'summary' => [
+                    'teams_count' => count($decodedState),
+                    'members_count' => collect($decodedState)->pluck('user_ids')->flatten()->count(),
+                    'updated_at_human' => now()->format('d/m/Y H:i'),
+                ]
+            ]);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Réorganise les équipes simulées.
+     */
+    private function regroupSimulatedTeams(array $simulationTeams, $ministereId): array
+    {
+        $profiles = $this->deploymentProfiles();
+        
+        foreach ($profiles as $profile) {
+            $pid = $profile['id'];
+
+            // 1. Extraire tous les agents de ce profil parmi les équipes simulées
+            $membersOfProfile = [];
+            foreach ($simulationTeams as $tIdx => $team) {
+                foreach ($team['members'] as $mIdx => $member) {
+                    if ($member['profil_id'] == $pid) {
+                        $membersOfProfile[] = $member;
+                    }
+                }
+            }
+
+            if (empty($membersOfProfile)) continue;
+
+            // 2. Trier : mettre le ministère cible en premier
+            usort($membersOfProfile, function($a, $b) use ($ministereId) {
+                $mIdA = $a['ministere_id'] ?? 0;
+                $mIdB = $b['ministere_id'] ?? 0;
+
+                if ($ministereId === 'all') {
+                    return $mIdA <=> $mIdB;
+                }
+                
+                $isTargetA = ($mIdA == $ministereId);
+                $isTargetB = ($mIdB == $ministereId);
+                
+                if ($isTargetA && !$isTargetB) return -1;
+                if (!$isTargetA && $isTargetB) return 1;
+                return 0;
+            });
+
+            // 3. Redistribuer dans les slots de profil existants
+            $ptr = 0;
+            foreach ($simulationTeams as &$team) {
+                foreach ($team['members'] as &$member) {
+                    if ($member['profil_id'] == $pid) {
+                        $member = $membersOfProfile[$ptr++];
+                    }
+                }
+            }
+        }
+
+        return $simulationTeams;
+    }
+
+    /**
+     * Modifie le profil d'un agent (AJAX).
+     */
+    public function updateProfile(Request $request)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'profil_id' => 'required|exists:profil,id',
+            'direction' => 'nullable|string|max:255',
+            'ministere_id' => 'nullable|exists:ministeres,id',
+        ]);
+
+        $user = User::findOrFail($validated['user_id']);
+        $newProfilId = (int) $validated['profil_id'];
+
+        if (empty($user->profil_initial_id)) {
+            $user->profil_initial_id = $user->profil_id;
+        }
+
+        $user->profil_id = $newProfilId;
+        if (array_key_exists('direction', $validated)) {
+            $user->direction = trim((string) $validated['direction']);
+        }
+        if (array_key_exists('ministere_id', $validated)) {
+            $user->ministere_id = $validated['ministere_id'] ?: null;
+        }
+        $user->save();
+
+        if ($request->ajax()) {
+            $user->load('ministere', 'profil');
+            return response()->json([
+                'success' => true,
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->prenom . ' ' . $user->nom,
+                    'profil_id' => $user->profil_id,
+                    'profil_libelle' => $user->profil->libelle,
+                    'ministere_id' => $user->ministere_id,
+                    'ministere_nom' => $user->ministere?->nom ?? 'Non défini',
+                    'direction' => $user->direction
+                ]
+            ]);
+        }
+
+        return back()->with('success', 'Profil de l’agent mis à jour.');
+    }
+
+    /**
+     * Exporte la simulation.
      */
     public function exportSimulation(Request $request)
     {
@@ -489,13 +660,33 @@ class AdminOperationsResearchController extends Controller
             }
         }
 
-        // Sinon, on retombe sur la logique par blocs classique
-        $blocks = $this->validateDeploymentBlocks($this->resolveDeploymentBlocks($request));
-        $deploymentPlan = $this->buildPlanFromBlocks($blocks);
+        // Sinon, on retombe sur le dernier brouillon
+        $draft = DeploymentPlan::where('is_draft', true)->first();
+        if ($draft) {
+             // Reconstitution du plan pour l'export
+             $decodedState = $draft->data;
+             $simulationTeams = [];
+             $roleLabels = $this->deploymentRoleLabels();
 
-        $filename = 'simulation_deploiement_' . now()->format('Ymd_His') . '.xlsx';
+             foreach ($decodedState as $teamData) {
+                 $userIds = $teamData['user_ids'] ?? [];
+                 $users = User::with(['profil', 'ministere'])->whereIn('id', $userIds)->get()->keyBy('id');
+                 $members = [];
+                 foreach ($userIds as $uid) {
+                     if ($user = $users->get($uid)) {
+                         $members[] = $this->makeDeploymentMember($user, $roleLabels[$user->profil_id] ?? 'Agent');
+                     }
+                 }
+                 $simulationTeams[] = [
+                     'nom' => $teamData['nom'] ?? 'Équipe',
+                     'members' => $members,
+                 ];
+             }
+             $filename = 'simulation_deploiement_' . now()->format('Ymd_His') . '.xlsx';
+             return Excel::download(new SimulationExport($simulationTeams), $filename);
+        }
 
-        return Excel::download(new SimulationExport($deploymentPlan['simulationTeams']), $filename);
+        return back()->with('error', 'Aucune simulation à exporter.');
     }
 
     /**
@@ -588,50 +779,6 @@ class AdminOperationsResearchController extends Controller
     }
 
     /**
-     * Modifie le profil d'un agent.
-     */
-    public function updateProfile(Request $request)
-    {
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'profil_id' => 'required|exists:profil,id',
-            'direction' => 'nullable|string|max:255',
-            'ministere_id' => 'nullable|exists:ministeres,id',
-        ]);
-
-        $user = User::findOrFail($validated['user_id']);
-        $newProfilId = (int) $validated['profil_id'];
-
-        if (empty($user->profil_initial_id)) {
-            $user->profil_initial_id = $user->profil_id;
-        }
-
-        if (!empty($user->team_id)) {
-            $teamHasProfile = User::where('team_id', $user->team_id)
-                ->where('profil_id', $newProfilId)
-                ->where('id', '!=', $user->id)
-                ->exists();
-
-            if ($teamHasProfile) {
-                return back()->withErrors([
-                    'profile' => 'Cette équipe contient déjà un agent avec ce profil.',
-                ]);
-            }
-        }
-
-        $user->profil_id = $newProfilId;
-        if (array_key_exists('direction', $validated)) {
-            $user->direction = trim((string) $validated['direction']);
-        }
-        if (array_key_exists('ministere_id', $validated)) {
-            $user->ministere_id = $validated['ministere_id'] ?: null;
-        }
-        $user->save();
-
-        return back()->with('success', 'Profil de l’agent mis à jour.');
-    }
-
-    /**
      * Algorithme de répartition automatique flexible.
      */
     public function autoDistribute(Request $request)
@@ -717,6 +864,7 @@ class AdminOperationsResearchController extends Controller
         DB::transaction(function () {
             User::query()->update(['team_id' => null]);
             Team::query()->delete();
+            DeploymentPlan::where('is_draft', true)->delete();
         });
 
         return back()->with('success', 'Déploiement réinitialisé. Tous les agents sont à nouveau sans équipe.');
@@ -769,5 +917,14 @@ class AdminOperationsResearchController extends Controller
         });
 
         return back()->with('success', 'Équipe supprimée et membres libérés.');
+    }
+
+    /**
+     * Supprime le brouillon en cours.
+     */
+    public function discardDraft()
+    {
+        DeploymentPlan::where('is_draft', true)->delete();
+        return back()->with('success', 'Simulation annulée et brouillon supprimé.');
     }
 }

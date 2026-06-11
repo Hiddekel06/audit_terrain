@@ -577,7 +577,7 @@
 
                     <div class="field-group {{ $showCinField ? '' : 'd-none' }}" data-cin-wrapper>
                         <label for="cin" class="id-label">CIN <span class="text-danger">*</span></label>
-                        <input type="text" class="id-input @error('cin') is-invalid @enderror" id="cin" name="cin" value="{{ old('cin') }}" placeholder="13 chiffres" inputmode="numeric" pattern="[0-9]{13}" maxlength="13" {{ $showCinField ? 'required' : '' }}>
+                        <input type="text" class="id-input @error('cin') is-invalid @enderror" id="cin" name="cin" value="{{ old('cin') }}" placeholder="13 ou 14 chiffres" inputmode="numeric" pattern="[0-9]{13,14}" maxlength="14" {{ $showCinField ? 'required' : '' }}>
                         @error('cin')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror

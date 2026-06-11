@@ -11,12 +11,14 @@ class DeploymentPlan extends Model
 
     protected $fillable = [
         'nom',
+        'is_draft',
         'data',
         'summary',
         'metadata',
     ];
 
     protected $casts = [
+        'is_draft' => 'boolean',
         'data' => 'array',
         'summary' => 'array',
         'metadata' => 'array',

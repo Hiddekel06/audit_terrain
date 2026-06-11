@@ -469,52 +469,88 @@
 
     @isset($simulationTeams)
         <div class="mb-5">
-            <div class="d-flex align-items-center justify-content-between mb-4 px-2">
+            <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between mb-4 px-2 gap-3">
                 <div>
                     <h3 class="h5 fw-bold mb-0 text-primary"><i class="bi bi-eye me-2"></i>Aperçu de simulation</h3>
                     <p class="text-muted small mb-0">Visualisez et ajustez la répartition avant validation</p>
                 </div>
-                <div class="d-flex gap-2">
-                    <span class="badge bg-primary rounded-pill px-3 py-2 shadow-sm fw-bold" id="simCountBadge">
-                        {{ count($simulationTeams) }} Équipes simulées
+                <div class="d-flex flex-wrap gap-2 align-items-center justify-content-lg-end">
+                    @if($draftPlan)
+                    <div class="d-flex align-items-center bg-light border rounded-pill px-3 py-1 me-2 shadow-sm">
+                        <span class="status-dot status-dot--filled bg-warning me-2" style="width: 8px; height: 8px;"></span>
+                        <span class="small fw-bold text-muted">Brouillon auto-sauvegardé @if(isset($draftPlan->summary['updated_at_human'])) à {{ $draftPlan->summary['updated_at_human'] }} @endif</span>
+                    </div>
+                    @endif
+
+                    <!-- Nouveau Bloc Cohésion -->
+                    <div class="d-flex align-items-center bg-white border rounded-pill px-2 py-1 shadow-sm">
+                        <span class="small fw-bold text-muted px-2 border-end me-2"><i class="bi bi-funnel"></i> Cohésion</span>
+                        <select name="regroup_ministere_id" class="form-select form-select-sm border-0 fw-bold small py-0" style="width: auto; min-width: 140px; background: transparent;" form="simulateFormPost">
+                            <option value="">-- Mixité --</option>
+                            <option value="all" @selected(($currentRegroupMinistereId ?? '') === 'all')>Toutes les structures</option>
+                            @foreach($allMinisteres as $m)
+                                <option value="{{ $m->id }}" @selected(($currentRegroupMinistereId ?? '') == $m->id)>{{ $m->nom }}</option>
+                            @endforeach
+                        </select>
+                        <form action="{{ route('admin.operations.simulate') }}" method="POST" id="simulateFormPost" class="m-0">
+                            @csrf
+                            {{-- On propage les blocs actuels --}}
+                            @foreach($deploymentBlocks as $idx => $block)
+                                <input type="hidden" name="deployment_blocks[{{ $idx }}][team_count]" value="{{ $block['team_count'] }}">
+                                @foreach($block['quotas'] as $pId => $q)
+                                    <input type="hidden" name="deployment_blocks[{{ $idx }}][quotas][{{ $pId }}]" value="{{ $q }}">
+                                @endforeach
+                            @endforeach
+                            <input type="hidden" name="region_id" value="{{ $selectedRegionId }}">
+                            <button type="submit" class="btn btn-sm btn-link text-primary p-0 px-2 fw-bold text-decoration-none">Regrouper</button>
+                        </form>
+                    </div>
+
+                    <span class="badge bg-primary rounded-pill px-3 py-2 shadow-sm fw-bold">
+                        {{ count($simulationTeams) }} Équipes
                     </span>
                     
-                    <form action="{{ route('admin.operations.export_simulation') }}" method="POST" class="d-inline" id="exportSimulationForm">
-                        @csrf
-                        <input type="hidden" name="simulation_state" id="simulationStateInput">
-                        @foreach(request()->except('_token') as $key => $value)
-                            @if(is_array($value))
-                                @foreach($value as $k => $v)
-                                    @if(is_array($v))
-                                        @foreach($v as $k2 => $v2)
-                                            @if(is_array($v2))
-                                                @foreach($v2 as $k3 => $v3)
-                                                    <input type="hidden" name="{{ $key }}[{{ $k }}][{{ $k2 }}][{{ $k3 }}]" value="{{ $v3 }}">
-                                                @endforeach
-                                            @else
-                                                <input type="hidden" name="{{ $key }}[{{ $k }}][{{ $k2 }}]" value="{{ $v2 }}">
-                                            @endif
-                                        @endforeach
-                                    @else
-                                        <input type="hidden" name="{{ $key }}[{{ $k }}]" value="{{ $v }}">
-                                    @endif
-                                @endforeach
-                            @else
-                                <input type="hidden" name="{{ $key }}" value="{{ $value }}">
-                            @endif
-                        @endforeach
-                        <button type="submit" class="btn btn-sm btn-modern-outline" style="border-color: #10b981; color: #10b981;">
-                            <i class="bi bi-file-earmark-excel me-1"></i> Exporter Excel
+                    <div class="d-flex gap-2">
+                        <form action="{{ route('admin.operations.export_simulation') }}" method="POST" class="d-inline" id="exportSimulationForm">
+                            @csrf
+                            <input type="hidden" name="simulation_state" id="simulationStateInput">
+                            @foreach(request()->except('_token') as $key => $value)
+                                @if(is_array($value))
+                                    @foreach($value as $k => $v)
+                                        @if(is_array($v))
+                                            @foreach($v as $k2 => $v2)
+                                                @if(is_array($v2))
+                                                    @foreach($v2 as $k3 => $v3)
+                                                        <input type="hidden" name="{{ $key }}[{{ $k }}][{{ $k2 }}][{{ $k3 }}]" value="{{ $v3 }}">
+                                                    @endforeach
+                                                @else
+                                                    <input type="hidden" name="{{ $key }}[{{ $k }}][{{ $k2 }}]" value="{{ $v2 }}">
+                                                @endif
+                                            @endforeach
+                                        @else
+                                            <input type="hidden" name="{{ $key }}[{{ $k }}]" value="{{ $v }}">
+                                        @endif
+                                    @endforeach
+                                @else
+                                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                                @endif
+                            @endforeach
+                            <button type="submit" class="btn btn-sm btn-modern-outline" style="border-color: #10b981; color: #10b981;">
+                                <i class="bi bi-file-earmark-excel"></i>
+                            </button>
+                        </form>
+
+                        <button type="button" class="btn btn-sm btn-modern-primary" data-bs-toggle="modal" data-bs-target="#savePlanModal" title="Sauvegarder définitivement">
+                            <i class="bi bi-bookmark-fill"></i>
                         </button>
-                    </form>
 
-                    <button type="button" class="btn btn-sm btn-modern-primary" data-bs-toggle="modal" data-bs-target="#savePlanModal">
-                        <i class="bi bi-bookmark-fill me-1"></i> Sauvegarder
-                    </button>
-
-                    <button type="button" class="btn btn-sm btn-modern-outline" onclick="window.location.reload()">
-                        <i class="bi bi-x-lg"></i> Annuler
-                    </button>
+                        <form action="{{ route('admin.operations.discard_draft') }}" method="POST" class="d-inline" onsubmit="return confirm('Annuler la simulation et supprimer le brouillon ?')">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-modern-outline text-danger border-danger" title="Tout annuler">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
 
@@ -543,7 +579,26 @@
                                         <span class="status-dot status-dot--filled"></span>
                                         <div class="role-label text-truncate">{{ $member['role'] }}</div>
                                         <div class="member-name flex-grow-1 text-truncate">{{ $member['name'] }}</div>
-                                        <i class="bi bi-grip-vertical text-muted"></i>
+                                        <div class="d-flex align-items-center gap-1">
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-link p-0 text-info opacity-50 hover-opacity-100"
+                                                    onclick="showAgentQuickView({{ $member['id'] }})"
+                                                    title="Détails complets">
+                                                <i class="bi bi-info-circle"></i>
+                                            </button>
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-link p-0 text-primary opacity-50 hover-opacity-100"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#editAgentProfileModal"
+                                                    data-user-id="{{ $member['id'] }}"
+                                                    data-user-name="{{ $member['name'] }}"
+                                                    data-profil-id="{{ $member['profil_id'] }}"
+                                                    data-ministere-id="{{ $member['ministere_id'] }}"
+                                                    title="Modifier le profil">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </button>
+                                            <i class="bi bi-grip-vertical text-muted"></i>
+                                        </div>
                                     </div>
                                 @empty
                                     <div class="text-center py-4 border-dashed rounded-4 bg-light bg-opacity-50">
@@ -637,6 +692,12 @@
                                             </div>
                                             <div class="d-flex align-items-center gap-1">
                                                 <button type="button" 
+                                                        class="btn btn-sm btn-link p-0 text-info opacity-50 hover-opacity-100"
+                                                        onclick="showAgentQuickView({{ $member->id }})"
+                                                        title="Détails complets">
+                                                    <i class="bi bi-info-circle"></i>
+                                                </button>
+                                                <button type="button" 
                                                         class="btn btn-sm btn-link p-0 text-primary opacity-50 hover-opacity-100"
                                                         data-bs-toggle="modal"
                                                         data-bs-target="#editAgentProfileModal"
@@ -700,6 +761,12 @@
                                     </div>
                                 </div>
                                 <div class="d-flex align-items-center gap-1">
+                                    <button type="button" 
+                                            class="btn btn-sm btn-light border rounded-pill p-1 text-info" 
+                                            onclick="showAgentQuickView({{ $user->id }})"
+                                            title="Voir détails">
+                                        <i class="bi bi-info-circle small"></i>
+                                    </button>
                                     <button type="button" 
                                             class="btn btn-sm btn-light border rounded-pill p-1" 
                                             data-bs-toggle="modal"
@@ -869,21 +936,25 @@
                                 </div>
 
                                 <div class="row g-3 mb-4">
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <label class="form-label fw-bold text-muted small text-uppercase mb-2">Nombre d'équipes</label>
                                         <input type="number" name="deployment_blocks[{{ $index }}][team_count]" class="form-control rounded-3 border-light bg-light px-3" style="height: 46px;" min="1" max="100" value="{{ $block['team_count'] ?? 1 }}" required>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-bold text-muted small text-uppercase mb-2">Format de l'unité</label>
-                                        <div class="d-flex align-items-center justify-content-between bg-light rounded-3 px-3 border border-dashed border-primary border-opacity-25" style="height: 46px;">
-                                            <div class="d-flex align-items-center">
-                                                <span class="text-muted small fw-bold text-uppercase">Total :</span>
-                                                <span class="h6 mb-0 fw-800 text-primary ms-2" data-block-total-display>0</span>
-                                                <span class="text-muted small fw-bold ms-1">membres</span>
+                                    <div class="col-md-8">
+                                        <label class="form-label fw-bold text-muted small text-uppercase mb-2">Capacité du Bloc</label>
+                                        <div class="d-flex align-items-center justify-content-between bg-light rounded-3 p-2 border border-dashed border-primary border-opacity-25" style="height: 46px;">
+                                            <div class="small fw-bold text-muted ps-2">
+                                                <i class="bi bi-info-circle me-1"></i> Optimisation disponible après simulation
                                             </div>
-                                            <div class="d-flex align-items-center border-start ps-3 ms-2 py-1" style="border-color: rgba(37, 99, 235, 0.1) !important;">
-                                                <span class="text-muted small fw-bold text-uppercase me-2" style="font-size: 0.6rem;">Potentiel :</span>
-                                                <span class="badge rounded-pill bg-white text-primary border border-primary border-opacity-25 fw-800" data-block-potential-display>0</span>
+                                            <div class="d-flex align-items-center">
+                                                <div class="text-center px-3 border-start" style="border-color: rgba(37, 99, 235, 0.1) !important;">
+                                                    <div class="text-muted fw-bold" style="font-size: 0.55rem; line-height: 1;">TOTAL</div>
+                                                    <div class="h6 mb-0 fw-800 text-primary" data-block-total-display>0</div>
+                                                </div>
+                                                <div class="text-center px-3 border-start" style="border-color: rgba(37, 99, 235, 0.1) !important;">
+                                                    <div class="text-muted fw-bold" style="font-size: 0.55rem; line-height: 1;">POTENTIEL</div>
+                                                    <div class="badge rounded-pill bg-white text-primary border border-primary border-opacity-25 fw-800" data-block-potential-display>0</div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -1080,10 +1151,105 @@
     </div>
 </div>
 
+<!-- Modal Détails Agent -->
+<div class="modal fade" id="agentQuickViewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content glass-card border-0">
+            <div class="modal-header border-0 pt-4 px-4 bg-light bg-opacity-50">
+                <h5 class="modal-title fw-bold text-dark">Fiche d'identification de l'agent</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4" id="agentQuickViewContent">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pb-4 px-4">
+                <button type="button" class="btn btn-modern-outline w-100" data-bs-dismiss="modal">Fermer la fiche</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
 <script>
+    function showAgentQuickView(userId) {
+        const modal = new bootstrap.Modal(document.getElementById('agentQuickViewModal'));
+        const content = document.getElementById('agentQuickViewContent');
+        
+        content.innerHTML = `
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>`;
+        
+        modal.show();
+
+        fetch(`/admin/candidates/${userId}/json`)
+            .then(response => response.json())
+            .then(data => {
+                const experiences = data.experiences ? data.experiences.join(', ') : 'Aucune';
+                const competences = data.competences_techniques ? data.competences_techniques.join(', ') : 'Aucune';
+                
+                content.innerHTML = `
+                    <div class="row g-4">
+                        <div class="col-md-5">
+                            <div class="d-flex flex-column align-items-center p-4 bg-light rounded-4 h-100 text-center">
+                                <div class="bg-primary bg-opacity-10 text-primary p-4 rounded-circle mb-3">
+                                    <i class="bi bi-person-fill fs-1"></i>
+                                </div>
+                                <h4 class="h5 fw-bold mb-1">${data.prenom} ${data.nom}</h4>
+                                <span class="badge bg-primary rounded-pill mb-3">${data.profil?.libelle || 'Agent'}</span>
+                                <div class="w-100 border-top pt-3 mt-auto">
+                                    <div class="small text-muted text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Téléphone</div>
+                                    <div class="fw-bold text-dark">+221 ${data.telephone || 'N/A'}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-7">
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="small text-muted text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Matricule / CIN</div>
+                                    <div class="fw-bold text-dark">${data.matricule || 'N/A'}</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="small text-muted text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Email</div>
+                                    <div class="fw-bold text-dark text-truncate" title="${data.email || ''}">${data.email || 'N/A'}</div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="small text-muted text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Structure (Ministère)</div>
+                                    <div class="fw-bold text-dark">${data.ministere?.nom || 'Non renseigné'}</div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="small text-muted text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Direction / Service</div>
+                                    <div class="fw-bold text-dark">${data.direction || 'Non renseignée'}</div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="p-3 border rounded-4 bg-light bg-opacity-50">
+                                        <div class="small text-muted text-uppercase fw-bold mb-2" style="font-size: 0.65rem;">Expériences & Projets</div>
+                                        <div class="small text-dark" style="line-height: 1.4;">${experiences}</div>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="p-3 border rounded-4 bg-light bg-opacity-50">
+                                        <div class="small text-muted text-uppercase fw-bold mb-2" style="font-size: 0.65rem;">Compétences Techniques</div>
+                                        <div class="small text-dark" style="line-height: 1.4;">${competences}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            })
+            .catch(error => {
+                content.innerHTML = `<div class="alert alert-danger">Erreur lors du chargement des données.</div>`;
+            });
+    }
+
     (function () {
         const availablePoolCounts = @json($availablePoolCounts);
         let draggedPayload = null;
@@ -1235,27 +1401,39 @@
 
         function syncSimulationState() {
             if (!simulationStateInput && !savePlanStateInput) return;
-            
+
             const state = [];
             document.querySelectorAll('.simulation-team').forEach(teamEl => {
                 const teamName = teamEl.querySelector('.team-title')?.textContent?.trim();
                 const memberIds = [];
-                
+
                 teamEl.querySelectorAll('.sim-member').forEach(memberEl => {
                     if (memberEl.dataset.simUserId) {
                         memberIds.push(memberEl.dataset.simUserId);
                     }
                 });
-                
+
                 state.push({
                     nom: teamName,
                     user_ids: memberIds
                 });
             });
-            
+
             const jsonState = JSON.stringify(state);
             if (simulationStateInput) simulationStateInput.value = jsonState;
             if (savePlanStateInput) savePlanStateInput.value = jsonState;
+
+            // SAUVEGARDE AUTO DU BROUILLON (AJAX)
+            if (state.length > 0) {
+                fetch('{{ route('admin.operations.update_draft') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ simulation_state: jsonState })
+                });
+            }
         }
 
         function swapSimulationMembers(memberA, memberB) {
@@ -1287,9 +1465,9 @@
 
                 const simTarget = e.target.closest('.sim-member');
                 if (simTarget && simTarget === simDragged) return;
-                
+
                 const draggedName = simDragged.querySelector('.member-name')?.textContent?.trim() || 'cet agent';
-                
+
                 if (!confirmSimMoveModal) return;
 
                 const cModalTitle = confirmSimMoveModalElement.querySelector('.modal-title');
@@ -1305,7 +1483,7 @@
                 }
 
                 confirmSimMoveModal.show();
-                
+
                 // On utilise une fonction nommée pour pouvoir la retirer ou l'écraser proprement
                 document.getElementById('confirmSimMoveConfirm').onclick = () => {
                     if (simTarget) {
@@ -1325,19 +1503,91 @@
         // Initialize state if simulation is present
         syncSimulationState();
 
-        // Agent Profile Editing Logic
+        // Agent Profile Editing Logic (AJAX)
         const editAgentProfileModalElement = document.getElementById('editAgentProfileModal');
+        const editAgentProfileForm = editAgentProfileModalElement ? editAgentProfileModalElement.querySelector('form') : null;
+
         if (editAgentProfileModalElement) {
             editAgentProfileModalElement.addEventListener('show.bs.modal', (event) => {
                 const trigger = event.relatedTarget;
                 const ds = trigger.dataset;
-                
+
                 document.getElementById('editAgentId').value = ds.userId;
                 document.getElementById('editAgentNameDisplay').textContent = ds.userName;
                 document.getElementById('editAgentProfilId').value = ds.profilId;
                 document.getElementById('editAgentMinistereId').value = ds.ministereId || '';
                 document.getElementById('editAgentDirection').value = ds.direction || '';
             });
+
+            if (editAgentProfileForm) {
+                editAgentProfileForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(editAgentProfileForm);
+                    const submitBtn = editAgentProfileForm.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.textContent;
+
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Mise à jour...';
+
+                    fetch(editAgentProfileForm.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const agentId = data.user.id;
+
+                            // 1. Équipes réelles
+                            document.querySelectorAll(`.drag-card[data-user-id="${agentId}"]`).forEach(el => {
+                                const nameEl = el.closest('.member-line')?.querySelector('.member-name') || el;
+                                nameEl.textContent = data.user.name;
+                                el.dataset.userName = data.user.name;
+                                el.dataset.profilId = data.user.profil_id;
+                                el.dataset.ministereId = data.user.ministere_id;
+                            });
+
+                            // 2. Simulation
+                            document.querySelectorAll(`.sim-member[data-sim-user-id="${agentId}"]`).forEach(el => {
+                                const nameEl = el.querySelector('.member-name');
+                                if (nameEl) nameEl.textContent = data.user.name;
+                                el.dataset.userName = data.user.name;
+                                el.dataset.profilId = data.user.profil_id;
+                                el.dataset.ministereId = data.user.ministere_id;
+                            });
+
+                            // 3. Vivier
+                            document.querySelectorAll(`.list-group-item[data-user-id="${agentId}"]`).forEach(el => {
+                                const nameEl = el.querySelector('.fw-bold');
+                                const profilEl = el.querySelector('.text-primary');
+                                if (nameEl) nameEl.textContent = data.user.name;
+                                if (profilEl) profilEl.textContent = data.user.profil_libelle;
+                                el.dataset.userName = data.user.name;
+                                el.dataset.profilId = data.user.profil_id;
+                                el.dataset.ministereId = data.user.ministere_id;
+                            });
+
+                            bootstrap.Modal.getInstance(editAgentProfileModalElement).hide();
+
+                            const toast = document.createElement('div');
+                            toast.className = 'position-fixed bottom-0 end-0 p-3';
+                            toast.style.zIndex = '1060';
+                            toast.innerHTML = `<div class="alert alert-success shadow-lg rounded-4"><i class="bi bi-check-circle me-2"></i>Agent mis à jour sans rechargement.</div>`;
+                            document.body.appendChild(toast);
+                            setTimeout(() => toast.remove(), 3000);
+                        }
+                    })
+                    .catch(error => alert('Erreur lors de la mise à jour'))
+                    .finally(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = originalText;
+                    });
+                });
+            }
         }
 
         // Block Management
@@ -1422,7 +1672,7 @@
 
             function refreshIndexes() {
                 blockContainer.querySelectorAll('[data-deployment-block]').forEach((b, i) => {
-                    b.querySelectorAll('input').forEach(inp => {
+                    b.querySelectorAll('input, select').forEach(inp => {
                         inp.name = inp.name.replace(/deployment_blocks\[\d+\]/, `deployment_blocks[${i}]`);
                     });
                     const titleEl = b.querySelector('.deploy-block-row__title');

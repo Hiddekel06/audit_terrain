@@ -1,5 +1,19 @@
 # Mémoire du Projet - Audit Terrain
 
+## 11/06/2026 : Optimisation Algorithmique & Randomisation
+
+### 1. Moteur de Déploiement "Random-then-Group"
+- **Phase 1 : Randomisation Totale** : Le système effectue d'abord un tirage au sort 100% aléatoire (shuffle) pour remplir toutes les équipes et respecter les quotas.
+- **Phase 2 : Optimisation de Cohésion** : 
+    - Si une stratégie de regroupement est choisie, le système réorganise les membres déjà assignés.
+    - **Concentration Ciblée** : Les agents d'une structure spécifique (ou de toutes les structures selon le mode) sont déplacés pour être regroupés dans un minimum d'équipes.
+    - **Intégrité des Quotas** : Ce réarrangement se fait uniquement par permutation entre membres de même profil, garantissant que la structure des équipes reste inchangée.
+- **Sélecteur de Stratégie Granulaire** : Remplacement de l'interrupteur par un sélecteur permettant de choisir la mixité, le regroupement global ou le regroupement d'un ministère précis.
+
+### 2. Interface de Configuration
+- **Switch UI** : Intégration d'un commutateur "Regrouper par structure" dans la modale de paramétrage intelligent.
+- **Feedback Dynamique** : Mise à jour en temps réel des quotas et du potentiel lors de l'ajout/suppression de blocs.
+
 ## 02/06/2026 : Intelligence Opérationnelle & Aide à la Décision
 
 ### 1. Moteur OR & Aide à la Décision
