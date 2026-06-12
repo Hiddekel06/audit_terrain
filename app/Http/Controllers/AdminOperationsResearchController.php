@@ -136,8 +136,10 @@ class AdminOperationsResearchController extends Controller
         $draftPlan = DeploymentPlan::where('is_draft', true)->orderBy('updated_at', 'desc')->first();
         $simulationTeams = null;
         $simulationSummary = null;
+        $currentRegroupMinistereId = null;
 
         if ($draftPlan) {
+            $currentRegroupMinistereId = $draftPlan->metadata['regroup_ministere_id'] ?? null;
             $decodedState = $draftPlan->data;
             $simulationTeams = [];
             $roleLabels = $this->deploymentRoleLabels();
@@ -170,7 +172,7 @@ class AdminOperationsResearchController extends Controller
             }
         }
 
-        return compact('teams', 'regions', 'profils', 'unassignedUsers', 'selectedRegionId', 'availablePoolCounts', 'allMinisteres', 'simulationTeams', 'simulationSummary', 'draftPlan');
+        return compact('teams', 'regions', 'profils', 'unassignedUsers', 'selectedRegionId', 'availablePoolCounts', 'allMinisteres', 'simulationTeams', 'simulationSummary', 'draftPlan', 'currentRegroupMinistereId');
     }
 
     /**

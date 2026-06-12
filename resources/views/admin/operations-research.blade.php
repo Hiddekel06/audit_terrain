@@ -103,6 +103,33 @@
     .status-dot--filled { background: #10b981; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1); }
     .status-dot--empty { border: 2px solid #cbd5e1; }
 
+    .member-line--highlighted {
+        background: var(--member-bg, #f8fafc) !important;
+        border: 1px solid var(--member-color, rgba(37, 99, 235, 0.2)) !important;
+        border-left: 4px solid var(--member-color, #2563eb) !important;
+        border-radius: 0.6rem;
+        padding-left: 0.8rem !important;
+        padding-right: 0.8rem !important;
+        margin-bottom: 3px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        position: relative;
+    }
+
+    .member-line--highlighted .status-dot {
+        background: var(--member-color, #2563eb) !important;
+        box-shadow: 0 0 0 3px var(--member-bg, #f8fafc) !important;
+    }
+
+    .member-line--highlighted .member-name {
+        color: #0f172a !important;
+        font-weight: 700 !important;
+    }
+
+    .member-line--highlighted .role-label {
+        color: var(--member-color, #64748b) !important;
+        opacity: 0.8;
+    }
+
     .role-label {
         font-size: 0.65rem;
         font-weight: 800;
@@ -576,12 +603,45 @@
                             </div>
 
                             <div class="simulation-members flex-grow-1 d-flex flex-column" data-sim-team-index="{{ $tIndex }}">
+                                @php
+                                    $ministereColors = [
+                                        1 => ['bg' => '#eff6ff', 'color' => '#2563eb'], // Bleu
+                                        2 => ['bg' => '#ecfdf5', 'color' => '#10b981'], // Vert
+                                        3 => ['bg' => '#fffbeb', 'color' => '#f59e0b'], // Ambre
+                                        4 => ['bg' => '#fef2f2', 'color' => '#ef4444'], // Rouge
+                                        5 => ['bg' => '#f5f3ff', 'color' => '#8b5cf6'], // Violet
+                                        6 => ['bg' => '#fdf2f8', 'color' => '#ec4899'], // Rose
+                                        7 => ['bg' => '#ecfeff', 'color' => '#06b6d4'], // Cyan
+                                        8 => ['bg' => '#f0fdf4', 'color' => '#16a34a'], // Émeraude
+                                        9 => ['bg' => '#fff7ed', 'color' => '#ea580c'], // Orange
+                                        10 => ['bg' => '#fafaf9', 'color' => '#78716c'], // Pierre
+                                    ];
+                                @endphp
                                 @forelse($team['members'] as $mIndex => $member)
-                                    <div class="member-line sim-member drag-card"
+                                    @php
+                                        $mId = $member['ministere_id'] ?? 0;
+                                        $isHighlighted = false;
+                                        $customStyle = '';
+
+                                        if (!empty($currentRegroupMinistereId)) {
+                                            if ($currentRegroupMinistereId === 'all' && $mId > 0) {
+                                                $isHighlighted = true;
+                                                $c = $ministereColors[($mId % 10) + 1];
+                                                $customStyle = "--member-bg: {$c['bg']}; --member-color: {$c['color']};";
+                                            } elseif ($currentRegroupMinistereId == $mId) {
+                                                $isHighlighted = true;
+                                                // On utilise une couleur fixe pour le regroupement ciblé (Indigo/Bleu)
+                                                $customStyle = "--member-bg: #eef2ff; --member-color: #4f46e5;";
+                                            }
+                                        }
+                                    @endphp
+                                    <div class="member-line sim-member drag-card {{ $isHighlighted ? 'member-line--highlighted' : '' }}"
                                          draggable="true"
                                          data-sim-user-id="{{ $member['id'] }}"
                                          data-sim-team-index="{{ $tIndex }}"
                                          data-sim-member-index="{{ $mIndex }}"
+                                         @if($isHighlighted) style="{!! $customStyle !!}" @endif
+                                         title="{{ $member['structure'] }}"
                                     >
                                         <span class="status-dot status-dot--filled"></span>
                                         <div class="role-label text-truncate">{{ $member['role'] }}</div>
@@ -749,8 +809,35 @@
             <div class="glass-card overflow-hidden drop-zone-unassigned" data-drop-unassigned="1">
                 <div class="list-group list-group-flush bg-transparent">
                     @forelse($unassignedUsers as $user)
+                        @php
+                            $mId = $user->ministere_id ?? 0;
+                            $isLibreHighlighted = false;
+                            $libreStyle = '';
+                            
+                            if (!empty($currentRegroupMinistereId)) {
+                                if ($currentRegroupMinistereId === 'all' && $mId > 0) {
+                                    $isLibreHighlighted = true;
+                                    $c = [
+                                        1 => ['bg' => '#eff6ff', 'color' => '#2563eb'],
+                                        2 => ['bg' => '#ecfdf5', 'color' => '#10b981'],
+                                        3 => ['bg' => '#fffbeb', 'color' => '#f59e0b'],
+                                        4 => ['bg' => '#fef2f2', 'color' => '#ef4444'],
+                                        5 => ['bg' => '#f5f3ff', 'color' => '#8b5cf6'],
+                                        6 => ['bg' => '#fdf2f8', 'color' => '#ec4899'],
+                                        7 => ['bg' => '#ecfeff', 'color' => '#06b6d4'],
+                                        8 => ['bg' => '#f0fdf4', 'color' => '#16a34a'],
+                                        9 => ['bg' => '#fff7ed', 'color' => '#ea580c'],
+                                        10 => ['bg' => '#fafaf9', 'color' => '#78716c'],
+                                    ][($mId % 10) + 1];
+                                    $libreStyle = "--member-bg: {$c['bg']}; --member-color: {$c['color']};";
+                                } elseif ($currentRegroupMinistereId == $mId) {
+                                    $isLibreHighlighted = true;
+                                    $libreStyle = "--member-bg: #eef2ff; --member-color: #4f46e5;";
+                                }
+                            }
+                        @endphp
                         <div
-                            class="list-group-item p-3 border-0 border-bottom bg-transparent hover-bg-light transition-all drag-card"
+                            class="list-group-item p-3 border-0 border-bottom bg-transparent hover-bg-light transition-all drag-card {{ $isLibreHighlighted ? 'member-line--highlighted' : '' }}"
                             draggable="true"
                             data-user-id="{{ $user->id }}"
                             data-user-name="{{ $user->prenom }} {{ $user->nom }}"
@@ -758,6 +845,7 @@
                             data-ministere-id="{{ $user->ministere_id }}"
                             data-direction="{{ $user->direction }}"
                             data-source-team-id=""
+                            @if($isLibreHighlighted) style="{!! $libreStyle !!}" @endif
                         >
                             <div class="d-flex align-items-center gap-3">
                                 <div class="status-dot status-dot--filled" style="width:8px; height:8px; background:#2563eb;"></div>
