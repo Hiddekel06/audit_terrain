@@ -57,6 +57,17 @@ class AdminCandidateController extends Controller
             $query->where('ministere_id', $request->ministere_id);
         }
 
+        if ($request->filled('direction')) {
+            if ($request->direction === '_none_') {
+                $query->where(function ($q) {
+                    $q->whereNull('direction')
+                        ->orWhere('direction', '');
+                });
+            } else {
+                $query->where('direction', $request->direction);
+            }
+        }
+
         if ($request->filled('telephone_status')) {
             if ($request->telephone_status === 'missing') {
                 $query->where(function ($q) {
@@ -111,6 +122,11 @@ class AdminCandidateController extends Controller
         // Données pour les filtres
         $profils = Profil::where('is_active', true)->get();
         $ministeres = $this->selectableMinisteres();
+        $directions = User::whereNotNull('direction')
+            ->where('direction', '!=', '')
+            ->distinct()
+            ->orderBy('direction')
+            ->pluck('direction');
         $regions = Region::orderBy('nom')->get();
         $niveauxNumeriques = ['debutant', 'intermediaire', 'avance', 'expert'];
         $experiences = [
@@ -128,6 +144,7 @@ class AdminCandidateController extends Controller
             'candidates',
             'profils',
             'ministeres',
+            'directions',
             'regions',
             'niveauxNumeriques',
             'experiences',
@@ -469,6 +486,26 @@ class AdminCandidateController extends Controller
         }
         if ($request->filled('ministere_id')) {
             $baseQuery->where('ministere_id', $request->ministere_id);
+        }
+        if ($request->filled('direction')) {
+            if ($request->direction === '_none_') {
+                $baseQuery->where(function ($q) {
+                    $q->whereNull('direction')->orWhere('direction', '');
+                });
+            } else {
+                $baseQuery->where('direction', $request->direction);
+            }
+        }
+        if ($request->filled('telephone_status')) {
+            if ($request->telephone_status === 'missing') {
+                $baseQuery->where(function ($q) {
+                    $q->whereNull('telephone')->orWhere('telephone', '');
+                });
+            } elseif ($request->telephone_status === 'present') {
+                $baseQuery->where(function ($q) {
+                    $q->whereNotNull('telephone')->where('telephone', '!=', '');
+                });
+            }
         }
         if ($request->filled('experience')) {
             $baseQuery->whereJsonContains('experiences', $request->experience);

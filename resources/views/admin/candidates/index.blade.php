@@ -184,6 +184,16 @@
                 </select>
             </div>
             <div class="col-md-3">
+                <label class="form-label fw-bold small text-uppercase text-muted ms-2">Direction</label>
+                <select name="direction" class="form-select filter-input">
+                    <option value="">Toutes les directions</option>
+                    <option value="_none_" @selected(request('direction') === '_none_')>— Sans direction —</option>
+                    @foreach($directions as $dir)
+                        <option value="{{ $dir }}" @selected(request('direction') === $dir)>{{ $dir }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
                 <label class="form-label fw-bold small text-uppercase text-muted ms-2">Téléphone</label>
                 <select name="telephone_status" class="form-select filter-input">
                     <option value="">Tous</option>
@@ -195,7 +205,7 @@
                 <button type="submit" class="btn btn-modern-primary w-100 py-2">
                     <i class="bi bi-filter me-2"></i> Filtrer
                 </button>
-                @if(request()->anyFilled(['search', 'profil_id', 'experience', 'ministere_id', 'telephone_status', 'region_id', 'ready_to_deploy', 'niveau_numerique']))
+                @if(request()->anyFilled(['search', 'profil_id', 'experience', 'ministere_id', 'direction', 'telephone_status', 'region_id', 'ready_to_deploy', 'niveau_numerique']))
                     <a href="{{ route('admin.candidates.index') }}" class="btn btn-modern-outline py-2" title="Réinitialiser">
                         <i class="bi bi-arrow-counterclockwise"></i>
                     </a>
@@ -273,7 +283,7 @@
 
                                 <td class="text-center">
                                     <div style="display:flex; gap:0.5rem; justify-content:center; align-items:center;">
-                                        <a href="{{ route('admin.candidates.show', $candidate) }}" title="Voir" class="btn btn-sm btn-modern-outline" style="padding:0.45rem 0.6rem;">
+                                        <a href="{{ route('admin.candidates.show', array_merge(['user' => $candidate->id], request()->query())) }}" title="Voir" class="btn btn-sm btn-modern-outline" style="padding:0.45rem 0.6rem;">
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
                                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                                 <circle cx="12" cy="12" r="3"></circle>
