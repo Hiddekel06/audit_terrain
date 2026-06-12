@@ -131,6 +131,8 @@
     /* Drag & Drop Visuals */
     .drag-card { cursor: grab; }
     .drag-card:active { cursor: grabbing; }
+    .team-drag-handle { cursor: grab; }
+    .team-drag-handle:active { cursor: grabbing; }
     .dragging { opacity: 0.4; transform: scale(0.98); }
     
     .drop-ready { background: #eff6ff !important; border-color: #2563eb !important; }
@@ -554,15 +556,20 @@
                 </div>
             </div>
 
-            <div class="row g-4">
+            <div class="row g-4" id="simulationTeamsContainer">
                 @foreach($simulationTeams as $tIndex => $team)
-                    <div class="col-md-6 col-xl-4">
+                    <div class="col-md-6 col-xl-4 simulation-team-wrapper" draggable="true" data-team-wrapper-index="{{ $tIndex }}">
                         <div class="glass-card team-card-clean simulation-team h-100" data-sim-team-index="{{ $tIndex }}">
                             <div class="d-flex justify-content-between align-items-start mb-4">
-                                <div>
-                                    <div class="team-title">{{ $team['nom'] }}</div>
-                                    <div class="team-subtitle">
-                                        
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="team-drag-handle cursor-grab text-muted opacity-50 hover-opacity-100" style="cursor: grab;">
+                                        <i class="bi bi-grip-vertical fs-5"></i>
+                                    </div>
+                                    <div>
+                                        <div class="team-title">{{ $team['nom'] }}</div>
+                                        <div class="team-subtitle">
+                                            
+                                        </div>
                                     </div>
                                 </div>
                                 <span class="badge bg-light text-dark rounded-pill px-2 py-1 small fw-bold border">SIM</span>
@@ -1399,6 +1406,18 @@
         const simulationStateInput = document.getElementById('simulationStateInput');
         const savePlanStateInput = document.getElementById('savePlanStateInput');
 
+        function renameTeams() {
+            document.querySelectorAll('.simulation-team-wrapper').forEach((wrapper, idx) => {
+                const titleEl = wrapper.querySelector('.team-title');
+                if (titleEl) {
+                    titleEl.textContent = `Équipe ${idx + 1}`;
+                }
+                const teamEl = wrapper.querySelector('.simulation-team');
+                if (teamEl) teamEl.dataset.simTeamIndex = idx;
+                wrapper.querySelectorAll('.sim-member').forEach(m => m.dataset.simTeamIndex = idx);
+            });
+        }
+
         function syncSimulationState() {
             if (!simulationStateInput && !savePlanStateInput) return;
 
@@ -1434,6 +1453,49 @@
                     body: JSON.stringify({ simulation_state: jsonState })
                 });
             }
+        }
+
+        // Team Drag & Drop
+        const teamsContainer = document.getElementById('simulationTeamsContainer');
+        if (teamsContainer) {
+            let draggedTeam = null;
+
+            teamsContainer.addEventListener('dragstart', (e) => {
+                const wrapper = e.target.closest('.simulation-team-wrapper');
+                // On ne déclenche le drag d'équipe que si on ne traîne pas un membre
+                if (wrapper && !e.target.closest('.sim-member')) {
+                    draggedTeam = wrapper;
+                    wrapper.classList.add('opacity-50');
+                    e.dataTransfer.effectAllowed = 'move';
+                }
+            });
+
+            teamsContainer.addEventListener('dragend', (e) => {
+                if (draggedTeam) {
+                    draggedTeam.classList.remove('opacity-50');
+                    draggedTeam = null;
+                }
+            });
+
+            teamsContainer.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                if (!draggedTeam) return;
+                
+                const targetWrapper = e.target.closest('.simulation-team-wrapper');
+                if (targetWrapper && targetWrapper !== draggedTeam) {
+                    const rect = targetWrapper.getBoundingClientRect();
+                    const next = (e.clientY - rect.top) > (rect.height / 2);
+                    teamsContainer.insertBefore(draggedTeam, next ? targetWrapper.nextSibling : targetWrapper);
+                }
+            });
+
+            teamsContainer.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (draggedTeam) {
+                    renameTeams();
+                    syncSimulationState();
+                }
+            });
         }
 
         function swapSimulationMembers(memberA, memberB) {
