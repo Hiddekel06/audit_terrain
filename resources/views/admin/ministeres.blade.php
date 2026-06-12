@@ -209,14 +209,14 @@
                             </div>
                             <div class="stat-tile d-flex justify-content-between align-items-center">
                                 <div>
-                                    <div class="stat-label">Auditeurs</div>
+                                    <div class="stat-label">Auditeurs IT</div>
                                     <div class="fw-bold text-dark">{{ $ministere->auditeurs_count }}</div>
                                 </div>
                                 <span class="badge rounded-pill text-bg-light">{{ $auditeursPct }}%</span>
                             </div>
                             <div class="stat-tile d-flex justify-content-between align-items-center">
                                 <div>
-                                    <div class="stat-label">Supports</div>
+                                    <div class="stat-label">Administratifs</div>
                                     <div class="fw-bold text-dark">{{ $ministere->supports_count }}</div>
                                 </div>
                                 <span class="badge rounded-pill text-bg-light">{{ $supportsPct }}%</span>

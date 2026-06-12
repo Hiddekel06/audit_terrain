@@ -17,8 +17,8 @@ class AdminMinistereStatsController extends Controller
 
         $profileCodes = [
             'chef_equipe' => 'Chefs d\'équipe',
-            'auditeur' => 'Auditeurs',
-            'auditeur_it' => 'Supports',
+            'auditeur' => 'Auditeurs IT',
+            'auditeur_it' => 'Administratifs',
             'chauffeur' => 'Chauffeurs',
         ];
 

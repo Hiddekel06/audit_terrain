@@ -36,14 +36,14 @@ class AdminOperationsResearchController extends Controller
                 'summary' => 'Chefs',
             ],
             'auditeur' => [
-                'label' => 'Auditeur',
+                'label' => 'Auditeur IT',
                 'icon' => 'bi-person',
-                'summary' => 'Auditeurs',
+                'summary' => 'Auditeurs IT',
             ],
             'auditeur_it' => [
-                'label' => 'Support',
+                'label' => 'Auditeur Administratif',
                 'icon' => 'bi-tools',
-                'summary' => 'Supports',
+                'summary' => 'Administratifs',
             ],
             'chauffeur' => [
                 'label' => 'Chauffeur',

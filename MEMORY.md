@@ -1,5 +1,25 @@
 # Mémoire du Projet - Audit Terrain
 
+## 12/06/2026 : Optimisation de l'Expérience Administrative & Navigation
+
+### 1. Gestion des Candidats : Filtres & Navigation
+- **Filtre par Direction** : Ajout d'un menu déroulant dynamique pour filtrer les agents par direction. Gestion spécifique du cas "Sans direction" pour isoler les fiches incomplètes.
+- **Navigation Contextuelle (Persistance)** :
+    - Les filtres appliqués sur la liste (Structure, Direction, Profil, Recherche) sont désormais transmis à la fiche détail.
+    - Les boutons **"Précédent" / "Suivant"** respectent désormais le contexte de filtrage actuel.
+    - Le bouton **"Retour"** renvoie l'utilisateur à sa liste filtrée initiale sans perte de données.
+
+### 2. Module Recherche Opérationnelle : Ergonomie du Déploiement
+- **Réorganisation des Équipes par Drag & Drop** :
+    - Possibilité de déplacer des blocs d'équipes entiers pour changer leur priorité.
+    - **Renommage Automatique** : Les équipes se renumérotent dynamiquement ("Équipe 1", "Équipe 2", ...) après chaque déplacement pour maintenir une structure cohérente.
+- **Visibilité du Vivier (Stock Réel)** :
+    - Les agents présents dans une simulation (brouillon) sont désormais masqués de la liste des "Agents Libres".
+    - Cela permet une vision nette du stock d'agents restant réellement disponibles sans affecter la base de données finale.
+
+### 3. Données de Test & Simulation
+- **Génération Massive (Seeders)** : Création de scripts de peuplement générant plus de 100 agents avec des quotas réalistes (majorité d'Auditeurs et Chefs, minorité de Chauffeurs/Superviseurs) et une forte disponibilité nationale (95%).
+
 ## 11/06/2026 : Optimisation Algorithmique & Randomisation
 
 ### 1. Moteur de Déploiement "Random-then-Group"

@@ -22,7 +22,7 @@ class ProfilSeeder extends Seeder
             ],
             [
                 'id' => 2,
-                'libelle' => 'Auditeur',
+                'libelle' => 'Auditeur IT',
                 'code' => 'auditeur',
                 'description' => 'Réaliser l’audit et garantir la fiabilité des données.',
                 'ordre' => 2,
@@ -32,7 +32,7 @@ class ProfilSeeder extends Seeder
             ],
             [
                 'id' => 3,
-                'libelle' => 'Auditeur – Support Technique (IT)',
+                'libelle' => 'Auditeur Administratif',
                 'code' => 'auditeur_it',
                 'description' => 'Garantir la fiabilité technique et la qualité des données.',
                 'ordre' => 3,

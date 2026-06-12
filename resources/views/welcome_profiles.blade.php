@@ -538,7 +538,7 @@
                 <span><i class="bi bi-person-badge"></i></span>
             </div>
             <div class="card-content">
-                <h3>Auditeur</h3>
+                <h3>Auditeur IT</h3>
                 <div class="card-mission">Réaliser l'audit et garantir la fiabilité</div>
                 <ul class="card-preview">
                     <li><i class="bi bi-id-card"></i> Vérification identité</li>
@@ -556,7 +556,7 @@
                 <span><i class="bi bi-tools"></i></span>
             </div>
             <div class="card-content">
-                <h3>Support</h3>
+                <h3>Auditeur Administratif</h3>
                 <div class="card-mission">Fiabilité technique et qualité des données</div>
                 <ul class="card-preview">
                     <li><i class="bi bi-gear"></i> Gestion des équipements</li>
@@ -564,7 +564,7 @@
                     <li><i class="bi bi-fingerprint"></i> Contrôle des données</li>
                 </ul>
             </div>
-            <button class="btn-details" onclick="openModal('support', 3)">
+            <button class="btn-details" onclick="openModal('administratif', 3)">
                 <i class="bi bi-eye"></i> Voir les détails
             </button>
         </div>
@@ -640,7 +640,7 @@
             icon: 'bi-person-badge',
             iconBg: '#d1fae5',
             iconColor: '#0f766e',
-            title: 'Auditeur',
+            title: 'Auditeur IT',
             mission: 'Réaliser l\'audit et garantir la fiabilité des données.',
             activities: [
                 'Vérification identité',
@@ -656,12 +656,12 @@
             ],
             badges: ['Collecte terrain', 'Fiabilité', 'Rigueur']
         },
-        support: {
+        administratif: {
             id: 3,
             icon: 'bi-tools',
             iconBg: '#fef3c7',
             iconColor: '#b45309',
-            title: 'Auditeur – Support ',
+            title: 'Auditeur Administratif',
             mission: 'Garantir la fiabilité technique et la qualité des données.',
             activities: [
                 'Gestion équipements',
