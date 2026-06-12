@@ -160,6 +160,10 @@ class AdminOperationsResearchController extends Controller
             }
             $simulationSummary = $draftPlan->summary;
             
+            // FILTRAGE : On retire les agents déjà présents dans le brouillon de la liste des agents libres
+            $simulatedUserIds = collect($decodedState)->pluck('user_ids')->flatten()->toArray();
+            $unassignedUsers = $unassignedUsers->reject(fn($u) => in_array($u->id, $simulatedUserIds));
+
             // On injecte les blocs du brouillon dans la requête pour qu'ils soient repris par le formulaire
             if (isset($draftPlan->metadata['blocks'])) {
                 $request->merge(['deployment_blocks' => $draftPlan->metadata['blocks']]);
