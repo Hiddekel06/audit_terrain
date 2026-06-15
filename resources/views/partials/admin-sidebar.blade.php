@@ -28,6 +28,13 @@
         </a>
 
         @if(Auth::guard('admin')->user()?->role === 'super_admin')
+            <a href="{{ route('admin.master_sync.index') }}" class="admin-sidebar__link {{ $currentRoute === 'admin.master_sync.index' ? 'active' : '' }}">
+                <i class="bi bi-shield-check"></i>
+                <span class="admin-sidebar__link-label">Liste Maître</span>
+            </a>
+        @endif
+
+        @if(Auth::guard('admin')->user()?->role === 'super_admin')
             <a href="{{ route('admin.operations.research') }}" class="admin-sidebar__link {{ $currentRoute === 'admin.operations.research' ? 'active' : '' }}">
                 <i class="bi bi-diagram-3"></i>
                 <span class="admin-sidebar__link-label">Recherche opérationnelle</span>

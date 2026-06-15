@@ -130,6 +130,41 @@
         opacity: 0.8;
     }
 
+    /* Sticky Sidebar Pool */
+    .sticky-pool-wrapper {
+        position: sticky;
+        top: 1.5rem;
+        height: calc(100vh - 3rem);
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .pool-search-container {
+        flex-shrink: 0;
+    }
+
+    .pool-list-container {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding-right: 4px; /* Space for scrollbar */
+    }
+
+    /* Custom scrollbar for the pool */
+    .pool-list-container::-webkit-scrollbar {
+        width: 4px;
+    }
+    .pool-list-container::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .pool-list-container::-webkit-scrollbar-thumb {
+        background: #e2e8f0;
+        border-radius: 10px;
+    }
+    .pool-list-container::-webkit-scrollbar-thumb:hover {
+        background: #cbd5e1;
+    }
+
     .role-label {
         font-size: 0.65rem;
         font-weight: 800;
@@ -427,51 +462,57 @@
 </style>
 @endpush
 
-<div class="container-fluid p-0 pb-5">
-    <!-- Header Actions -->
-    <div class="glass-card p-4 mb-5" style="border-radius: 1.5rem; border: none; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1);">
-        <div class="row align-items-center g-3">
-            <div class="col-md-4">
-                <form action="{{ route('admin.operations.research') }}" method="GET" id="regionFilterForm">
-                    <div class="team-header-label ms-2">Secteur Géographique</div>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light border-0 rounded-start-pill ps-3">
-                            <i class="bi bi-geo-alt text-primary"></i>
-                        </span>
-                        <select name="region_id" class="form-select border-0 bg-light rounded-end-pill fw-bold" onchange="this.form.submit()">
-                            <option value="">Toutes les régions</option>
-                            @foreach($regions as $region)
-                                <option value="{{ $region->id }}" @selected($selectedRegionId == $region->id)>{{ $region->nom }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </form>
-            </div>
-            <div class="col-md-8 text-md-end d-flex gap-2 justify-content-md-end pt-md-3">
-                <button type="button" class="btn btn-modern-primary" data-bs-toggle="modal" data-bs-target="#autoDeployModal">
-                    <i class=""></i> Deploiement optimisé
-                </button>
-                <div class="dropdown">
-                    <button type="button" class="btn btn-modern-outline dropdown-toggle" data-bs-toggle="dropdown">
-                        Actions
+<div class="dashboard-wrapper">
+    <!-- Header Actions (Fixé) -->
+    <div class="dashboard-header-fixed">
+        <div class="glass-card p-4" style="border-radius: 1.5rem; border: none; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1);">
+            <div class="row align-items-center g-3">
+                <div class="col-md-4">
+                    <form action="{{ route('admin.operations.research') }}" method="GET" id="regionFilterForm">
+                        <div class="team-header-label ms-2">Secteur Géographique</div>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0 rounded-start-pill ps-3">
+                                <i class="bi bi-geo-alt text-primary"></i>
+                            </span>
+                            <select name="region_id" class="form-select border-0 bg-light rounded-end-pill fw-bold" onchange="this.form.submit()">
+                                <option value="">Toutes les régions</option>
+                                @foreach($regions as $region)
+                                    <option value="{{ $region->id }}" @selected($selectedRegionId == $region->id)>{{ $region->nom }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-8 text-md-end d-flex gap-2 justify-content-md-end pt-md-3">
+                    <button type="button" class="btn btn-modern-primary" data-bs-toggle="modal" data-bs-target="#autoDeployModal">
+                        <i class=""></i> Deploiement optimisé
                     </button>
-                    <ul class="dropdown-menu border-0 shadow-lg rounded-4 p-2">
-                        <li>
-                            <button type="button" class="dropdown-item rounded-3 py-2" data-bs-toggle="modal" data-bs-target="#createTeamModal">
-                                <i class="bi bi-plus-lg me-2 text-primary"></i> Nouvelle équipe
-                            </button>
-                        </li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <button type="button" class="dropdown-item rounded-3 py-2 text-danger" data-bs-toggle="modal" data-bs-target="#resetDeploymentModal">
-                                <i class="bi bi-arrow-counterclockwise me-2"></i> Réinitialiser tout
-                            </button>
-                        </li>
-                    </ul>
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-modern-outline dropdown-toggle" data-bs-toggle="dropdown">
+                            Actions
+                        </button>
+                        <ul class="dropdown-menu border-0 shadow-lg rounded-4 p-2">
+                            <li>
+                                <button type="button" class="dropdown-item rounded-3 py-2" data-bs-toggle="modal" data-bs-target="#createTeamModal">
+                                    <i class="bi bi-plus-lg me-2 text-primary"></i> Nouvelle équipe
+                                </button>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <button type="button" class="dropdown-item rounded-3 py-2 text-danger" data-bs-toggle="modal" data-bs-target="#resetDeploymentModal">
+                                    <i class="bi bi-arrow-counterclockwise me-2"></i> Réinitialiser tout
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <div class="dashboard-content-split">
+        <!-- Zone Équipes (Scrollable) -->
+        <div class="teams-scroll-zone">
 
     @if(session('success'))
         <div class="alert alert-success border-0 shadow-sm rounded-4 mb-4 ps-4">
@@ -797,109 +838,104 @@
             </div>
         </div>
 
-        <!-- Candidats Disponibles -->
+        <!-- Candidats Disponibles (Sidebar Fixe) -->
         <div class="col-lg-4">
-            <div class="d-flex align-items-center justify-content-between mb-4 px-2">
-                <h3 class="h5 fw-bold mb-0">Agents Libres</h3>
-                <span class="badge bg-light text-dark border-0 rounded-pill px-3 py-2 fw-bold" style="font-size: 0.75rem;">
-                    {{ $unassignedUsers->count() }} dispo.
-                </span>
-            </div>
-            
-            <div class="glass-card overflow-hidden drop-zone-unassigned" data-drop-unassigned="1">
-                <div class="list-group list-group-flush bg-transparent">
-                    @forelse($unassignedUsers as $user)
-                        @php
-                            $mId = $user->ministere_id ?? 0;
-                            $isLibreHighlighted = false;
-                            $libreStyle = '';
-                            
-                            if (!empty($currentRegroupMinistereId)) {
-                                if ($currentRegroupMinistereId === 'all' && $mId > 0) {
-                                    $isLibreHighlighted = true;
-                                    $c = [
-                                        1 => ['bg' => '#eff6ff', 'color' => '#2563eb'],
-                                        2 => ['bg' => '#ecfdf5', 'color' => '#10b981'],
-                                        3 => ['bg' => '#fffbeb', 'color' => '#f59e0b'],
-                                        4 => ['bg' => '#fef2f2', 'color' => '#ef4444'],
-                                        5 => ['bg' => '#f5f3ff', 'color' => '#8b5cf6'],
-                                        6 => ['bg' => '#fdf2f8', 'color' => '#ec4899'],
-                                        7 => ['bg' => '#ecfeff', 'color' => '#06b6d4'],
-                                        8 => ['bg' => '#f0fdf4', 'color' => '#16a34a'],
-                                        9 => ['bg' => '#fff7ed', 'color' => '#ea580c'],
-                                        10 => ['bg' => '#fafaf9', 'color' => '#78716c'],
-                                    ][($mId % 10) + 1];
-                                    $libreStyle = "--member-bg: {$c['bg']}; --member-color: {$c['color']};";
-                                } elseif ($currentRegroupMinistereId == $mId) {
-                                    $isLibreHighlighted = true;
-                                    $libreStyle = "--member-bg: #eef2ff; --member-color: #4f46e5;";
-                                }
-                            }
-                        @endphp
-                        <div
-                            class="list-group-item p-3 border-0 border-bottom bg-transparent hover-bg-light transition-all drag-card {{ $isLibreHighlighted ? 'member-line--highlighted' : '' }}"
-                            draggable="true"
-                            data-user-id="{{ $user->id }}"
-                            data-user-name="{{ $user->prenom }} {{ $user->nom }}"
-                            data-profil-id="{{ $user->profil_id }}"
-                            data-ministere-id="{{ $user->ministere_id }}"
-                            data-direction="{{ $user->direction }}"
-                            data-source-team-id=""
-                            @if($isLibreHighlighted) style="{!! $libreStyle !!}" @endif
-                        >
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="status-dot status-dot--filled" style="width:8px; height:8px; background:#2563eb;"></div>
-                                <div class="flex-grow-1 overflow-hidden">
-                                    <div class="fw-bold text-dark small">{{ $user->prenom }} {{ $user->nom }}</div>
-                                    <div class="text-primary small fw-bold" style="font-size: 0.6rem; text-transform: uppercase;">
-                                        {{ $user->profil?->libelle }}
+            <div class="sticky-pool-wrapper">
+                <div class="pool-search-container">
+                    <div class="d-flex align-items-center justify-content-between mb-3 px-2">
+                        <h3 class="h5 fw-bold mb-0">Agents Libres</h3>
+                        <span class="badge bg-white text-primary border rounded-pill px-3 py-1 fw-bold" style="font-size: 0.7rem;">
+                            <span id="poolCount">{{ $unassignedUsers->count() }}</span> disponible(s)
+                        </span>
+                    </div>
+                    
+                    <div class="input-group input-group-sm mb-2 shadow-sm rounded-pill overflow-hidden border">
+                        <span class="input-group-text bg-white border-0 ps-3">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                        <input type="text" id="poolSearchInput" class="form-control border-0 py-2" placeholder="Filtrer par nom, profil, structure...">
+                    </div>
+                </div>
+                
+                <div class="pool-list-container drop-zone-unassigned" data-drop-unassigned="1">
+                    <div class="glass-card overflow-hidden border-0 shadow-sm" style="border-radius: 1rem;">
+                        <div class="list-group list-group-flush bg-transparent" id="unassignedPoolList">
+                            @forelse($unassignedUsers as $user)
+                                @php
+                                    $mId = $user->ministere_id ?? 0;
+                                    $isLibreHighlighted = false;
+                                    $libreStyle = '';
+                                    
+                                    if (!empty($currentRegroupMinistereId)) {
+                                        if ($currentRegroupMinistereId === 'all' && $mId > 0) {
+                                            $isLibreHighlighted = true;
+                                            $c = [
+                                                1 => ['bg' => '#eff6ff', 'color' => '#2563eb'],
+                                                2 => ['bg' => '#ecfdf5', 'color' => '#10b981'],
+                                                3 => ['bg' => '#fffbeb', 'color' => '#f59e0b'],
+                                                4 => ['bg' => '#fef2f2', 'color' => '#ef4444'],
+                                                5 => ['bg' => '#f5f3ff', 'color' => '#8b5cf6'],
+                                                6 => ['bg' => '#fdf2f8', 'color' => '#ec4899'],
+                                                7 => ['bg' => '#ecfeff', 'color' => '#06b6d4'],
+                                                8 => ['bg' => '#f0fdf4', 'color' => '#16a34a'],
+                                                9 => ['bg' => '#fff7ed', 'color' => '#ea580c'],
+                                                10 => ['bg' => '#fafaf9', 'color' => '#78716c'],
+                                            ][($mId % 10) + 1];
+                                            $libreStyle = "--member-bg: {$c['bg']}; --member-color: {$c['color']};";
+                                        } elseif ($currentRegroupMinistereId == $mId) {
+                                            $isLibreHighlighted = true;
+                                            $libreStyle = "--member-bg: #eef2ff; --member-color: #4f46e5;";
+                                        }
+                                    }
+                                @endphp
+                                <div
+                                    class="list-group-item p-3 border-0 border-bottom bg-transparent hover-bg-light transition-all drag-card {{ $isLibreHighlighted ? 'member-line--highlighted' : '' }}"
+                                    draggable="true"
+                                    data-user-id="{{ $user->id }}"
+                                    data-user-name="{{ $user->prenom }} {{ $user->nom }}"
+                                    data-profil-id="{{ $user->profil_id }}"
+                                    data-ministere-id="{{ $user->ministere_id }}"
+                                    data-structure="{{ $user->ministere?->nom }}"
+                                    data-profil-label="{{ $user->profil?->libelle }}"
+                                    data-direction="{{ $user->direction }}"
+                                    data-source-team-id=""
+                                    @if($isLibreHighlighted) style="{!! $libreStyle !!}" @endif
+                                >
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="status-dot status-dot--filled" style="width:8px; height:8px; background:#2563eb;"></div>
+                                        <div class="flex-grow-1 overflow-hidden">
+                                            <div class="fw-bold text-dark small">{{ $user->prenom }} {{ $user->nom }}</div>
+                                            <div class="text-primary small fw-bold" style="font-size: 0.6rem; text-transform: uppercase;">
+                                                {{ $user->profil?->libelle }}
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-1">
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-light border rounded-pill p-1 text-info" 
+                                                    onclick="showAgentQuickView({{ $user->id }})"
+                                                    title="Voir détails">
+                                                <i class="bi bi-info-circle small"></i>
+                                            </button>
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-light border rounded-pill p-1" 
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#editAgentProfileModal"
+                                                    data-user-id="{{ $user->id }}"
+                                                    data-user-name="{{ $user->prenom }} {{ $user->nom }}"
+                                                    data-profil-id="{{ $user->profil_id }}"
+                                                    data-ministere-id="{{ $user->ministere_id }}"
+                                                    data-direction="{{ $user->direction }}"
+                                                    title="Modifier">
+                                                <i class="bi bi-pencil small"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="d-flex align-items-center gap-1">
-                                    <button type="button" 
-                                            class="btn btn-sm btn-light border rounded-pill p-1 text-info" 
-                                            onclick="showAgentQuickView({{ $user->id }})"
-                                            title="Voir détails">
-                                        <i class="bi bi-info-circle small"></i>
-                                    </button>
-                                    <button type="button" 
-                                            class="btn btn-sm btn-light border rounded-pill p-1" 
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#editAgentProfileModal"
-                                            data-user-id="{{ $user->id }}"
-                                            data-user-name="{{ $user->prenom }} {{ $user->nom }}"
-                                            data-profil-id="{{ $user->profil_id }}"
-                                            data-ministere-id="{{ $user->ministere_id }}"
-                                            data-direction="{{ $user->direction }}"
-                                            title="Modifier">
-                                        <i class="bi bi-pencil small"></i>
-                                    </button>
-                                    <div class="dropdown">
-                                        <button class="btn btn-sm btn-light border rounded-pill px-2 py-0" type="button" data-bs-toggle="dropdown" style="font-size: 0.7rem; font-weight: 700;">
-                                            Assigner
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow-xl rounded-4 overflow-hidden" style="max-height: 250px; overflow-y: auto;">
-                                            @foreach($teams as $team)
-                                                <li>
-                                                    <form action="{{ route('admin.operations.assign') }}" method="POST">
-                                                        @csrf
-                                                        <input type="hidden" name="user_id" value="{{ $user->id }}">
-                                                        <input type="hidden" name="team_id" value="{{ $team->id }}">
-                                                        <button type="submit" class="dropdown-item py-2 px-3 small d-flex justify-content-between align-items-center">
-                                                            <span>{{ $team->nom }}</span>
-                                                            <i class="bi bi-plus text-primary"></i>
-                                                        </button>
-                                                    </form>
-                                                </li>
-                                            @endforeach
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
+                            @empty
+                                <div class="p-5 text-center text-muted small fw-bold bg-white">Vivier vide</div>
+                            @endforelse
                         </div>
-                    @empty
-                        <div class="p-5 text-center text-muted small fw-bold">Vivier vide</div>
-                    @endforelse
+                    </div>
                 </div>
             </div>
         </div>
@@ -1844,6 +1880,35 @@
             });
 
             refreshAllBlocks();
+        }
+
+        // Pool Search Filtering Logic
+        const poolSearchInput = document.getElementById('poolSearchInput');
+        const unassignedPoolList = document.getElementById('unassignedPoolList');
+        const poolCount = document.getElementById('poolCount');
+
+        if (poolSearchInput && unassignedPoolList) {
+            poolSearchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase().trim();
+                const items = unassignedPoolList.querySelectorAll('.list-group-item');
+                let visibleCount = 0;
+
+                items.forEach(item => {
+                    const userName = item.dataset.userName?.toLowerCase() || '';
+                    const profilLabel = item.dataset.profilLabel?.toLowerCase() || '';
+                    const structure = item.dataset.structure?.toLowerCase() || '';
+                    const direction = item.dataset.direction?.toLowerCase() || '';
+
+                    if (userName.includes(query) || profilLabel.includes(query) || structure.includes(query) || direction.includes(query)) {
+                        item.style.setProperty('display', 'block', 'important');
+                        visibleCount++;
+                    } else {
+                        item.style.setProperty('display', 'none', 'important');
+                    }
+                });
+
+                if (poolCount) poolCount.textContent = visibleCount;
+            });
         }
     })();
 </script>

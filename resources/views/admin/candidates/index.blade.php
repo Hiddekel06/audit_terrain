@@ -201,6 +201,15 @@
                     <option value="present" @selected(request('telephone_status') === 'present')>Avec téléphone</option>
                 </select>
             </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold small text-uppercase text-muted ms-2">Statut Validation</label>
+                <select name="validation_status" class="form-select filter-input">
+                    <option value="">Tous les statuts</option>
+                    <option value="officiel_inscrit" @selected(request('validation_status') === 'officiel_inscrit')>Officiel & Inscrit</option>
+                    <option value="officiel_attente" @selected(request('validation_status') === 'officiel_attente')>Officiel & En attente</option>
+                    <option value="reserve" @selected(request('validation_status') === 'reserve')>Liste de Réserve</option>
+                </select>
+            </div>
             <div class="col-md-2 d-flex align-items-end gap-2">
                 <button type="submit" class="btn btn-modern-primary w-100 py-2">
                     <i class="bi bi-filter me-2"></i> Filtrer
@@ -245,11 +254,25 @@
                                             <div class="text-muted small">{{ $candidate->matricule ?? $candidate->email }}</div>
                                             {{-- Métier remové: champ non utilisé --}}
                                             @php($candidateSource = $candidate->source_type ?? 'manual')
-                                            <div class="mt-2">
-                                                <span class="source-badge {{ $candidateSource === 'import' ? 'import' : 'manual' }}">
-                                                    <i class="bi bi-{{ $candidateSource === 'import' ? 'upload' : 'person-check' }}"></i>
-                                                    {{ $candidateSource === 'import' ? 'Importé' : 'Inscrit' }}
+                                            <div class="mt-2 d-flex flex-wrap gap-1">
+                                                <span class="source-badge {{ $candidateSource === 'import' || $candidateSource === 'master_sync' ? 'import' : 'manual' }}">
+                                                    <i class="bi bi-{{ $candidateSource === 'import' || $candidateSource === 'master_sync' ? 'upload' : 'person-check' }}"></i>
+                                                    {{ $candidateSource === 'import' || $candidateSource === 'master_sync' ? 'Importé' : 'Inscrit' }}
                                                 </span>
+
+                                                @if($candidate->validation_status === 'officiel_inscrit')
+                                                    <span class="source-badge" style="background: #dcfce7; color: #166534;">
+                                                        <i class="bi bi-shield-check"></i> Officiel
+                                                    </span>
+                                                @elseif($candidate->validation_status === 'officiel_attente')
+                                                    <span class="source-badge" style="background: #fef9c3; color: #854d0e;">
+                                                        <i class="bi bi-shield-exclamation"></i> Officiel (Attente)
+                                                    </span>
+                                                @elseif($candidate->validation_status === 'reserve')
+                                                    <span class="source-badge" style="background: #f1f5f9; color: #475569;">
+                                                        <i class="bi bi-archive"></i> Réserve
+                                                    </span>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -258,6 +281,13 @@
                                     <span class="badge-modern" style="background: #ecfdf5; color: #059669;">
                                         {{ $candidate->profil->libelle ?? '—' }}
                                     </span>
+                                    @if($candidate->profil_initial_id && $candidate->profil_id != $candidate->profil_initial_id)
+                                        <div class="mt-1" title="Initialement inscrit comme : {{ $candidate->initialProfil->libelle ?? '—' }}">
+                                            <span class="badge rounded-pill bg-warning text-dark" style="font-size: 0.6rem;">
+                                                <i class="bi bi-exclamation-triangle"></i> Changé
+                                            </span>
+                                        </div>
+                                    @endif
                                 </td>
                                 <td>
                                     <span class="badge-modern" style="background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;">

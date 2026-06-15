@@ -98,6 +98,10 @@ class AdminCandidateController extends Controller
             $query->where('ready_to_deploy_all_regions', $readyToDeploy);
         }
 
+        if ($request->filled('validation_status')) {
+            $query->where('validation_status', $request->validation_status);
+        }
+
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {

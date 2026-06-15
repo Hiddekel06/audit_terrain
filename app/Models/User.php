@@ -31,6 +31,8 @@ class User extends Authenticatable
         'metier',
         'source_type',
         'team_id',
+        'validation_status',
+        'validation_source',
     ];
 
     protected $hidden = [

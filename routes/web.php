@@ -128,6 +128,18 @@ Route::middleware('admin.auth')->group(function () {
     Route::delete('/admin/deployment-plans/{plan}', [App\Http\Controllers\AdminDeploymentPlanController::class, 'destroy'])
         ->name('admin.deployment_plans.destroy');
 
+    // Synchronisation Liste Maître
+    Route::get('/admin/master-sync', [App\Http\Controllers\AdminMasterSyncController::class, 'index'])
+        ->name('admin.master_sync.index');
+    Route::post('/admin/master-sync', [App\Http\Controllers\AdminMasterSyncController::class, 'sync'])
+        ->name('admin.master_sync.process');
+    Route::post('/admin/master-sync/confirm', [App\Http\Controllers\AdminMasterSyncController::class, 'confirm'])
+        ->name('admin.master_sync.confirm');
+    Route::get('/admin/master-sync/cancel', [App\Http\Controllers\AdminMasterSyncController::class, 'cancel'])
+        ->name('admin.master_sync.cancel');
+    Route::post('/admin/master-sync/reset', [App\Http\Controllers\AdminMasterSyncController::class, 'reset'])
+        ->name('admin.master_sync.reset');
+
     Route::get('/admin/questions', [App\Http\Controllers\AdminDynamicQuestionController::class, 'index'])->name('admin.questions.index');
 
     Route::put('/admin/questions/{question}', [App\Http\Controllers\AdminDynamicQuestionController::class, 'update'])->name('admin.questions.update');
