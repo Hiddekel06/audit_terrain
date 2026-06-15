@@ -86,19 +86,28 @@ class UserController extends Controller
         }
 
         // Vérification d'existence (par matricule ou téléphone)
-        $existing = User::where('matricule', $identityNumber)
-            ->orWhere('telephone', $validated['telephone'])
-            ->first();
+        $existing = User::where(function($q) use ($identityNumber, $validated) {
+            if (!empty($identityNumber)) $q->where('matricule', $identityNumber);
+            $q->orWhere('telephone', $validated['telephone']);
+        })->first();
 
         if ($existing) {
-            return back()->withErrors([
-                'matricule' => 'Un agent avec ce matricule ou ce numéro de téléphone est déjà enregistré.',
-            ])->withInput();
+            // Si l'agent est déjà "officiel_inscrit" ou "reserve", il a déjà fait son boulot
+            if (in_array($existing->validation_status, ['officiel_inscrit', 'reserve'])) {
+                return back()->withErrors([
+                    'matricule' => 'Un agent avec ce matricule ou ce numéro de téléphone est déjà enregistré et a finalisé son profil.',
+                ])->withInput();
+            }
+            // Sinon (officiel_attente ou pas de statut), on autorise la réconciliation
+            $existingUserId = $existing->id;
+        } else {
+            $existingUserId = null;
         }
 
         // Stockage en session pour le wizard multi-étapes
         session([
             'pending_user_payload' => [
+                'id' => $existingUserId, // On garde l'ID s'il existe pour la fusion
                 'prenom' => $validated['prenom'],
                 'nom' => $validated['nom'],
                 'matricule' => $identityNumber,

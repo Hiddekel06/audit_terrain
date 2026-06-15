@@ -46,7 +46,29 @@ class AdminCandidateController extends Controller
         ]);
 
         if ($request->filled('profil_id')) {
-            $query->where('profil_id', $request->profil_id);
+            if ($request->profil_id === '_none_') {
+                $query->whereNull('profil_id');
+            } else {
+                $query->where('profil_id', $request->profil_id);
+            }
+        }
+
+        if ($request->filled('profile_completion')) {
+            if ($request->profile_completion === 'incomplete') {
+                $query->where(function($q) {
+                    $q->whereNull('niveau_numerique')
+                      ->where(function($sq) {
+                          $sq->whereNull('experiences')->orWhere('experiences', '[]')->orWhere('experiences', '');
+                      });
+                });
+            } elseif ($request->profile_completion === 'completed') {
+                $query->where(function($q) {
+                    $q->whereNotNull('niveau_numerique')
+                      ->orWhere(function($sq) {
+                          $sq->whereNotNull('experiences')->where('experiences', '!=', '[]')->where('experiences', '!=', '');
+                      });
+                });
+            }
         }
 
         if ($request->filled('niveau_numerique')) {
@@ -99,7 +121,11 @@ class AdminCandidateController extends Controller
         }
 
         if ($request->filled('validation_status')) {
-            $query->where('validation_status', $request->validation_status);
+            if ($request->validation_status === '_none_') {
+                $query->whereNull('validation_status');
+            } else {
+                $query->where('validation_status', $request->validation_status);
+            }
         }
 
         if ($request->filled('search')) {
@@ -720,11 +746,12 @@ class AdminCandidateController extends Controller
     {
         $validated = $request->validate([
             'telephone' => ['nullable', 'digits:9', 'unique:users,telephone,' . $user->id],
-            'matricule' => ['nullable', 'unique:users,matricule,' . $user->id, 'regex:/^[0-9]{6}[A-Z]$/'],
+            // On accepte Matricule (6 chiffres + 1 lettre) OU CIN (numérique 13-14 chiffres)
+            'matricule' => ['nullable', 'unique:users,matricule,' . $user->id, 'regex:/^([0-9]{6}[A-Z]|[0-9]{10,20})$/'],
             'validation_status' => ['nullable', 'in:reserve,officiel,officiel_inscrit,officiel_attente'],
         ], [
-            'matricule.unique' => 'Ce matricule est déjà utilisé par un autre agent.',
-            'matricule.regex' => 'Le matricule doit être au format 6 chiffres suivis d\'une lettre majuscule (ex: 123456A).',
+            'matricule.unique' => 'Ce Matricule/CIN est déjà utilisé par un autre agent.',
+            'matricule.regex' => 'Format invalide. Utilisez le matricule (ex: 123456A) ou le CIN (ex: 1765...)',
         ]);
 
         $data = [];
@@ -741,17 +768,15 @@ class AdminCandidateController extends Controller
             $status = $validated['validation_status'];
             
             if ($status === 'officiel') {
-                // Détection automatique du sous-statut officiel
-                $status = (!empty($user->experiences) || !empty($user->niveau_numerique)) 
-                    ? 'officiel_inscrit' 
-                    : 'officiel_attente';
+                // Détection intelligente : Inscrit si au moins une info technique est présente
+                $hasTechnicalInfo = (!empty($user->experiences) && $user->experiences != '[]') || !empty($user->niveau_numerique);
+                $status = $hasTechnicalInfo ? 'officiel_inscrit' : 'officiel_attente';
             }
             
             $data['validation_status'] = $status;
             
-            // Si on passe en officiel manuellement
             if (str_contains($status, 'officiel')) {
-                $data['validation_source'] = $user->validation_source ?: 'Validation manuelle';
+                $data['validation_source'] = $user->validation_source ?: 'Manuel';
             } else {
                 $data['validation_source'] = null;
             }
@@ -759,7 +784,7 @@ class AdminCandidateController extends Controller
 
         $user->update($data);
 
-        return back()->with('success', 'Profil de l’agent mis à jour avec succès.');
+        return back()->with('success', 'Informations mises à jour.');
     }
 
     /**

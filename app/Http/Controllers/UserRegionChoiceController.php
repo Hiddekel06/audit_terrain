@@ -151,7 +151,7 @@ class UserRegionChoiceController extends Controller
     }
 
     /**
-     * Crée le candidat à partir des données conservées en session.
+     * Crée ou met à jour le candidat à partir des données conservées en session.
      */
     private function persistPendingUser(?array $pendingUser = null, ?array $pendingAnswers = null): User
     {
@@ -159,22 +159,46 @@ class UserRegionChoiceController extends Controller
         $pendingAnswers = $pendingAnswers ?? session('pending_dynamic_answers', []);
 
         return DB::transaction(function () use ($pendingUser, $pendingAnswers) {
-            $user = User::create([
+            $data = [
                 'prenom' => $pendingUser['prenom'],
                 'nom' => $pendingUser['nom'],
                 'telephone' => $pendingUser['telephone'] ?? null,
                 'email' => $pendingUser['email'] ?? null,
-                'disponibilite' => $pendingUser['disponibilite'] ?? null,
+                'disponibilite' => $pendingUser['disponibilite'] ?? 'immediate',
                 'matricule' => $pendingUser['matricule'],
                 'profil_id' => $pendingUser['profil_id'] ?? null,
-                'profil_initial_id' => $pendingUser['profil_id'] ?? null,
                 'niveau_numerique' => $pendingUser['niveau_numerique'] ?? null,
                 'experiences' => $pendingUser['experiences'] ?? null,
                 'competences_techniques' => $pendingUser['competences_techniques'] ?? null,
                 'ministere_id' => $pendingUser['ministere_id'] ?? null,
                 'direction' => $pendingUser['direction'] ?? null,
                 'ready_to_deploy_all_regions' => session('ready_to_deploy_all_regions', false),
-            ]);
+            ];
+
+            // Si c'est une réconciliation (l'utilisateur existe déjà via import)
+            if (!empty($pendingUser['id'])) {
+                $user = User::find($pendingUser['id']);
+                
+                // On met à jour le statut : s'il était officiel_attente, il devient officiel_inscrit
+                if ($user->validation_status === 'officiel_attente') {
+                    $data['validation_status'] = 'officiel_inscrit';
+                }
+                
+                // On sauvegarde le profil initial s'il change
+                if ($user->profil_id != $data['profil_id'] && !$user->profil_initial_id) {
+                    $data['profil_initial_id'] = $user->profil_id;
+                }
+
+                $user->update($data);
+            } else {
+                // Création classique (nouveau venu)
+                $data['profil_initial_id'] = $pendingUser['profil_id'] ?? null;
+                $data['source_type'] = 'manual';
+                $user = User::create($data);
+            }
+
+            // Nettoyage des anciennes réponses si réconciliation
+            UserDynamicAnswer::where('user_id', $user->id)->delete();
 
             foreach ($pendingAnswers as $answer) {
                 UserDynamicAnswer::create([

@@ -160,6 +160,7 @@
                 <label class="form-label fw-bold small text-uppercase text-muted ms-2">Profil</label>
                 <select name="profil_id" class="form-select filter-input">
                     <option value="">Tous les profils</option>
+                    <option value="_none_" @selected(request('profil_id') === '_none_')>Profil non défini</option>
                     @foreach($profils as $profil)
                         <option value="{{ $profil->id }}" @selected(request('profil_id') == $profil->id)>{{ $profil->libelle }}</option>
                     @endforeach
@@ -187,7 +188,7 @@
                 <label class="form-label fw-bold small text-uppercase text-muted ms-2">Direction</label>
                 <select name="direction" class="form-select filter-input">
                     <option value="">Toutes les directions</option>
-                    <option value="_none_" @selected(request('direction') === '_none_')>— Sans direction —</option>
+                    <option value="_none_" @selected(request('direction') === '_none_')>Sans direction</option>
                     @foreach($directions as $dir)
                         <option value="{{ $dir }}" @selected(request('direction') === $dir)>{{ $dir }}</option>
                     @endforeach
@@ -208,13 +209,22 @@
                     <option value="officiel_inscrit" @selected(request('validation_status') === 'officiel_inscrit')>Officiel & Inscrit</option>
                     <option value="officiel_attente" @selected(request('validation_status') === 'officiel_attente')>Officiel & En attente</option>
                     <option value="reserve" @selected(request('validation_status') === 'reserve')>Liste de Réserve</option>
+                    <option value="_none_" @selected(request('validation_status') === '_none_')>Juste inscrit (Non validé)</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold small text-uppercase text-muted ms-2">État du Profil</label>
+                <select name="profile_completion" class="form-select filter-input">
+                    <option value="">Tous les états</option>
+                    <option value="completed" @selected(request('profile_completion') === 'completed')>Profil Rempli</option>
+                    <option value="incomplete" @selected(request('profile_completion') === 'incomplete')>Profil Incomplet</option>
                 </select>
             </div>
             <div class="col-md-2 d-flex align-items-end gap-2">
                 <button type="submit" class="btn btn-modern-primary w-100 py-2">
                     <i class="bi bi-filter me-2"></i> Filtrer
                 </button>
-                @if(request()->anyFilled(['search', 'profil_id', 'experience', 'ministere_id', 'direction', 'telephone_status', 'region_id', 'ready_to_deploy', 'niveau_numerique']))
+                @if(request()->anyFilled(['search', 'profil_id', 'experience', 'ministere_id', 'direction', 'telephone_status', 'region_id', 'ready_to_deploy', 'niveau_numerique', 'profile_completion']))
                     <a href="{{ route('admin.candidates.index') }}" class="btn btn-modern-outline py-2" title="Réinitialiser">
                         <i class="bi bi-arrow-counterclockwise"></i>
                     </a>
@@ -252,7 +262,7 @@
                                         <div>
                                             <div class="fw-bold">{{ $candidate->nom }} {{ $candidate->prenom }}</div>
                                             <div class="text-muted small">{{ $candidate->matricule ?? $candidate->email }}</div>
-                                            {{-- Métier remové: champ non utilisé --}}
+                                            {{-- Métier retiré : champ non utilisé --}}
                                             @php($candidateSource = $candidate->source_type ?? 'manual')
                                             <div class="mt-2 d-flex flex-wrap gap-1">
                                                 <span class="source-badge {{ $candidateSource === 'import' || $candidateSource === 'master_sync' ? 'import' : 'manual' }}">

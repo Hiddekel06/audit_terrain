@@ -11,12 +11,17 @@
    - `officiel_inscrit` : Agent dans Excel + Profil déjà complété.
    - `officiel_attente` : Agent dans Excel + Profil vide (à compléter).
    - `reserve` : Inscription libre non présente dans la liste officielle.
-3. **LOGIQUE DE MATCHING** :
-   - Priorité 1 : Matricule ou Téléphone (Match exact).
-   - Priorité 2 : Nom + Prénom (Match strict au ministère ou match partiel suggéré).
-4. **GESTION DES PROFILS** :
+3. **LOGIQUE DE MATCHING & IDENTITÉ** :
+   - **Pivot central** : Matricule (6 chiffres + 1 lettre) ou CIN (numérique long).
+   - **Matching Nominal** : Algorithme intelligent par jetons (tokens) + Levenshtein (tolérance typos).
+   - **Priorité Ministère** : Le matching nominal est restreint au ministère sélectionné pour éviter les doublons externes.
+4. **RÉCONCILIATION PUBLIQUE** : 
+   - Le formulaire d'inscription NE DOIT PAS bloquer un matricule importé.
+   - Il doit proposer la mise à jour (fusion) en gardant les données administratives (Import) et en ajoutant les données techniques (Saisie agent).
+   - Le nom saisi par l'agent prévaut sur celui de l'import.
+5. **GESTION DES PROFILS** :
    - Le profil Excel écrase le profil actuel pour le déploiement.
-   - Le choix original de l'agent est TOUJOURS conservé dans `profil_initial_id` en cas de divergence.
+   - Le choix original de l'agent est TOUJOURS conservé dans `profil_initial_id` en cas de divergence (Badge ⚠️ Changé).
    - **Règles de conversion** : `Auditeur` ➔ `Auditeur IT`, `Support/Administratif` ➔ `Auditeur Administratif`.
 
 ## Procédure de Restauration (en cas de perte)
