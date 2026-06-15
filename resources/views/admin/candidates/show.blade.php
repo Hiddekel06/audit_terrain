@@ -455,10 +455,31 @@
                     <span class="candidate-source {{ ($user->source_type ?? 'manual') === 'import' ? 'import' : 'manual' }}">
                         {{ ($user->source_type ?? 'manual') === 'import' ? 'Importé' : 'Inscrit' }}
                     </span>
+                    
+                    @if($user->validation_status === 'officiel_inscrit')
+                        <span class="candidate-source" style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0;">
+                            <i class="bi bi-patch-check-fill me-1"></i> Officiel
+                        </span>
+                    @elseif($user->validation_status === 'officiel_attente')
+                        <span class="candidate-source" style="background: #fef9c3; color: #a16207; border: 1px solid #fef08a;">
+                            <i class="bi bi-clock-history me-1"></i> Officiel (Attente)
+                        </span>
+                    @elseif($user->validation_status === 'reserve')
+                        <span class="candidate-source" style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;">
+                            Réserve
+                        </span>
+                    @endif
                 </div>
             </div>
-            <div>
-                <div class="profile-premium-card {{ $themeClass ?? 'theme-default' }}">
+            <div style="text-align: right;">
+                <button type="button" class="back-link" data-bs-toggle="modal" data-bs-target="#editAgentModal" style="background:#f0f7ff; color:#2563eb; border-color: rgba(37,99,235,0.12); cursor: pointer;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    Modifier l'agent
+                </button>
+                <div class="profile-premium-card {{ $themeClass ?? 'theme-default' }}" style="margin-top: 1rem;">
                     <div class="profile-premium-header">
                         <div class="profile-premium-icon">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
@@ -621,6 +642,55 @@
                 <div class="info-label">Dernière mise à jour</div>
                 <div class="info-value">{{ $user->updated_at->format('d/m/Y à H:i') }}</div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de modification -->
+<div class="modal fade" id="editAgentModal" tabindex="-1" aria-labelledby="editAgentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 1.25rem; border: none; shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);">
+            <div class="modal-header" style="border-bottom: 1px solid #f1f5f9; padding: 1.5rem;">
+                <h5 class="modal-title fw-bold" id="editAgentModalLabel">Modifier les informations</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('admin.candidates.update', $user) }}" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body" style="padding: 1.5rem;">
+                    <div class="mb-4">
+                        <label for="telephone" class="info-label" style="display: block; margin-bottom: 0.5rem;">Numéro de téléphone</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0" style="border-radius: 0.75rem 0 0 0.75rem;">+221</span>
+                            <input type="text" name="telephone" id="telephone" class="form-control border-start-0" 
+                                   value="{{ $user->telephone }}" placeholder="771234567" 
+                                   style="border-radius: 0 0.75rem 0.75rem 0; font-weight: 600;">
+                        </div>
+                        <small class="text-muted">9 chiffres sans indicatif.</small>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="info-label" style="display: block; margin-bottom: 0.5rem;">Statut de validation</label>
+                        <div class="d-grid gap-2">
+                            <input type="radio" class="btn-check" name="validation_status" id="status_reserve" value="reserve" {{ $user->validation_status === 'reserve' ? 'checked' : '' }}>
+                            <label class="btn btn-outline-secondary text-start p-3" for="status_reserve" style="border-radius: 0.75rem;">
+                                <div class="fw-bold">Réserve</div>
+                                <div style="font-size: 0.75rem; opacity: 0.8;">Candidat non retenu sur la liste officielle.</div>
+                            </label>
+
+                            <input type="radio" class="btn-check" name="validation_status" id="status_officiel" value="officiel" {{ str_contains($user->validation_status ?? '', 'officiel') ? 'checked' : '' }}>
+                            <label class="btn btn-outline-success text-start p-3" for="status_officiel" style="border-radius: 0.75rem;">
+                                <div class="fw-bold">Officiel</div>
+                                <div style="font-size: 0.75rem; opacity: 0.8;">Inscrire l'agent sur la liste maître officielle.</div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid #f1f5f9; padding: 1.25rem;">
+                    <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal" style="border-radius: 0.75rem; padding: 0.6rem 1.25rem;">Annuler</button>
+                    <button type="submit" class="btn btn-primary fw-bold" style="border-radius: 0.75rem; padding: 0.6rem 1.25rem; background: var(--primary); border: none;">Enregistrer les modifications</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

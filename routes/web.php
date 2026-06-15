@@ -49,9 +49,8 @@ Route::middleware('admin.auth')->group(function () {
         ->name('admin.candidates.template');
     Route::get('/admin/candidates/{user}', [App\Http\Controllers\AdminCandidateController::class, 'show'])
         ->name('admin.candidates.show');
-    Route::get('/admin/candidates/{user}/json', function (\App\Models\User $user) {
-        return $user->load(['profil', 'ministere']);
-    })->name('admin.candidates.json');
+    Route::put('/admin/candidates/{user}', [App\Http\Controllers\AdminCandidateController::class, 'update'])
+        ->name('admin.candidates.update');
     
     Route::delete('/admin/candidates/{user}', [App\Http\Controllers\AdminCandidateController::class, 'destroy'])
         ->name('admin.candidates.destroy');

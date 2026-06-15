@@ -130,9 +130,9 @@ class AdminMasterSyncController extends Controller
                             })
                             ->orWhere(function($sq) use ($cleanP, $cleanN) {
                                 $sq->where(function($ssq) use ($cleanP) {
-                                    $sq->where('nom', 'like', "%$cleanP%")->orWhereRaw('? LIKE CONCAT("%", nom, "%")', [$cleanP]);
+                                    $ssq->where('nom', 'like', "%$cleanP%")->orWhereRaw('? LIKE CONCAT("%", nom, "%")', [$cleanP]);
                                 })->where(function($ssq) use ($cleanN) {
-                                    $sq->where('prenom', 'like', "%$cleanN%")->orWhereRaw('? LIKE CONCAT("%", prenom, "%")', [$cleanN]);
+                                    $ssq->where('prenom', 'like', "%$cleanN%")->orWhereRaw('? LIKE CONCAT("%", prenom, "%")', [$cleanN]);
                                 });
                             });
                         })->first();

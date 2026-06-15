@@ -714,6 +714,47 @@ class AdminCandidateController extends Controller
     }
 
     /**
+     * Met à jour les informations d'un agent (Statut, Téléphone, etc.)
+     */
+    public function update(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'telephone' => ['nullable', 'digits:9', 'unique:users,telephone,' . $user->id],
+            'validation_status' => ['nullable', 'in:reserve,officiel,officiel_inscrit,officiel_attente'],
+        ]);
+
+        $data = [];
+        
+        if ($request->has('telephone')) {
+            $data['telephone'] = $validated['telephone'];
+        }
+
+        if ($request->has('validation_status')) {
+            $status = $validated['validation_status'];
+            
+            if ($status === 'officiel') {
+                // Détection automatique du sous-statut officiel
+                $status = (!empty($user->experiences) || !empty($user->niveau_numerique)) 
+                    ? 'officiel_inscrit' 
+                    : 'officiel_attente';
+            }
+            
+            $data['validation_status'] = $status;
+            
+            // Si on passe en officiel manuellement
+            if (str_contains($status, 'officiel')) {
+                $data['validation_source'] = $user->validation_source ?: 'Validation manuelle';
+            } else {
+                $data['validation_source'] = null;
+            }
+        }
+
+        $user->update($data);
+
+        return back()->with('success', 'Profil de l’agent mis à jour avec succès.');
+    }
+
+    /**
      * Supprime un candidat et ses dépendances liées.
      */
     public function destroy(User $user)
