@@ -50,11 +50,11 @@ class AdminMasterSyncController extends Controller
             $file = $request->file('file');
             $storedPath = $file->storeAs('temp-sync', $token . '.' . $file->getClientOriginalExtension());
             $defaultMinId = $request->input('default_ministere_id');
-            
+
             // On utilise la classe d'importation pour garantir le WithHeadingRow
             $import = new AgentsMasterSyncImport();
             $rows = Excel::toArray($import, Storage::path($storedPath))[0];
-            
+
             $analysis = [
                 'confirmed' => 0,
                 'created' => 0,
@@ -73,70 +73,47 @@ class AdminMasterSyncController extends Controller
                 // Recherche avec tolérance aux fautes
                 $user = null;
                 $confidence = 'none';
-                
+
                 if (!empty($parsed['matricule'])) {
                     $user = User::where('matricule', $parsed['matricule'])->first();
                     if ($user) $confidence = 'high';
                 }
-                
+
                 if (!$user && !empty($parsed['telephone'])) {
                     $user = User::where('telephone', $parsed['telephone'])->first();
                     if ($user) $confidence = 'high';
                 }
 
                 if (!$user && !empty($parsed['prenom']) && !empty($parsed['nom'])) {
-                    $p = $parsed['prenom'];
-                    $n = $parsed['nom'];
+                    $p = strtolower(trim(preg_replace('/^(mme|m\.|m|monsieur|madame|mme\.)\s+/i', '', $parsed['prenom'])));
+                    $n = strtolower(trim(preg_replace('/^(mme|m\.|m|monsieur|madame|mme\.)\s+/i', '', $parsed['nom'])));
                     $minId = $parsed['ministere_id'];
 
-                    // Nettoyage des titres pour le matching
-                    $cleanP = preg_replace('/^(mme|m\.|m|monsieur|madame|mme\.)\s+/i', '', $p);
-                    $cleanN = preg_replace('/^(mme|m\.|m|monsieur|madame|mme\.)\s+/i', '', $n);
+                    $queryBuilder = function($q) use ($p, $n) {
+                        $q->where(function($sq) use ($p, $n) {
+                            $sq->where(function($ssq) use ($n) {
+                                $ssq->whereRaw('LOWER(nom) LIKE ?', ["%$n%"])->orWhereRaw('? LIKE CONCAT("%", LOWER(nom), "%")', [$n]);
+                            })->where(function($ssq) use ($p) {
+                                $ssq->whereRaw('LOWER(prenom) LIKE ?', ["%$p%"])->orWhereRaw('? LIKE CONCAT("%", LOWER(prenom), "%")', [$p]);
+                            });
+                        })->orWhere(function($sq) use ($p, $n) {
+                            $sq->where(function($ssq) use ($p) {
+                                $ssq->whereRaw('LOWER(nom) LIKE ?', ["%$p%"])->orWhereRaw('? LIKE CONCAT("%", LOWER(nom), "%")', [$p]);
+                            })->where(function($ssq) use ($n) {
+                                $ssq->whereRaw('LOWER(prenom) LIKE ?', ["%$n%"])->orWhereRaw('? LIKE CONCAT("%", LOWER(prenom), "%")', [$n]);
+                            });
+                        });
+                    };
 
                     // 1. Recherche PRIORITAIRE au sein du MINISTÈRE (si défini)
                     if ($minId) {
-                        $user = User::where('ministere_id', $minId)
-                            ->where(function($q) use ($cleanP, $cleanN) {
-                                // Cas normal : Nom=N, Prénom=P (avec tolérance bidirectionnelle)
-                                $q->where(function($sq) use ($cleanP, $cleanN) {
-                                    $sq->where(function($ssq) use ($cleanN) {
-                                        $ssq->where('nom', 'like', "%$cleanN%")->orWhereRaw('? LIKE CONCAT("%", nom, "%")', [$cleanN]);
-                                    })->where(function($ssq) use ($cleanP) {
-                                        $ssq->where('prenom', 'like', "%$cleanP%")->orWhereRaw('? LIKE CONCAT("%", prenom, "%")', [$cleanP]);
-                                    });
-                                })
-                                // Cas inversé : Nom=P, Prénom=N
-                                ->orWhere(function($sq) use ($cleanP, $cleanN) {
-                                    $sq->where(function($ssq) use ($cleanP) {
-                                        $ssq->where('nom', 'like', "%$cleanP%")->orWhereRaw('? LIKE CONCAT("%", nom, "%")', [$cleanP]);
-                                    })->where(function($ssq) use ($cleanN) {
-                                        $ssq->where('prenom', 'like', "%$cleanN%")->orWhereRaw('? LIKE CONCAT("%", prenom, "%")', [$cleanN]);
-                                    });
-                                });
-                            })->first();
-                        
+                        $user = User::where('ministere_id', $minId)->where($queryBuilder)->first();
                         if ($user) $confidence = 'high';
                     }
 
                     // 2. Recherche ÉLARGIE à toute la base (si non trouvé dans le ministère)
                     if (!$user) {
-                        $user = User::where(function($q) use ($cleanP, $cleanN) {
-                            $q->where(function($sq) use ($cleanP, $cleanN) {
-                                $sq->where(function($ssq) use ($cleanN) {
-                                    $ssq->where('nom', 'like', "%$cleanN%")->orWhereRaw('? LIKE CONCAT("%", nom, "%")', [$cleanN]);
-                                })->where(function($ssq) use ($cleanP) {
-                                    $ssq->where('prenom', 'like', "%$cleanP%")->orWhereRaw('? LIKE CONCAT("%", prenom, "%")', [$cleanP]);
-                                });
-                            })
-                            ->orWhere(function($sq) use ($cleanP, $cleanN) {
-                                $sq->where(function($ssq) use ($cleanP) {
-                                    $ssq->where('nom', 'like', "%$cleanP%")->orWhereRaw('? LIKE CONCAT("%", nom, "%")', [$cleanP]);
-                                })->where(function($ssq) use ($cleanN) {
-                                    $ssq->where('prenom', 'like', "%$cleanN%")->orWhereRaw('? LIKE CONCAT("%", prenom, "%")', [$cleanN]);
-                                });
-                            });
-                        })->first();
-
+                        $user = User::where($queryBuilder)->first();
                         if ($user) {
                             $confidence = ($minId && $user->ministere_id == $minId) ? 'high' : 'medium';
                         }
@@ -207,7 +184,7 @@ class AdminMasterSyncController extends Controller
                         $user = User::find($userId);
                         if ($user) {
                             $status = (!empty($user->experiences) || !empty($user->niveau_numerique)) ? 'officiel_inscrit' : 'officiel_attente';
-                            
+
                             $updateData = [
                                 'ministere_id' => $parsed['ministere_id'],
                                 'direction' => $parsed['direction'],
@@ -226,16 +203,22 @@ class AdminMasterSyncController extends Controller
                     }
 
                     // SI NON VALIDÉ (OU NON TROUVÉ) -> CRÉATION (Anti-doublon ultime)
-                    // On vérifie une dernière fois en base avant de créer
+                    // On vérifie une dernière fois en base avant de créer avec le queryBuilder robuste
+                    $p = strtolower(trim(preg_replace('/^(mme|m\.|m|monsieur|madame|mme\.)\s+/i', '', $parsed['prenom'])));
+                    $n = strtolower(trim(preg_replace('/^(mme|m\.|m|monsieur|madame|mme\.)\s+/i', '', $parsed['nom'])));
+                    
                     $exists = false;
                     if (!empty($parsed['matricule'])) {
                         $exists = User::where('matricule', $parsed['matricule'])->exists();
                     }
-                    if (!$exists && !empty($parsed['prenom']) && !empty($parsed['nom']) && !empty($parsed['ministere_id'])) {
-                        $exists = User::where('prenom', $parsed['prenom'])
-                                      ->where('nom', $parsed['nom'])
-                                      ->where('ministere_id', $parsed['ministere_id'])
-                                      ->exists();
+                    if (!$exists && !empty($p) && !empty($n)) {
+                        $exists = User::where(function($q) use ($p, $n) {
+                            $q->where(function($sq) use ($p, $n) {
+                                $sq->whereRaw('LOWER(nom) LIKE ?', ["%$n%"])->orWhereRaw('? LIKE CONCAT("%", LOWER(nom), "%")', [$n]);
+                            })->where(function($ssq) use ($p) {
+                                $ssq->whereRaw('LOWER(prenom) LIKE ?', ["%$p%"])->orWhereRaw('? LIKE CONCAT("%", LOWER(prenom), "%")', [$p]);
+                            });
+                        })->exists();
                     }
 
                     if (!$exists) {
@@ -289,7 +272,7 @@ class AdminMasterSyncController extends Controller
             Storage::delete($preview['path']);
         }
         session()->forget('master_sync_preview');
-        
+
         return redirect()->route('admin.master_sync.index')->with('info', 'Synchronisation annulée.');
     }
 }

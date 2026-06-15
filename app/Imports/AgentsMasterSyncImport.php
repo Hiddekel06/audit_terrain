@@ -203,51 +203,36 @@ class AgentsMasterSyncImport implements ToCollection, WithHeadingRow
         
         // Recherche contextuelle par Nom+Prénom
         if (!empty($parsed['prenom']) && !empty($parsed['nom'])) {
-            $p = $parsed['prenom'];
-            $n = $parsed['nom'];
+            $p = strtolower(trim(preg_replace('/^(mme|m\.|m|monsieur|madame|mme\.)\s+/i', '', $parsed['prenom'])));
+            $n = strtolower(trim(preg_replace('/^(mme|m\.|m|monsieur|madame|mme\.)\s+/i', '', $parsed['nom'])));
             $minId = $parsed['ministere_id'];
 
-            // Nettoyage des titres pour le matching
-            $cleanP = preg_replace('/^(mme|m\.|m|monsieur|madame|mme\.)\s+/i', '', $p);
-            $cleanN = preg_replace('/^(mme|m\.|m|monsieur|madame|mme\.)\s+/i', '', $n);
+            $queryBuilder = function($q) use ($p, $n) {
+                $q->where(function($sq) use ($p, $n) {
+                    // Cas normal
+                    $sq->where(function($ssq) use ($n) {
+                        $ssq->whereRaw('LOWER(nom) LIKE ?', ["%$n%"])->orWhereRaw('? LIKE CONCAT("%", LOWER(nom), "%")', [$n]);
+                    })->where(function($ssq) use ($p) {
+                        $ssq->whereRaw('LOWER(prenom) LIKE ?', ["%$p%"])->orWhereRaw('? LIKE CONCAT("%", LOWER(prenom), "%")', [$p]);
+                    });
+                })->orWhere(function($sq) use ($p, $n) {
+                    // Cas inversé
+                    $sq->where(function($ssq) use ($p) {
+                        $ssq->whereRaw('LOWER(nom) LIKE ?', ["%$p%"])->orWhereRaw('? LIKE CONCAT("%", LOWER(nom), "%")', [$p]);
+                    })->where(function($ssq) use ($n) {
+                        $ssq->whereRaw('LOWER(prenom) LIKE ?', ["%$n%"])->orWhereRaw('? LIKE CONCAT("%", LOWER(prenom), "%")', [$n]);
+                    });
+                });
+            };
 
             // 1. Priorité au ministère
             if ($minId) {
-                $u = User::where('ministere_id', $minId)
-                    ->where(function($q) use ($cleanP, $cleanN) {
-                        $q->where(function($sq) use ($cleanP, $cleanN) {
-                            $sq->where(function($ssq) use ($cleanN) {
-                                $ssq->where('nom', 'like', "%$cleanN%")->orWhereRaw('? LIKE CONCAT("%", nom, "%")', [$cleanN]);
-                            })->where(function($ssq) use ($cleanP) {
-                                $ssq->where('prenom', 'like', "%$cleanP%")->orWhereRaw('? LIKE CONCAT("%", prenom, "%")', [$cleanP]);
-                            });
-                        })->orWhere(function($sq) use ($cleanP, $cleanN) {
-                            $sq->where(function($ssq) use ($cleanP) {
-                                $ssq->where('nom', 'like', "%$cleanP%")->orWhereRaw('? LIKE CONCAT("%", nom, "%")', [$cleanP]);
-                            })->where(function($ssq) use ($cleanN) {
-                                $ssq->where('prenom', 'like', "%$cleanN%")->orWhereRaw('? LIKE CONCAT("%", prenom, "%")', [$cleanN]);
-                            });
-                        });
-                    })->first();
+                $u = User::where('ministere_id', $minId)->where($queryBuilder)->first();
                 if ($u) return $u;
             }
 
             // 2. Recherche globale
-            return User::where(function($q) use ($cleanP, $cleanN) {
-                $q->where(function($sq) use ($cleanP, $cleanN) {
-                    $sq->where(function($ssq) use ($cleanN) {
-                        $ssq->where('nom', 'like', "%$cleanN%")->orWhereRaw('? LIKE CONCAT("%", nom, "%")', [$cleanN]);
-                    })->where(function($ssq) use ($cleanP) {
-                        $ssq->where('prenom', 'like', "%$cleanP%")->orWhereRaw('? LIKE CONCAT("%", prenom, "%")', [$cleanP]);
-                    });
-                })->orWhere(function($sq) use ($cleanP, $cleanN) {
-                    $sq->where(function($ssq) use ($cleanP) {
-                        $ssq->where('nom', 'like', "%$cleanP%")->orWhereRaw('? LIKE CONCAT("%", nom, "%")', [$cleanP]);
-                    })->where(function($ssq) use ($cleanN) {
-                        $ssq->where('prenom', 'like', "%$cleanN%")->orWhereRaw('? LIKE CONCAT("%", prenom, "%")', [$cleanN]);
-                    });
-                });
-            })->first();
+            return User::where($queryBuilder)->first();
         }
         return null;
     }
