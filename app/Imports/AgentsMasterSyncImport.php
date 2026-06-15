@@ -42,7 +42,6 @@ class AgentsMasterSyncImport implements ToCollection, WithHeadingRow
             return [strtolower(trim($nom)) => $id];
         });
 
-        // Reprise EXACTE des alias de AgentsImport
         $this->ministereAliases = [
             'ministere en charge de la sante' => 'sante',
             'ministere en charge de la famille' => 'famille',
@@ -60,7 +59,6 @@ class AgentsMasterSyncImport implements ToCollection, WithHeadingRow
             'ministere en charge des transports' => 'transports',
         ];
 
-        // Règles de mapping spécifiques demandées par l'utilisateur
         $this->profilAliases = [
             "chef d'equipe" => "chef d'équipe",
             'chefs d equipes' => "chef d'équipe",
@@ -105,7 +103,6 @@ class AgentsMasterSyncImport implements ToCollection, WithHeadingRow
 
                 if (!$parsed['can_sync']) continue;
 
-                // Application du ministère par défaut
                 if ($this->defaultMinistereId) {
                     $parsed['ministere_id'] = $this->defaultMinistereId;
                 }
@@ -196,45 +193,63 @@ class AgentsMasterSyncImport implements ToCollection, WithHeadingRow
         ];
     }
 
-    private function findExistingUser(array $parsed)
+    public function findExistingUser(array $parsed)
     {
         if (!empty($parsed['matricule'])) return User::where('matricule', $parsed['matricule'])->first();
         if (!empty($parsed['telephone'])) return User::where('telephone', $parsed['telephone'])->first();
         
-        // Recherche contextuelle par Nom+Prénom
         if (!empty($parsed['prenom']) && !empty($parsed['nom'])) {
-            $p = strtolower(trim(preg_replace('/^(mme|m\.|m|monsieur|madame|mme\.)\s+/i', '', $parsed['prenom'])));
-            $n = strtolower(trim(preg_replace('/^(mme|m\.|m|monsieur|madame|mme\.)\s+/i', '', $parsed['nom'])));
+            $cleanP = $this->cleanName($parsed['prenom']);
+            $cleanN = $this->cleanName($parsed['nom']);
             $minId = $parsed['ministere_id'];
 
-            $queryBuilder = function($q) use ($p, $n) {
-                $q->where(function($sq) use ($p, $n) {
-                    // Cas normal
-                    $sq->where(function($ssq) use ($n) {
-                        $ssq->whereRaw('LOWER(nom) LIKE ?', ["%$n%"])->orWhereRaw('? LIKE CONCAT("%", LOWER(nom), "%")', [$n]);
-                    })->where(function($ssq) use ($p) {
-                        $ssq->whereRaw('LOWER(prenom) LIKE ?', ["%$p%"])->orWhereRaw('? LIKE CONCAT("%", LOWER(prenom), "%")', [$p]);
-                    });
-                })->orWhere(function($sq) use ($p, $n) {
-                    // Cas inversé
-                    $sq->where(function($ssq) use ($p) {
-                        $ssq->whereRaw('LOWER(nom) LIKE ?', ["%$p%"])->orWhereRaw('? LIKE CONCAT("%", LOWER(nom), "%")', [$p]);
-                    })->where(function($ssq) use ($n) {
-                        $ssq->whereRaw('LOWER(prenom) LIKE ?', ["%$n%"])->orWhereRaw('? LIKE CONCAT("%", LOWER(prenom), "%")', [$n]);
-                    });
+            // 1. Recherche STRICTE (Nom/Prénom dans n'importe quel ordre)
+            $u = User::where(function($q) use ($cleanP, $cleanN) {
+                $q->where(function($sq) use ($cleanP, $cleanN) {
+                    $sq->where('prenom', 'like', $cleanP)->where('nom', 'like', $cleanN);
+                })->orWhere(function($sq) use ($cleanP, $cleanN) {
+                    $sq->where('prenom', 'like', $cleanN)->where('nom', 'like', $cleanP);
                 });
-            };
+            });
+            if ($minId) $u->where('ministere_id', $minId);
+            $found = $u->first();
+            if ($found) return $found;
 
-            // 1. Priorité au ministère
-            if ($minId) {
-                $u = User::where('ministere_id', $minId)->where($queryBuilder)->first();
-                if ($u) return $u;
+            // 2. Recherche par JETONS (Tokens) - Gère Yankoba/Yankhoba et inversions complexes
+            $tokens = array_filter(explode(' ', strtolower($cleanP . ' ' . $cleanN)));
+            
+            $query = User::query();
+            if ($minId) $query->where('ministere_id', $minId);
+            
+            $candidates = $query->get();
+            foreach ($candidates as $candidate) {
+                $candTokens = array_filter(explode(' ', strtolower($candidate->prenom . ' ' . $candidate->nom)));
+                $intersection = array_intersect($tokens, $candTokens);
+                
+                // Si on partage au moins 2 mots (ou 1 mot si c'est un nom court unique)
+                if (count($intersection) >= 2 || (count($tokens) == 1 && count($intersection) == 1)) {
+                    return $candidate;
+                }
+
+                // Test de proximité phonétique légère (pour les typos comme Yankoba/Yankhoba)
+                $matchCount = 0;
+                foreach ($tokens as $t) {
+                    foreach ($candTokens as $ct) {
+                        if (levenshtein($t, $ct) <= 1) { // 1 seule lettre de différence
+                            $matchCount++;
+                            break;
+                        }
+                    }
+                }
+                if ($matchCount >= count($tokens) && count($tokens) > 0) return $candidate;
             }
-
-            // 2. Recherche globale
-            return User::where($queryBuilder)->first();
         }
         return null;
+    }
+
+    private function cleanName(string $name): string
+    {
+        return trim(preg_replace('/^(mme|m\.|m|monsieur|madame|mme\.)\s+/i', '', $name));
     }
 
     private function splitFullName(string $fullName): array
@@ -263,7 +278,6 @@ class AgentsMasterSyncImport implements ToCollection, WithHeadingRow
         if (!empty($inputAlias)) $inputTokens = array_values(array_unique(array_merge($inputTokens, $this->matchTokens($inputAlias))));
 
         foreach ($collection as $name => $id) { if ($this->normalizeString($name) === $inputNormalized) return $id; }
-        if (!empty($inputAlias)) { foreach ($collection as $name => $id) { if (str_contains($this->normalizeString($name), $this->normalizeString($inputAlias))) return $id; } }
         foreach ($collection as $name => $id) { if (str_contains($this->normalizeString($name), $inputNormalized)) return $id; }
 
         $bestId = null; $bestScore = 0;
