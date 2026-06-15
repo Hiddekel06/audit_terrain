@@ -659,6 +659,14 @@
                 @method('PUT')
                 <div class="modal-body" style="padding: 1.5rem;">
                     <div class="mb-4">
+                        <label for="matricule" class="info-label" style="display: block; margin-bottom: 0.5rem;">Matricule</label>
+                        <input type="text" name="matricule" id="matricule" class="form-control" 
+                               value="{{ $user->matricule }}" placeholder="123456A" 
+                               style="border-radius: 0.75rem; font-weight: 600; text-transform: uppercase;">
+                        <small class="text-muted">Format: 6 chiffres + 1 lettre majuscule.</small>
+                    </div>
+
+                    <div class="mb-4">
                         <label for="telephone" class="info-label" style="display: block; margin-bottom: 0.5rem;">Numéro de téléphone</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0" style="border-radius: 0.75rem 0 0 0.75rem;">+221</span>

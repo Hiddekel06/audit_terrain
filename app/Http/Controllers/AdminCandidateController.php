@@ -720,13 +720,21 @@ class AdminCandidateController extends Controller
     {
         $validated = $request->validate([
             'telephone' => ['nullable', 'digits:9', 'unique:users,telephone,' . $user->id],
+            'matricule' => ['nullable', 'unique:users,matricule,' . $user->id, 'regex:/^[0-9]{6}[A-Z]$/'],
             'validation_status' => ['nullable', 'in:reserve,officiel,officiel_inscrit,officiel_attente'],
+        ], [
+            'matricule.unique' => 'Ce matricule est déjà utilisé par un autre agent.',
+            'matricule.regex' => 'Le matricule doit être au format 6 chiffres suivis d\'une lettre majuscule (ex: 123456A).',
         ]);
 
         $data = [];
         
         if ($request->has('telephone')) {
             $data['telephone'] = $validated['telephone'];
+        }
+
+        if ($request->has('matricule')) {
+            $data['matricule'] = strtoupper(trim($validated['matricule']));
         }
 
         if ($request->has('validation_status')) {
