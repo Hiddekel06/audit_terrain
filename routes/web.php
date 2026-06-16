@@ -54,6 +54,8 @@ Route::middleware('admin.auth')->group(function () {
         ->name('admin.candidates.template');
     Route::get('/admin/candidates/{user}', [App\Http\Controllers\AdminCandidateController::class, 'show'])
         ->name('admin.candidates.show');
+    Route::get('/admin/candidates/{user}/json', [App\Http\Controllers\AdminCandidateController::class, 'showJson'])
+        ->name('admin.candidates.show.json');
     Route::put('/admin/candidates/{user}', [App\Http\Controllers\AdminCandidateController::class, 'update'])
         ->name('admin.candidates.update');
     

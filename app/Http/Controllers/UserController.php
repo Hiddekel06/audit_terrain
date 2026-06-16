@@ -22,12 +22,14 @@ class UserController extends Controller
 
         $ministeres = Ministere::orderBy('nom')->get();
 
+        $prefilledMatricule = $request->query('matricule');
+
         $selectedProfile = null;
         if ($request->has('profil_id')) {
             $selectedProfile = $profils->firstWhere('id', $request->profil_id);
         }
 
-        return view('utilisateur_form', compact('profils', 'ministeres', 'selectedProfile'));
+        return view('utilisateur_form', compact('profils', 'ministeres', 'selectedProfile', 'prefilledMatricule'));
     }
 
     /**

@@ -499,6 +499,28 @@
         </div>
     </div>
 
+    @if(session('success'))
+        <div class="alert alert-success border-0 shadow-sm rounded-4 mb-4">
+            <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
+        </div>
+    @endif
+
+    @if($errors->any())
+        <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4">
+            <ul class="mb-0">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <!-- En-tête candidat -->
     <div class="candidate-header">
         <div class="header-grid">
@@ -530,8 +552,8 @@
                             <path d="M8 12h8"/>
                         </svg>
                         Matricule: {{ $user->matricule }}
-                        <span class="candidate-source {{ ($user->source_type ?? 'manual') === 'import' ? 'import' : 'manual' }}">
-                            {{ ($user->source_type ?? 'manual') === 'import' ? 'Importé' : 'Inscrit' }}
+                        <span class="candidate-source {{ in_array($user->source_type ?? 'manual', ['import', 'master_sync']) ? 'import' : 'manual' }}">
+                            {{ in_array($user->source_type ?? 'manual', ['import', 'master_sync']) ? 'Importé' : 'Inscrit' }}
                         </span>
                         
                         @if($user->validation_status === 'officiel_inscrit')
@@ -714,7 +736,7 @@
     <div class="meta-footer">
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
             <div>
-                <div class="info-label">Inscrit le</div>
+                <div class="info-label">Créé le</div>
                 <div class="info-value">{{ $user->created_at->format('d/m/Y à H:i') }}</div>
             </div>
             <div>

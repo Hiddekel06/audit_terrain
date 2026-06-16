@@ -599,6 +599,38 @@ class AdminCandidateController extends Controller
     }
 
     /**
+     * Retourne les données d'un agent au format JSON.
+     */
+    public function showJson(User $user)
+    {
+        $user->load(['profil', 'ministere', 'regionChoices.region']);
+
+        return response()->json([
+            'id' => $user->id,
+            'nom' => $user->nom,
+            'prenom' => $user->prenom,
+            'matricule' => $user->matricule,
+            'telephone' => $user->telephone,
+            'email' => $user->email,
+            'photo' => $user->photo,
+            'ministere' => $user->ministere->nom ?? '—',
+            'direction' => $user->direction ?? '—',
+            'profil' => $user->profil->libelle ?? '—',
+            'profil_id' => $user->profil_id,
+            'experiences' => $user->experiences ?? [],
+            'competences_techniques' => $user->competences_techniques ?? [],
+            'disponibilite' => $user->disponibilite,
+            'validation_status' => $user->validation_status,
+            'region_choices' => $user->regionChoices->map(function($choice) {
+                return [
+                    'ordre' => $choice->ordre,
+                    'region' => $choice->region->nom
+                ];
+            })
+        ]);
+    }
+
+    /**
      * Retourne les stats dashboard.
      */
     public function stats()

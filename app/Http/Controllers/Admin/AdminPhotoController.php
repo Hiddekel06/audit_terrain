@@ -53,8 +53,13 @@ class AdminPhotoController extends Controller
                     continue;
                 }
 
-                // Recherche de l'agent par Matricule ou CIN (Match exact)
-                $user = User::where('matricule', $identifier)->first();
+                // Recherche de l'agent par Matricule (ou CIN stocké dans matricule)
+                // On utilise strtoupper pour garantir le matching avec les matricules en base
+                $identifierUpper = strtoupper(trim($identifier));
+                
+                $user = User::where('matricule', $identifierUpper)
+                            ->orWhere('telephone', $identifier) // Parfois le CIN est dans le téléphone
+                            ->first();
 
                 if ($user) {
                     // Supprimer l'ancienne photo si elle existe

@@ -33,6 +33,7 @@ class User extends Authenticatable
         'team_id',
         'validation_status',
         'validation_source',
+        'photo',
     ];
 
     protected $hidden = [

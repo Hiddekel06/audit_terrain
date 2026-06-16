@@ -29,6 +29,22 @@
                 <p class="text-muted mb-4">Vos réponses pour le quiz <strong>{{ $quiz->titre }}</strong> ont été enregistrées avec succès.</p>
             @endif
 
+            @if(isset($score))
+                @php
+                    $percentage = ($totalPoints > 0) ? ($score / $totalPoints) * 100 : 0;
+                    $badgeClass = 'bg-danger';
+                    if($percentage >= 80) $badgeClass = 'bg-success';
+                    elseif($percentage >= 50) $badgeClass = 'bg-warning text-dark';
+                @endphp
+                <div class="score-display mb-4 p-4 rounded-4 bg-light border">
+                    <div class="text-uppercase small fw-bold text-muted mb-2">Votre Score</div>
+                    <div class="display-4 fw-bold mb-2">{{ $score }} <small class="fs-4 text-muted">/ {{ $totalPoints }}</small></div>
+                    <div class="badge {{ $badgeClass }} rounded-pill px-3 py-2">
+                        {{ number_format($percentage, 0) }}% de bonnes réponses
+                    </div>
+                </div>
+            @endif
+
             <p class="small text-muted mb-5">Vous pouvez maintenant fermer cette fenêtre ou retourner à l'accueil.</p>
 
             <a href="{{ url('/') }}" class="btn btn-outline-secondary rounded-pill px-4">

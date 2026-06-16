@@ -35,9 +35,10 @@
                     @forelse($sourceStats as $source)
                         @php
                             $sourceType = $source->source_type ?? 'manual';
-                            $label = $sourceType === 'import' ? 'Importé' : 'Inscrit';
-                            $bgColor = $sourceType === 'import' ? '#ecfdf5' : '#f1f5f9';
-                            $textColor = $sourceType === 'import' ? '#059669' : '#475569';
+                            $isImport = in_array($sourceType, ['import', 'master_sync']);
+                            $label = $isImport ? 'Importé' : 'Inscrit';
+                            $bgColor = $isImport ? '#ecfdf5' : '#f1f5f9';
+                            $textColor = $isImport ? '#059669' : '#475569';
                         @endphp
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <span style="font-size: 0.9rem; font-weight: 600; color: #1e293b;">{{ $label }}</span>

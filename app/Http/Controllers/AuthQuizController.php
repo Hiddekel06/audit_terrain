@@ -81,9 +81,16 @@ class AuthQuizController extends Controller
         $user = User::findOrFail(Session::get('quiz_auth_user_id'));
 
         // Vérifier si l'agent a déjà passé ce test
-        $alreadyDone = \App\Models\QuizResult::where('user_id', $user->id)->where('quiz_id', $quiz->id)->exists();
-        if ($alreadyDone) {
-            return view('qcm.thanks', ['quiz' => $quiz, 'alreadyDone' => true]);
+        $result = \App\Models\QuizResult::where('user_id', $user->id)->where('quiz_id', $quiz->id)->first();
+        if ($result) {
+            // Calculer le total des points possible pour le quiz
+            $totalPoints = $quiz->questions->sum('points');
+            return view('qcm.thanks', [
+                'quiz' => $quiz, 
+                'alreadyDone' => true, 
+                'score' => $result->score,
+                'totalPoints' => $totalPoints
+            ]);
         }
 
         return view('qcm.show', compact('quiz', 'user'));
@@ -138,6 +145,10 @@ class AuthQuizController extends Controller
             'answers_json' => $answers,
         ]);
 
-        return view('qcm.thanks', compact('quiz'));
+        return view('qcm.thanks', [
+            'quiz' => $quiz,
+            'score' => $earnedPoints,
+            'totalPoints' => $totalPoints
+        ]);
     }
 }

@@ -460,6 +460,14 @@
                 ];
 
                 $showCinField = old('no_matricule');
+                // Si on vient du QCM, on détermine si c'est un matricule ou un CIN (CNI)
+                $isPrefilled = !empty($prefilledMatricule);
+                $prefilledIsCin = $isPrefilled && preg_match('/^\d{10,20}$/', $prefilledMatricule);
+
+                if ($isPrefilled) {
+                    $showCinField = $prefilledIsCin;
+                }
+
                 $oldExperiences = old('experiences', []);
                 $oldCompetences = old('competences_techniques', []);
             @endphp
@@ -560,8 +568,11 @@
                     <div class="field-row">
                         <div>
                             <label for="matricule" class="id-label">Matricule <span class="text-danger">*</span></label>
-                            <input type="text" class="id-input @error('matricule') is-invalid @enderror" id="matricule" name="matricule" value="{{ old('matricule') }}" placeholder="123456A" inputmode="text" maxlength="7" pattern="[0-9]{6}[A-Za-z]{1}">
-                            
+                            <input type="text" class="id-input @error('matricule') is-invalid @enderror" id="matricule" name="matricule" 
+                                value="{{ $isPrefilled && !$prefilledIsCin ? $prefilledMatricule : old('matricule') }}" 
+                                {{ $isPrefilled && !$prefilledIsCin ? 'readonly' : '' }}
+                                placeholder="123456A" inputmode="text" maxlength="7" pattern="[0-9]{6}[A-Za-z]{1}">
+
                             @error('matricule')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
@@ -569,15 +580,18 @@
                     </div>
 
                     <div class="field-group mt-2">
-                        <div class="check-item check-item--subtle">
-                            <input type="checkbox" id="no_matricule" name="no_matricule" value="1" @checked((bool) $showCinField)>
+                        <div class="check-item check-item--subtle {{ $isPrefilled ? 'opacity-50' : '' }}">
+                            <input type="checkbox" id="no_matricule" name="no_matricule" value="1" @checked((bool) $showCinField) {{ $isPrefilled ? 'onclick=return(false);onkeydown=return(false);' : '' }}>
                             <label for="no_matricule">Pas de matricule</label>
                         </div>
                     </div>
 
                     <div class="field-group {{ $showCinField ? '' : 'd-none' }}" data-cin-wrapper>
                         <label for="cin" class="id-label">CIN <span class="text-danger">*</span></label>
-                        <input type="text" class="id-input @error('cin') is-invalid @enderror" id="cin" name="cin" value="{{ old('cin') }}" placeholder="13 ou 14 chiffres" inputmode="numeric" pattern="[0-9]{13,14}" maxlength="14" {{ $showCinField ? 'required' : '' }}>
+                        <input type="text" class="id-input @error('cin') is-invalid @enderror" id="cin" name="cin" 
+                            value="{{ $prefilledIsCin ? $prefilledMatricule : old('cin') }}" 
+                            {{ $prefilledIsCin ? 'readonly' : '' }}
+                            placeholder="13 ou 14 chiffres" inputmode="numeric" pattern="[0-9]{13,14}" maxlength="14" {{ $showCinField ? 'required' : '' }}>
                         @error('cin')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
