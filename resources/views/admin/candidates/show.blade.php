@@ -77,6 +77,64 @@
         transition: transform 0.2s ease;
     }
 
+    .profile-avatar-container {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        margin-right: 1.5rem;
+    }
+
+    .profile-avatar-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border-radius: 2rem;
+        overflow: hidden;
+        background: #ecfdf5;
+        border: 3px solid white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .profile-avatar-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .profile-avatar-initials {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 800;
+        color: #059669;
+    }
+
+    .avatar-edit-badge {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        background: var(--accent);
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: 2px solid white;
+        transition: all 0.2s ease;
+        z-index: 10;
+    }
+
+    .avatar-edit-badge:hover {
+        transform: scale(1.1);
+        background: var(--primary);
+    }
+
     .candidate-header-body {
         margin-top: 1.25rem;
         padding-top: 1.25rem;
@@ -444,31 +502,52 @@
     <!-- En-tête candidat -->
     <div class="candidate-header">
         <div class="header-grid">
-            <div>
-                <h1 class="candidate-name">{{ $user->nom }} {{ $user->prenom }}</h1>
-                <div class="candidate-matricule">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="4" width="20" height="16" rx="2"/>
-                        <path d="M8 12h8"/>
-                    </svg>
-                    Matricule: {{ $user->matricule }}
-                    <span class="candidate-source {{ ($user->source_type ?? 'manual') === 'import' ? 'import' : 'manual' }}">
-                        {{ ($user->source_type ?? 'manual') === 'import' ? 'Importé' : 'Inscrit' }}
-                    </span>
-                    
-                    @if($user->validation_status === 'officiel_inscrit')
-                        <span class="candidate-source" style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0;">
-                            <i class="bi bi-patch-check-fill me-1"></i> Officiel
+            <div class="d-flex align-items-center">
+                <div class="profile-avatar-container">
+                    <div class="profile-avatar-wrapper">
+                        @if($user->photo)
+                            <img src="{{ asset('storage/' . $user->photo) }}" alt="Photo de profil" class="profile-avatar-img">
+                        @else
+                            <div class="profile-avatar-initials">
+                                {{ substr($user->prenom, 0, 1) }}{{ substr($user->nom, 0, 1) }}
+                            </div>
+                        @endif
+                        
+                        <label for="manualPhotoUpload" class="avatar-edit-badge" title="Changer la photo">
+                            <i class="bi bi-camera-fill"></i>
+                        </label>
+                        <form id="manualPhotoForm" action="{{ route('admin.candidates.photo.update', $user) }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            <input type="file" name="photo" id="manualPhotoUpload" class="d-none" onchange="document.getElementById('manualPhotoForm').submit()" accept="image/*">
+                        </form>
+                    </div>
+                </div>
+                <div>
+                    <h1 class="candidate-name" style="margin-bottom: 0.5rem;">{{ $user->nom }} {{ $user->prenom }}</h1>
+                    <div class="candidate-matricule">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="4" width="20" height="16" rx="2"/>
+                            <path d="M8 12h8"/>
+                        </svg>
+                        Matricule: {{ $user->matricule }}
+                        <span class="candidate-source {{ ($user->source_type ?? 'manual') === 'import' ? 'import' : 'manual' }}">
+                            {{ ($user->source_type ?? 'manual') === 'import' ? 'Importé' : 'Inscrit' }}
                         </span>
-                    @elseif($user->validation_status === 'officiel_attente')
-                        <span class="candidate-source" style="background: #fef9c3; color: #a16207; border: 1px solid #fef08a;">
-                            <i class="bi bi-clock-history me-1"></i> Officiel (Attente)
-                        </span>
-                    @elseif($user->validation_status === 'reserve')
-                        <span class="candidate-source" style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;">
-                            Réserve
-                        </span>
-                    @endif
+                        
+                        @if($user->validation_status === 'officiel_inscrit')
+                            <span class="candidate-source" style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0;">
+                                <i class="bi bi-patch-check-fill me-1"></i> Officiel
+                            </span>
+                        @elseif($user->validation_status === 'officiel_attente')
+                            <span class="candidate-source" style="background: #fef9c3; color: #a16207; border: 1px solid #fef08a;">
+                                <i class="bi bi-clock-history me-1"></i> Officiel (Attente)
+                            </span>
+                        @elseif($user->validation_status === 'reserve')
+                            <span class="candidate-source" style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;">
+                                Réserve
+                            </span>
+                        @endif
+                    </div>
                 </div>
             </div>
             <div style="text-align: right;">

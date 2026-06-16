@@ -24,6 +24,11 @@
    - Le choix original de l'agent est TOUJOURS conservé dans `profil_initial_id` en cas de divergence (Badge ⚠️ Changé).
    - **Règles de conversion** : `Auditeur` ➔ `Auditeur IT`, `Support/Administratif` ➔ `Auditeur Administratif`.
 
+## 📸 GESTION DES PHOTOS
+1. **IDENTIFICATION VISUELLE** : La photo est liée à l'agent via son **Matricule** ou son **CIN**.
+2. **IMPORT DE MASSE** : Utiliser un fichier ZIP où chaque image est nommée par le matricule (ex: `123456A.jpg`).
+3. **MAINTENANCE** : La suppression d'une photo en base doit entraîner la suppression physique du fichier sur le disque pour éviter l'encombrement.
+
 ## Procédure de Restauration (en cas de perte)
 Si la base est vide, utiliser uniquement les seeders ou les fichiers SQL fournis :
 - `php artisan db:seed` (lance tous les seeders)

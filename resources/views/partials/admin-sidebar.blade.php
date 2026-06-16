@@ -22,10 +22,31 @@
             <span class="admin-sidebar__link-label">Dashboard</span>
         </a>
 
-        <a href="{{ route('admin.candidates.index') }}" class="admin-sidebar__link {{ str_starts_with($currentRoute, 'admin.candidates.') ? 'active' : '' }}">
+        <a href="{{ route('admin.candidates.index') }}" class="admin-sidebar__link {{ str_starts_with($currentRoute, 'admin.candidates.') && $currentRoute !== 'admin.candidates.create' ? 'active' : '' }}">
             <i class="bi bi-people"></i>
             <span class="admin-sidebar__link-label">Gestion des candidats</span>
         </a>
+
+        {{-- Groupe Actions Agents --}}
+        <div class="admin-sidebar__dropdown {{ str_contains($currentRoute, 'candidates.create') || str_contains($currentRoute, 'photos.index') ? 'show' : '' }}">
+            <button type="button" class="admin-sidebar__link admin-sidebar__dropdown-toggle" data-admin-sidebar-dropdown>
+                <i class="bi bi-person-plus"></i>
+                <span class="admin-sidebar__link-label">Actions Agents</span>
+                <i class="bi bi-chevron-down ms-auto admin-sidebar__dropdown-icon"></i>
+            </button>
+            <div class="admin-sidebar__dropdown-menu">
+                @if(Auth::guard('admin')->user()?->role === 'super_admin')
+                    <a href="{{ route('admin.candidates.create') }}" class="admin-sidebar__dropdown-link {{ $currentRoute === 'admin.candidates.create' ? 'active' : '' }}">
+                        <i class="bi bi-person-plus-fill"></i>
+                        <span>Nouvel agent</span>
+                    </a>
+                @endif
+                <a href="{{ route('admin.photos.index') }}" class="admin-sidebar__dropdown-link {{ $currentRoute === 'admin.photos.index' ? 'active' : '' }}">
+                    <i class="bi bi-camera-fill"></i>
+                    <span>Gestion des photos</span>
+                </a>
+            </div>
+        </div>
 
         @if(Auth::guard('admin')->user()?->role === 'super_admin')
             <a href="{{ route('admin.master_sync.index') }}" class="admin-sidebar__link {{ $currentRoute === 'admin.master_sync.index' ? 'active' : '' }}">
@@ -33,6 +54,30 @@
                 <span class="admin-sidebar__link-label">Liste Maître</span>
             </a>
         @endif
+
+        {{-- Groupe Gestion des QCM --}}
+        <div class="admin-sidebar__section-title">Gestion des QCM</div>
+        <div class="admin-sidebar__dropdown {{ str_contains($currentRoute, 'admin.quizzes.') ? 'show' : '' }}">
+            <button type="button" class="admin-sidebar__link admin-sidebar__dropdown-toggle" data-admin-sidebar-dropdown>
+                <i class="bi bi-patch-question"></i>
+                <span class="admin-sidebar__link-label">Module Évaluations</span>
+                <i class="bi bi-chevron-down ms-auto admin-sidebar__dropdown-icon"></i>
+            </button>
+            <div class="admin-sidebar__dropdown-menu">
+                <a href="{{ route('admin.quizzes.index') }}" class="admin-sidebar__dropdown-link {{ $currentRoute === 'admin.quizzes.index' ? 'active' : '' }}">
+                    <i class="bi bi-card-list"></i>
+                    <span>Liste des Quiz</span>
+                </a>
+                <a href="{{ route('admin.quizzes.results') }}" class="admin-sidebar__dropdown-link {{ $currentRoute === 'admin.quizzes.results' ? 'active' : '' }}">
+                    <i class="bi bi-trophy"></i>
+                    <span>Résultats & Notes</span>
+                </a>
+                <a href="{{ route('admin.quizzes.create') }}" class="admin-sidebar__dropdown-link {{ $currentRoute === 'admin.quizzes.create' ? 'active' : '' }}">
+                    <i class="bi bi-plus-circle"></i>
+                    <span>Créer un Quiz</span>
+                </a>
+            </div>
+        </div>
 
         @if(Auth::guard('admin')->user()?->role === 'super_admin')
             <a href="{{ route('admin.operations.research') }}" class="admin-sidebar__link {{ $currentRoute === 'admin.operations.research' ? 'active' : '' }}">
@@ -78,13 +123,6 @@
                 </a>
             </div>
         </div>
-
-        @if(Auth::guard('admin')->user()?->role === 'super_admin')
-            <a href="{{ route('admin.candidates.create') }}" class="admin-sidebar__link {{ $currentRoute === 'admin.candidates.create' ? 'active' : '' }}">
-                <i class="bi bi-person-plus"></i>
-                <span class="admin-sidebar__link-label">Nouvel agent</span>
-            </a>
-        @endif
 
         <a href="{{ route('admin.dashboard') }}#regions-section" class="admin-sidebar__link">
             <i class="bi bi-geo-alt"></i>

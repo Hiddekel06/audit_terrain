@@ -29,6 +29,11 @@ Route::middleware('admin.auth')->group(function () {
         ->name('admin.dashboard');
 
     // Gestion candidats
+    // Gestion des Photos
+    Route::get('/admin/photos', [App\Http\Controllers\Admin\AdminPhotoController::class, 'index'])->name('admin.photos.index');
+    Route::post('/admin/photos/import-zip', [App\Http\Controllers\Admin\AdminPhotoController::class, 'importZip'])->name('admin.photos.import_zip');
+    Route::post('/admin/candidates/{user}/photo', [App\Http\Controllers\Admin\AdminPhotoController::class, 'updateManual'])->name('admin.candidates.photo.update');
+
     Route::get('/admin/candidates', [App\Http\Controllers\AdminCandidateController::class, 'index'])
         ->name('admin.candidates.index');
     Route::get('/admin/candidates/export', [App\Http\Controllers\AdminCandidateController::class, 'export'])
@@ -139,9 +144,36 @@ Route::middleware('admin.auth')->group(function () {
     Route::post('/admin/master-sync/reset', [App\Http\Controllers\AdminMasterSyncController::class, 'reset'])
         ->name('admin.master_sync.reset');
 
+    // Gestion des Quiz QCM
+    Route::get('/admin/quizzes', [App\Http\Controllers\AdminQuizController::class, 'index'])->name('admin.quizzes.index');
+    Route::get('/admin/quizzes/results', [App\Http\Controllers\AdminQuizController::class, 'results'])->name('admin.quizzes.results');
+    Route::post('/admin/quizzes/settings', [App\Http\Controllers\AdminQuizController::class, 'updateSettings'])->name('admin.quizzes.settings.update');
+    Route::get('/admin/quizzes/create', [App\Http\Controllers\AdminQuizController::class, 'create'])->name('admin.quizzes.create');
+    Route::post('/admin/quizzes', [App\Http\Controllers\AdminQuizController::class, 'store'])->name('admin.quizzes.store');
+    Route::get('/admin/quizzes/{quiz}', [App\Http\Controllers\AdminQuizController::class, 'show'])->name('admin.quizzes.show');
+    Route::get('/admin/quizzes/{quiz}/edit', [App\Http\Controllers\AdminQuizController::class, 'edit'])->name('admin.quizzes.edit');
+    Route::put('/admin/quizzes/{quiz}', [App\Http\Controllers\AdminQuizController::class, 'update'])->name('admin.quizzes.update');
+    Route::delete('/admin/quizzes/{quiz}', [App\Http\Controllers\AdminQuizController::class, 'destroy'])->name('admin.quizzes.destroy');
+    Route::post('/admin/quizzes/{quiz}/toggle', [App\Http\Controllers\AdminQuizController::class, 'toggle'])->name('admin.quizzes.toggle');
+
+    // Gestion des Questions & Options (Smart Builder)
+    Route::post('/admin/quizzes/{quiz}/questions', [App\Http\Controllers\AdminQuizController::class, 'storeQuestion'])->name('admin.quizzes.questions.store');
+    Route::put('/admin/questions/{question}', [App\Http\Controllers\AdminQuizController::class, 'updateQuestion'])->name('admin.questions.update');
+    Route::delete('/admin/questions/{question}', [App\Http\Controllers\AdminQuizController::class, 'destroyQuestion'])->name('admin.questions.destroy');
+
     Route::get('/admin/questions', [App\Http\Controllers\AdminDynamicQuestionController::class, 'index'])->name('admin.questions.index');
 
     Route::put('/admin/questions/{question}', [App\Http\Controllers\AdminDynamicQuestionController::class, 'update'])->name('admin.questions.update');
     Route::post('/admin/questions/{question}/toggle', [App\Http\Controllers\AdminDynamicQuestionController::class, 'toggle'])->name('admin.questions.toggle');
     Route::post('/admin/questions/{question}/order', [App\Http\Controllers\AdminDynamicQuestionController::class, 'updateOrder'])->name('admin.questions.order');
+});
+
+// Routes QCM Agent
+Route::get('/qcm/{slug}', [App\Http\Controllers\AuthQuizController::class, 'showLoginForm'])->name('qcm.login');
+Route::post('/qcm/{slug}/login', [App\Http\Controllers\AuthQuizController::class, 'login'])->name('qcm.login.submit');
+Route::post('/qcm/logout', [App\Http\Controllers\AuthQuizController::class, 'logout'])->name('qcm.logout');
+
+Route::middleware(['web', 'quiz.auth'])->group(function () {
+    Route::get('/evaluation/{slug}', [App\Http\Controllers\AuthQuizController::class, 'showQuiz'])->name('qcm.show');
+    Route::post('/evaluation/{slug}/submit', [App\Http\Controllers\AuthQuizController::class, 'submitQuiz'])->name('qcm.submit');
 });

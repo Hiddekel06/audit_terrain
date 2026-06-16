@@ -256,9 +256,13 @@
                             <tr>
                                 <td>
                                     <div class="d-flex align-items-center gap-3">
-                                        <div class="avatar-modern" style="background: #ecfdf5; color: #059669;">
-                                            {{ substr($candidate->prenom, 0, 1) }}{{ substr($candidate->nom, 0, 1) }}
-                                        </div>
+                                        @if($candidate->photo)
+                                            <img src="{{ asset('storage/' . $candidate->photo) }}" alt="" class="avatar-modern" style="object-fit: cover; border: 2px solid #ecfdf5;">
+                                        @else
+                                            <div class="avatar-modern" style="background: #ecfdf5; color: #059669;">
+                                                {{ substr($candidate->prenom, 0, 1) }}{{ substr($candidate->nom, 0, 1) }}
+                                            </div>
+                                        @endif
                                         <div>
                                             <div class="fw-bold">{{ $candidate->nom }} {{ $candidate->prenom }}</div>
                                             <div class="text-muted small">{{ $candidate->matricule ?? $candidate->email }}</div>
