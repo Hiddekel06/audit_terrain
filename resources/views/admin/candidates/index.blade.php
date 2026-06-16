@@ -154,7 +154,7 @@
         <form method="GET" action="{{ route('admin.candidates.index') }}" class="row g-3">
             <div class="col-md-3">
                 <label class="form-label fw-bold small text-uppercase text-muted ms-2">Recherche</label>
-                <input type="text" name="search" class="form-control filter-input" placeholder="Nom, matricule, email..." value="{{ request('search') }}">
+                <input type="text" name="search" class="form-control filter-input" placeholder="Nom, matricule, tel, email..." value="{{ request('search') }}">
             </div>
             <div class="col-md-2">
                 <label class="form-label fw-bold small text-uppercase text-muted ms-2">Profil</label>

@@ -134,7 +134,8 @@ class AdminCandidateController extends Controller
                 $q->where('nom', 'like', "%$search%")
                     ->orWhere('prenom', 'like', "%$search%")
                     ->orWhere('matricule', 'like', "%$search%")
-                    ->orWhere('email', 'like', "%$search%");
+                    ->orWhere('email', 'like', "%$search%")
+                    ->orWhere('telephone', 'like', "%$search%");
             });
         }
 

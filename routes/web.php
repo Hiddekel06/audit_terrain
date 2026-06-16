@@ -168,6 +168,11 @@ Route::middleware('admin.auth')->group(function () {
     Route::put('/admin/questions/{question}', [App\Http\Controllers\AdminDynamicQuestionController::class, 'update'])->name('admin.questions.update');
     Route::post('/admin/questions/{question}/toggle', [App\Http\Controllers\AdminDynamicQuestionController::class, 'toggle'])->name('admin.questions.toggle');
     Route::post('/admin/questions/{question}/order', [App\Http\Controllers\AdminDynamicQuestionController::class, 'updateOrder'])->name('admin.questions.order');
+
+    // Gestion des Tokens API
+    Route::get('/admin/api-tokens', [App\Http\Controllers\AdminApiTokenController::class, 'index'])->name('admin.api.tokens.index');
+    Route::post('/admin/api-tokens', [App\Http\Controllers\AdminApiTokenController::class, 'store'])->name('admin.api.tokens.store');
+    Route::delete('/admin/api-tokens/{id}', [App\Http\Controllers\AdminApiTokenController::class, 'destroy'])->name('admin.api.tokens.destroy');
 });
 
 // Routes QCM Agent

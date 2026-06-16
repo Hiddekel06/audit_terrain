@@ -128,6 +128,14 @@
             <i class="bi bi-geo-alt"></i>
             <span class="admin-sidebar__link-label">Tendances régions</span>
         </a>
+
+        @if(Auth::guard('admin')->user()?->role === 'super_admin')
+            <div class="admin-sidebar__section-title">Paramètres</div>
+            <a href="{{ route('admin.api.tokens.index') }}" class="admin-sidebar__link {{ $currentRoute === 'admin.api.tokens.index' ? 'active' : '' }}">
+                <i class="bi bi-key"></i>
+                <span class="admin-sidebar__link-label">Configuration API</span>
+            </a>
+        @endif
     </nav>
 
     <div class="admin-sidebar__footer">
