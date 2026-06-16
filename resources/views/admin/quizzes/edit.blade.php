@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('admin-title', 'Nouveau Quiz')
-@section('admin-subtitle', 'Définissez les bases de votre évaluation')
+@section('admin-title', 'Modifier le Quiz')
+@section('admin-subtitle', 'Mettez à jour les informations générales')
 
 @section('content')
 <div class="container-fluid">
@@ -9,7 +9,7 @@
         <div class="col-md-8 col-lg-6">
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                 <div class="card-header bg-white border-0 pt-4 px-4">
-                    <h5 class="fw-bold mb-0">Informations générales</h5>
+                    <h5 class="fw-bold mb-0">Modifier les informations</h5>
                 </div>
                 <div class="card-body p-4">
                     @if ($errors->any())
@@ -22,12 +22,13 @@
                         </div>
                     @endif
                     
-                    <form action="{{ route('admin.quizzes.store') }}" method="POST">
+                    <form action="{{ route('admin.quizzes.update', $quiz) }}" method="POST">
                         @csrf
+                        @method('PUT')
                         
                         <div class="mb-4">
                             <label for="titre" class="form-label fw-medium text-dark">Titre du Quiz <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('titre') is-invalid @enderror" id="titre" name="titre" placeholder="Ex: Aptitude Auditeur IT - Session Juin" value="{{ old('titre') }}" required>
+                            <input type="text" class="form-control @error('titre') is-invalid @enderror" id="titre" name="titre" value="{{ old('titre', $quiz->titre) }}" required>
                             @error('titre')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -38,12 +39,12 @@
                             <div class="row g-3">
                                 <div class="col-12">
                                     <div class="p-3 bg-light rounded-3 border">
-                                        <div class="form-text mb-3"><i class="bi bi-info-circle me-1"></i> Sélectionnez les profils autorisés à passer ce quiz. (Tous cochés par défaut).</div>
+                                        <div class="form-text mb-3"><i class="bi bi-info-circle me-1"></i> Sélectionnez les profils autorisés à passer ce quiz.</div>
                                         <div class="row row-cols-1 row-cols-md-2 g-2">
                                             @foreach($profils as $profil)
                                                 <div class="col">
                                                     <div class="form-check custom-checkbox p-2 border rounded-2 bg-white">
-                                                        <input class="form-check-input ms-1" type="checkbox" name="profil_ids[]" value="{{ $profil->id }}" id="profil_{{ $profil->id }}" {{ !old('profil_ids') || (is_array(old('profil_ids')) && in_array($profil->id, old('profil_ids'))) ? 'checked' : '' }}>
+                                                        <input class="form-check-input ms-1" type="checkbox" name="profil_ids[]" value="{{ $profil->id }}" id="profil_{{ $profil->id }}" {{ in_array($profil->id, old('profil_ids', $selectedProfils)) ? 'checked' : '' }}>
                                                         <label class="form-check-label ms-2 fw-medium" for="profil_{{ $profil->id }}">
                                                             {{ $profil->libelle }}
                                                         </label>
@@ -61,7 +62,7 @@
 
                         <div class="mb-4">
                             <label for="description" class="form-label fw-medium text-dark">Description / Consignes</label>
-                            <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description" rows="3" placeholder="Présentez le quiz ou donnez des consignes aux agents...">{{ old('description') }}</textarea>
+                            <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description" rows="3">{{ old('description', $quiz->description) }}</textarea>
                             @error('description')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -69,8 +70,8 @@
 
                         <div class="mb-4">
                             <div class="form-check form-switch p-3 bg-light rounded-3">
-                                <input class="form-check-input ms-0 me-3" type="checkbox" role="switch" id="is_active" name="is_active" {{ old('is_active') ? 'checked' : '' }}>
-                                <label class="form-check-label fw-medium text-dark" for="is_active">Activer immédiatement après création</label>
+                                <input class="form-check-input ms-0 me-3" type="checkbox" role="switch" id="is_active" name="is_active" {{ old('is_active', $quiz->is_active) ? 'checked' : '' }}>
+                                <label class="form-check-label fw-medium text-dark" for="is_active">Le Quiz est actif</label>
                             </div>
                         </div>
 
@@ -79,7 +80,7 @@
                                 <i class="bi bi-x-lg me-2"></i> Annuler
                             </a>
                             <button type="submit" class="btn btn-primary px-5 rounded-pill fw-bold shadow-sm">
-                                Suivant <i class="bi bi-arrow-right ms-2"></i>
+                                Mettre à jour <i class="bi bi-check-lg ms-2"></i>
                             </button>
                         </div>
                     </form>

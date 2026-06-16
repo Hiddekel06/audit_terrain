@@ -89,66 +89,93 @@
 
         {{-- Liste des Questions --}}
         <div class="col-lg-8">
-            <div class="d-flex align-items-center justify-content-between mb-4">
-                <h4 class="fw-bold mb-0">Questions du questionnaire</h4>
-            </div>
+            {{-- Système d'onglets Smart --}}
+            <ul class="nav nav-pills nav-fill bg-white p-2 rounded-4 shadow-sm mb-4 border" id="quizTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active rounded-3 fw-bold py-2" id="questions-tab" data-bs-toggle="tab" data-bs-target="#questions-content" type="button" role="tab">
+                        <i class="bi bi-list-check me-2"></i>Questions
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-3 fw-bold py-2 position-relative" id="participation-tab" data-bs-toggle="tab" data-bs-target="#participation-content" type="button" role="tab">
+                        <i class="bi bi-people me-2"></i>Participation
+                        @if($stats['total_target'] > 0)
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white">
+                                {{ count($stats['pending']) }}
+                                <span class="visually-hidden">En attente</span>
+                            </span>
+                        @endif
+                    </button>
+                </li>
+            </ul>
 
-            @forelse($quiz->questions as $index => $question)
-                <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden border-start border-4 {{ $question->type == 'multiple' ? 'border-warning' : 'border-primary' }}">
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div class="d-flex align-items-center gap-3">
-                                <span class="badge bg-light text-dark fs-6 p-2 rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
-                                    {{ $index + 1 }}
-                                </span>
-                                <h5 class="fw-bold mb-0">{{ $question->libelle }}</h5>
-                            </div>
-                            <div class="dropdown">
-                                <button class="btn btn-link text-muted p-0" type="button" data-bs-toggle="dropdown">
-                                    <i class="bi bi-three-dots-vertical fs-5"></i>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                                    <li>
-                                        <form action="{{ route('admin.questions.destroy', $question) }}" method="POST" onsubmit="return confirm('Supprimer cette question ?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="dropdown-item text-danger small">
-                                                <i class="bi bi-trash me-2"></i> Supprimer
+            <div class="tab-content" id="quizTabsContent">
+                {{-- Onglet 1 : Questions --}}
+                <div class="tab-pane fade show active" id="questions-content" role="tabpanel">
+                    <div class="d-flex align-items-center justify-content-between mb-4 px-1">
+                        <h4 class="fw-bold mb-0">Questions du questionnaire</h4>
+                    </div>
+
+                    @forelse($quiz->questions as $index => $question)
+                        <div class="card border-0 shadow-sm rounded-4 mb-3 overflow-hidden border-start border-4 {{ $question->type == 'multiple' ? 'border-warning' : 'border-primary' }}">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <span class="badge bg-light text-dark fw-bold rounded-circle d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 0.8rem;">
+                                            {{ $index + 1 }}
+                                        </span>
+                                        <h6 class="fw-bold mb-0 text-dark">{{ $question->libelle }}</h6>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge bg-light text-muted border px-2 py-1 x-small">
+                                            <i class="bi {{ $question->type == 'multiple' ? 'bi-check2-all' : 'bi-check2-circle' }} me-1"></i>
+                                            {{ $question->type == 'multiple' ? 'Multi' : 'Unique' }}
+                                        </span>
+                                        <span class="badge bg-light text-muted border px-2 py-1 x-small">
+                                            {{ $question->points }} pts
+                                        </span>
+                                        <div class="dropdown">
+                                            <button class="btn btn-link text-muted p-0" type="button" data-bs-toggle="dropdown">
+                                                <i class="bi bi-three-dots-vertical"></i>
                                             </button>
-                                        </form>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <span class="badge bg-light text-muted border px-2 py-1">
-                                <i class="bi {{ $question->type == 'multiple' ? 'bi-check2-all' : 'bi-check2-circle' }} me-1"></i>
-                                {{ $question->type == 'multiple' ? 'Choix multiples' : 'Choix unique' }}
-                            </span>
-                            <span class="badge bg-light text-muted border px-2 py-1 ms-2">
-                                <i class="bi bi-star me-1"></i> {{ $question->points }} {{ Str::plural('point', $question->points) }}
-                            </span>
-                        </div>
-
-                        <div class="row g-2">
-                            @foreach($question->options as $option)
-                                <div class="col-md-6">
-                                    <div class="p-3 rounded-3 border d-flex align-items-center justify-content-between {{ $option->is_correct ? 'bg-success bg-opacity-10 border-success border-opacity-25' : 'bg-white' }}">
-                                        <div class="d-flex align-items-center gap-3">
-                                            <i class="bi {{ $option->is_correct ? 'bi-check-circle-fill text-success' : 'bi-circle text-muted' }}"></i>
-                                            <span class="{{ $option->is_correct ? 'fw-bold text-success' : '' }}">{{ $option->libelle }}</span>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                                <li>
+                                                    <button type="button" class="dropdown-item small" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#editQuestionModal" 
+                                                            data-question="{{ json_encode($question->only(['id', 'libelle', 'type', 'points'])) }}"
+                                                            data-options="{{ json_encode($question->options->map(fn($o) => $o->only(['libelle', 'is_correct']))) }}"
+                                                            data-action="{{ route('admin.questions.update', $question) }}">
+                                                        <i class="bi bi-pencil me-2"></i> Modifier
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <form action="{{ route('admin.questions.destroy', $question) }}" method="POST" onsubmit="return confirm('Supprimer cette question ?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="dropdown-item text-danger small">
+                                                            <i class="bi bi-trash me-2"></i> Supprimer
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            </ul>
                                         </div>
-                                        @if($option->is_correct)
-                                            <span class="badge bg-success small">Juste</span>
-                                        @endif
                                     </div>
                                 </div>
-                            @endforeach
+
+                                <div class="row g-2 mt-1">
+                                    @foreach($question->options as $option)
+                                        <div class="col-md-6 col-xl-4">
+                                            <div class="p-2 rounded-3 border d-flex align-items-center gap-2 {{ $option->is_correct ? 'bg-success bg-opacity-10 border-success border-opacity-25' : 'bg-white' }}" style="font-size: 0.85rem;">
+                                                <i class="bi {{ $option->is_correct ? 'bi-check-circle-fill text-success' : 'bi-circle text-muted' }}" style="font-size: 0.75rem;"></i>
+                                                <span class="{{ $option->is_correct ? 'fw-bold text-success' : 'text-muted' }} text-truncate">{{ $option->libelle }}</span>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-            @empty
+                    @empty
                 <div class="card border-0 shadow-sm rounded-4 bg-light">
                     <div class="card-body p-5 text-center">
                         <i class="bi bi-plus-circle text-muted mb-3" style="font-size: 3rem;"></i>
@@ -160,6 +187,174 @@
                     </div>
                 </div>
             @endforelse
+            </div>
+
+            {{-- Onglet 2 : Participation --}}
+            <div class="tab-pane fade" id="participation-content" role="tabpanel">
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm rounded-4 bg-primary text-white">
+                        <div class="card-body p-4 text-center">
+                            <div class="display-5 fw-bold mb-1">{{ $stats['total_target'] }}</div>
+                            <div class="small opacity-75">Agents ciblés</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm rounded-4 bg-success text-white">
+                        <div class="card-body p-4 text-center">
+                            <div class="display-5 fw-bold mb-1">{{ $stats['total_responded'] }}</div>
+                            <div class="small opacity-75">Ont répondu</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm rounded-4 bg-warning text-dark">
+                        <div class="card-body p-4 text-center">
+                            <div class="display-5 fw-bold mb-1">{{ count($stats['pending']) }}</div>
+                            <div class="small opacity-75">En attente</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white border-0 pt-4 px-4 pb-3">
+                    <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-4">
+                        <div>
+                            <h5 class="fw-bold mb-0 text-dark">Suivi nominatif des officiels</h5>
+                            <p class="text-muted small mb-0">Seuls les agents inscrits sur la liste maître apparaissent ici.</p>
+                        </div>
+                        <div class="d-flex flex-column flex-md-row flex-grow-1 justify-content-xl-end gap-3">
+                            <div class="search-box">
+                                <i class="bi bi-search search-icon text-muted"></i>
+                                <input type="text" id="participationSearch" class="form-control form-control-modern" placeholder="Nom ou matricule...">
+                            </div>
+                            <div class="status-filters d-flex bg-light p-1 rounded-3">
+                                <input type="radio" class="btn-check" name="statusFilter" id="filterAll" checked>
+                                <label class="btn btn-sm btn-filter flex-grow-1" for="filterAll">Tous</label>
+
+                                <input type="radio" class="btn-check" name="statusFilter" id="filterDone">
+                                <label class="btn btn-sm btn-filter flex-grow-1" for="filterDone">Terminés</label>
+
+                                <input type="radio" class="btn-check" name="statusFilter" id="filterPending">
+                                <label class="btn btn-sm btn-filter flex-grow-1" for="filterPending">En attente</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" id="participationTable">
+                            <thead class="bg-light bg-opacity-50">
+                                <tr>
+                                    <th class="ps-4 py-3 border-0 text-uppercase x-small fw-bold text-muted">Agent officiel</th>
+                                    <th class="py-3 border-0 text-uppercase x-small fw-bold text-muted">Profil</th>
+                                    <th class="py-3 border-0 text-uppercase x-small fw-bold text-muted text-center">État d'avancement</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($stats['responded'] as $agent)
+                                    <tr class="participation-row border-bottom border-light" data-status="done">
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="avatar-sm bg-success bg-opacity-10 text-success fw-bold rounded-circle d-flex align-items-center justify-content-center">
+                                                    {{ substr($agent->prenom, 0, 1) }}{{ substr($agent->nom, 0, 1) }}
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold agent-name text-dark">{{ $agent->nom }} {{ $agent->prenom }}</div>
+                                                    <div class="small text-muted agent-matricule">{{ $agent->matricule }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge bg-light text-secondary fw-medium border px-2 py-1">{{ $agent->profil->libelle ?? '-' }}</span></td>
+                                        <td class="text-center">
+                                            <div class="status-badge status-badge-success">
+                                                <i class="bi bi-check-circle-fill"></i> Terminé
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                                @foreach($stats['pending'] as $agent)
+                                    <tr class="participation-row border-bottom border-light" data-status="pending">
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="avatar-sm bg-light text-muted fw-bold rounded-circle d-flex align-items-center justify-content-center">
+                                                    {{ substr($agent->prenom, 0, 1) }}{{ substr($agent->nom, 0, 1) }}
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold agent-name text-dark">{{ $agent->nom }} {{ $agent->prenom }}</div>
+                                                    <div class="small text-muted agent-matricule">{{ $agent->matricule }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge bg-light text-secondary fw-medium border px-2 py-1">{{ $agent->profil->libelle ?? '-' }}</span></td>
+                                        <td class="text-center">
+                                            <div class="status-badge status-badge-pending">
+                                                <i class="bi bi-hourglass-split"></i> En attente
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            </div>
+            </div>
+            </div>
+
+</div>
+
+{{-- Modal Édition Question --}}
+<div class="modal fade" id="editQuestionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold">Modifier la question</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="" method="POST" id="editQuestionForm">
+                @csrf
+                @method('PUT')
+                <div class="modal-body p-4">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Intitulé de la question</label>
+                        <input type="text" name="libelle" id="edit-libelle" class="form-control" required>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Type de réponse</label>
+                            <select name="type" id="edit-type" class="form-select" required>
+                                <option value="unique">Choix unique (Radio)</option>
+                                <option value="multiple">Choix multiples (Checkbox)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Points attribués</label>
+                            <input type="number" name="points" id="edit-points" class="form-control" min="0" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label fw-bold mb-0">Réponses possibles</label>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="add-option-edit">
+                                <i class="bi bi-plus-lg"></i> Ajouter une réponse
+                            </button>
+                        </div>
+                        <div id="options-container-edit">
+                            {{-- Lignes injectées via JS --}}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pb-4 px-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">Mettre à jour</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -230,6 +425,28 @@
     </div>
 </div>
 
+@push('styles')
+<style>
+    .search-box { position: relative; min-width: 250px; }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); z-index: 5; }
+    .form-control-modern { padding-left: 35px; border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 0.9rem; transition: all 0.2s; }
+    .form-control-modern:focus { background: white; border-color: #065f46; box-shadow: 0 0 0 3px rgba(6, 95, 70, 0.1); }
+    
+    .btn-filter { border: none; border-radius: 8px !important; color: #64748b; font-weight: 600; padding: 6px 15px; transition: all 0.2s; }
+    .btn-check:checked + .btn-filter { background: white !important; color: #065f46 !important; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    
+    .avatar-sm { width: 38px; height: 38px; font-size: 0.8rem; }
+    
+    .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+    .status-badge-success { background: #ecfdf5; color: #065f46; }
+    .status-badge-pending { background: #fff7ed; color: #9a3412; }
+    
+    .table-hover tbody tr:hover { background-color: #f8fafc !important; }
+    .x-small { font-size: 0.7rem; }
+    .table-light-warning { background-color: #fffbeb !important; }
+</style>
+@endpush
+
 @push('scripts')
 <script>
     function copyToClipboard() {
@@ -274,6 +491,109 @@
                 }
             }
         });
+
+        // Gestion de l'édition
+        const editModal = document.getElementById('editQuestionModal');
+        const editContainer = document.getElementById('options-container-edit');
+        const addOptionEditBtn = document.getElementById('add-option-edit');
+        let optionCountEdit = 0;
+
+        editModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            const question = JSON.parse(button.getAttribute('data-question'));
+            const options = JSON.parse(button.getAttribute('data-options'));
+            const action = button.getAttribute('data-action');
+
+            document.getElementById('editQuestionForm').action = action;
+            document.getElementById('edit-libelle').value = question.libelle;
+            document.getElementById('edit-type').value = question.type;
+            document.getElementById('edit-points').value = question.points;
+
+            editContainer.innerHTML = '';
+            optionCountEdit = 0;
+
+            options.forEach(opt => {
+                addOptionRowEdit(opt.libelle, opt.is_correct);
+            });
+        });
+
+        function addOptionRowEdit(libelle = '', isCorrect = false) {
+            const row = document.createElement('div');
+            row.className = 'option-row mb-2 d-flex align-items-center gap-3 bg-light p-3 rounded-3';
+            row.innerHTML = `
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="options[${optionCountEdit}][is_correct]" value="1" ${isCorrect ? 'checked' : ''}>
+                </div>
+                <input type="text" name="options[${optionCountEdit}][libelle]" class="form-control" placeholder="Option" value="${libelle}" required>
+                <button type="button" class="btn btn-link text-danger remove-option-edit p-0"><i class="bi bi-trash fs-5"></i></button>
+            `;
+            editContainer.appendChild(row);
+            optionCountEdit++;
+        }
+
+        addOptionEditBtn.addEventListener('click', () => addOptionRowEdit());
+
+        editContainer.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-option-edit')) {
+                const rows = editContainer.querySelectorAll('.option-row');
+                if (rows.length > 2) {
+                    e.target.closest('.option-row').remove();
+                } else {
+                    alert('Une question doit avoir au moins 2 options.');
+                }
+            }
+        });
+
+        // Validation avant soumission
+        const validateForm = (form) => {
+            const corrects = form.querySelectorAll('input[type="checkbox"][name*="[is_correct]"]:checked');
+            if (corrects.length === 0) {
+                alert('Attention : Vous devez cocher au moins une réponse juste.');
+                return false;
+            }
+            return true;
+        };
+
+        document.getElementById('addQuestionModal').querySelector('form').onsubmit = function() {
+            return validateForm(this);
+        };
+
+        document.getElementById('editQuestionForm').onsubmit = function() {
+            return validateForm(this);
+        };
+
+        // Filtrage dynamique Participation
+        const searchInput = document.getElementById('participationSearch');
+        const statusFilters = document.querySelectorAll('input[name="statusFilter"]');
+        const tableRows = document.querySelectorAll('.participation-row');
+
+        function filterParticipation() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const activeFilter = document.querySelector('input[name="statusFilter"]:checked').id;
+
+            tableRows.forEach(row => {
+                const name = row.querySelector('.agent-name').textContent.toLowerCase();
+                const matricule = row.querySelector('.agent-matricule').textContent.toLowerCase();
+                const status = row.getAttribute('data-status');
+
+                let matchesSearch = name.includes(searchTerm) || matricule.includes(searchTerm);
+                let matchesStatus = true;
+
+                if (activeFilter === 'filterDone') matchesStatus = (status === 'done');
+                if (activeFilter === 'filterPending') matchesStatus = (status === 'pending');
+
+                if (matchesSearch && matchesStatus) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', filterParticipation);
+            statusFilters.forEach(radio => radio.addEventListener('change', filterParticipation));
+        }
     });
 </script>
 @endpush

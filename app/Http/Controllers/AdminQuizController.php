@@ -23,13 +23,38 @@ class AdminQuizController extends Controller
     /**
      * Liste des résultats des agents.
      */
-    public function results()
+    public function results(Request $request)
     {
-        $results = \App\Models\QuizResult::with(['user', 'quiz.questions.options'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $query = \App\Models\QuizResult::with(['user.profil', 'user.ministere', 'quiz.questions.options']);
 
-        return view('admin.quizzes.results', compact('results'));
+        // Filtre par Recherche (Nom ou Matricule)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('user', function($q) use ($search) {
+                $q->where('nom', 'like', "%{$search}%")
+                  ->orWhere('prenom', 'like', "%{$search}%")
+                  ->orWhere('matricule', 'like', "%{$search}%");
+            });
+        }
+
+        // Filtre par Quiz
+        if ($request->filled('quiz_id')) {
+            $query->where('quiz_id', $request->quiz_id);
+        }
+
+        // Filtre par Profil
+        if ($request->filled('profil_id')) {
+            $query->whereHas('user', function($q) use ($request) {
+                $q->where('profil_id', $request->profil_id);
+            });
+        }
+
+        $results = $query->orderBy('created_at', 'desc')->get();
+        
+        $quizzes = Quiz::orderBy('titre')->get();
+        $profils = Profil::orderBy('libelle')->get();
+
+        return view('admin.quizzes.results', compact('results', 'quizzes', 'profils'));
     }
 
     /**
@@ -89,12 +114,85 @@ class AdminQuizController extends Controller
     }
 
     /**
+     * Formulaire de modification d'un Quiz.
+     */
+    public function edit(Quiz $quiz)
+    {
+        $quiz->load('profils');
+        $profils = Profil::where('is_active', true)->orderBy('ordre')->get();
+        $selectedProfils = $quiz->profils->pluck('id')->toArray();
+        
+        return view('admin.quizzes.edit', compact('quiz', 'profils', 'selectedProfils'));
+    }
+
+    /**
+     * Mise à jour des informations d'un Quiz.
+     */
+    public function update(Request $request, Quiz $quiz)
+    {
+        $validated = $request->validate([
+            'titre' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'profil_ids' => 'nullable|array',
+            'profil_ids.*' => 'exists:profil,id',
+        ]);
+
+        \DB::transaction(function () use ($quiz, $validated, $request) {
+            $quiz->update([
+                'titre' => $validated['titre'],
+                'description' => $validated['description'] ?? null,
+                'is_active' => $request->boolean('is_active'),
+            ]);
+
+            if (isset($validated['profil_ids'])) {
+                $quiz->profils()->sync($validated['profil_ids']);
+            } else {
+                $quiz->profils()->detach();
+            }
+        });
+
+        return redirect()->route('admin.quizzes.index')->with('success', 'Quiz mis à jour avec succès.');
+    }
+
+    /**
      * Affichage d'un Quiz (Détails et Questions).
      */
     public function show(Quiz $quiz)
     {
         $quiz->load(['questions.options', 'profils']);
-        return view('admin.quizzes.show', compact('quiz'));
+
+        // 1. Récupérer les IDs des profils ciblés
+        $targetProfilIds = $quiz->profils->pluck('id')->toArray();
+
+        // 2. Récupérer uniquement les agents OFFICIELS et INSCRITS correspondant à ces profils
+        $queryAgents = \App\Models\User::query();
+        if (!empty($targetProfilIds)) {
+            $queryAgents->whereIn('profil_id', $targetProfilIds);
+        }
+        
+        // On ne cible que ceux qui sont officiellement inscrits (liste maître + profil rempli)
+        $targetAgents = $queryAgents->where('validation_status', 'officiel_inscrit')->get();
+
+        // 3. Récupérer les IDs des agents ayant déjà répondu
+        $respondedUserIds = $quiz->results->pluck('user_id')->toArray();
+
+        // 4. Séparer en deux listes
+        $stats = [
+            'total_target' => $targetAgents->count(),
+            'total_responded' => count($respondedUserIds),
+            'responded' => [],
+            'pending' => []
+        ];
+
+        foreach ($targetAgents as $agent) {
+            if (in_array($agent->id, $respondedUserIds)) {
+                $stats['responded'][] = $agent;
+            } else {
+                $stats['pending'][] = $agent;
+            }
+        }
+
+        return view('admin.quizzes.show', compact('quiz', 'stats'));
     }
 
     /**
@@ -122,6 +220,12 @@ class AdminQuizController extends Controller
             'options.*.is_correct' => 'nullable',
         ]);
 
+        // Vérifier qu'au moins une option est correcte
+        $hasCorrect = collect($request->options)->contains(fn($opt) => isset($opt['is_correct']));
+        if (!$hasCorrect) {
+            return back()->withErrors(['options' => 'Vous devez cocher au moins une réponse juste.'])->withInput();
+        }
+
         \DB::transaction(function () use ($quiz, $validated) {
             $question = $quiz->questions()->create([
                 'libelle' => $validated['libelle'],
@@ -139,6 +243,47 @@ class AdminQuizController extends Controller
         });
 
         return back()->with('success', 'Question ajoutée avec succès.');
+    }
+
+    /**
+     * Met à jour une question et ses options.
+     */
+    public function updateQuestion(Request $request, \App\Models\QuizQuestion $question)
+    {
+        $validated = $request->validate([
+            'libelle' => 'required|string|max:500',
+            'type' => 'required|in:unique,multiple',
+            'points' => 'required|integer|min:0',
+            'options' => 'required|array|min:2',
+            'options.*.libelle' => 'required|string|max:255',
+            'options.*.is_correct' => 'nullable',
+        ]);
+
+        // Vérifier qu'au moins une option est correcte
+        $hasCorrect = collect($request->options)->contains(fn($opt) => isset($opt['is_correct']));
+        if (!$hasCorrect) {
+            return back()->withErrors(['options' => 'Vous devez cocher au moins une réponse juste.'])->withInput();
+        }
+
+        \DB::transaction(function () use ($question, $validated) {
+            $question->update([
+                'libelle' => $validated['libelle'],
+                'type' => $validated['type'],
+                'points' => $validated['points'],
+            ]);
+
+            // On supprime les anciennes options et on recrée
+            $question->options()->delete();
+
+            foreach ($validated['options'] as $optData) {
+                $question->options()->create([
+                    'libelle' => $optData['libelle'],
+                    'is_correct' => isset($optData['is_correct']),
+                ]);
+            }
+        });
+
+        return back()->with('success', 'Question mise à jour.');
     }
 
     /**

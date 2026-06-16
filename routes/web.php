@@ -158,8 +158,8 @@ Route::middleware('admin.auth')->group(function () {
 
     // Gestion des Questions & Options (Smart Builder)
     Route::post('/admin/quizzes/{quiz}/questions', [App\Http\Controllers\AdminQuizController::class, 'storeQuestion'])->name('admin.quizzes.questions.store');
-    Route::put('/admin/questions/{question}', [App\Http\Controllers\AdminQuizController::class, 'updateQuestion'])->name('admin.questions.update');
-    Route::delete('/admin/questions/{question}', [App\Http\Controllers\AdminQuizController::class, 'destroyQuestion'])->name('admin.questions.destroy');
+    Route::put('/admin/quiz-questions/{question}', [App\Http\Controllers\AdminQuizController::class, 'updateQuestion'])->name('admin.questions.update');
+    Route::delete('/admin/quiz-questions/{question}', [App\Http\Controllers\AdminQuizController::class, 'destroyQuestion'])->name('admin.questions.destroy');
 
     Route::get('/admin/questions', [App\Http\Controllers\AdminDynamicQuestionController::class, 'index'])->name('admin.questions.index');
 
