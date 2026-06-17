@@ -20,6 +20,7 @@ class AgentResource extends JsonResource
                 'nom' => $this->nom,
                 'prenom' => $this->prenom,
                 'matricule' => $this->matricule,
+                'photo_url' => $this->photo ? url('storage/photos/' . $this->photo) : null,
             ],
             'contact' => [
                 'telephone' => $this->telephone,
