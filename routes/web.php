@@ -158,6 +158,11 @@ Route::middleware('admin.auth')->group(function () {
     Route::delete('/admin/quizzes/{quiz}', [App\Http\Controllers\AdminQuizController::class, 'destroy'])->name('admin.quizzes.destroy');
     Route::post('/admin/quizzes/{quiz}/toggle', [App\Http\Controllers\AdminQuizController::class, 'toggle'])->name('admin.quizzes.toggle');
 
+    // Gestion des Sections de Quiz
+    Route::post('/admin/quizzes/{quiz}/sections', [App\Http\Controllers\AdminQuizController::class, 'storeSection'])->name('admin.quizzes.sections.store');
+    Route::put('/admin/quiz-sections/{section}', [App\Http\Controllers\AdminQuizController::class, 'updateSection'])->name('admin.sections.update');
+    Route::delete('/admin/quiz-sections/{section}', [App\Http\Controllers\AdminQuizController::class, 'destroySection'])->name('admin.sections.destroy');
+
     // Gestion des Questions & Options (Smart Builder)
     Route::post('/admin/quizzes/{quiz}/questions', [App\Http\Controllers\AdminQuizController::class, 'storeQuestion'])->name('admin.quizzes.questions.store');
     Route::put('/admin/quiz-questions/{question}', [App\Http\Controllers\AdminQuizController::class, 'updateQuestion'])->name('admin.questions.update');

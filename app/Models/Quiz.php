@@ -22,6 +22,11 @@ class Quiz extends Model
         return $this->hasMany(QuizQuestion::class, 'quiz_id')->orderBy('ordre');
     }
 
+    public function sections()
+    {
+        return $this->hasMany(QuizSection::class)->orderBy('ordre');
+    }
+
     public function results()
     {
         return $this->hasMany(QuizResult::class);

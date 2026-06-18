@@ -8,10 +8,16 @@
         <i class="bi bi-arrow-left"></i>
         <span>Retour</span>
     </a>
-    <button type="button" class="btn btn-primary d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#addQuestionModal">
-        <i class="bi bi-plus-circle"></i>
-        <span>Ajouter une question</span>
-    </button>
+    <div class="btn-group">
+        <button type="button" class="btn btn-primary d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#addQuestionModal">
+            <i class="bi bi-plus-circle"></i>
+            <span>Ajouter une question</span>
+        </button>
+        <button type="button" class="btn btn-dark d-flex align-items-center gap-2 border-start border-white border-opacity-25" data-bs-toggle="modal" data-bs-target="#addSectionModal">
+            <i class="bi bi-folder-plus"></i>
+            <span>Nouvelle section</span>
+        </button>
+    </div>
 @endsection
 
 @section('content')
@@ -19,6 +25,11 @@
     @if(session('success'))
         <div class="alert alert-success border-0 shadow-sm mb-4">
             {{ session('success') }}
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger border-0 shadow-sm mb-4">
+            {{ session('error') }}
         </div>
     @endif
 
@@ -51,6 +62,10 @@
                                     <span class="fw-bold">Tous les profils</span>
                                 @endforelse
                             </div>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between px-0 py-3 bg-transparent">
+                            <span class="text-muted">Nombre de sections :</span>
+                            <span class="fw-bold">{{ $quiz->sections->count() }}</span>
                         </div>
                         <div class="list-group-item d-flex justify-content-between px-0 py-3 bg-transparent">
                             <span class="text-muted">Total questions :</span>
@@ -87,13 +102,13 @@
             </div>
         </div>
 
-        {{-- Liste des Questions --}}
+        {{-- Contenu Principal --}}
         <div class="col-lg-8">
             {{-- Système d'onglets Smart --}}
             <ul class="nav nav-pills nav-fill bg-white p-2 rounded-4 shadow-sm mb-4 border" id="quizTabs" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active rounded-3 fw-bold py-2" id="questions-tab" data-bs-toggle="tab" data-bs-target="#questions-content" type="button" role="tab">
-                        <i class="bi bi-list-check me-2"></i>Questions
+                        <i class="bi bi-list-nested me-2"></i>Structure & Questions
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -110,87 +125,140 @@
             </ul>
 
             <div class="tab-content" id="quizTabsContent">
-                {{-- Onglet 1 : Questions --}}
+                {{-- Onglet 1 : Structure & Questions --}}
                 <div class="tab-pane fade show active" id="questions-content" role="tabpanel">
                     <div class="d-flex align-items-center justify-content-between mb-4 px-1">
-                        <h4 class="fw-bold mb-0">Questions du questionnaire</h4>
+                        <h4 class="fw-bold mb-0">Contenu du questionnaire</h4>
                     </div>
 
-                    @forelse($quiz->questions as $index => $question)
-                        <div class="card border-0 shadow-sm rounded-4 mb-3 overflow-hidden border-start border-4 {{ $question->type == 'multiple' ? 'border-warning' : 'border-primary' }}">
-                            <div class="card-body p-3">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <span class="badge bg-light text-dark fw-bold rounded-circle d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 0.8rem;">
-                                            {{ $index + 1 }}
-                                        </span>
-                                        <h6 class="fw-bold mb-0 text-dark">{{ $question->libelle }}</h6>
+                    @forelse($quiz->sections as $sectionIndex => $section)
+                        <div class="section-container mb-5">
+                            {{-- Header de Section --}}
+                            <div class="d-flex align-items-center justify-content-between bg-light p-3 rounded-4 mb-3 border">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px;">
+                                        {{ $sectionIndex + 1 }}
                                     </div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <span class="badge bg-light text-muted border px-2 py-1 x-small">
-                                            <i class="bi {{ $question->type == 'multiple' ? 'bi-check2-all' : 'bi-check2-circle' }} me-1"></i>
-                                            {{ $question->type == 'multiple' ? 'Multi' : 'Unique' }}
-                                        </span>
-                                        <span class="badge bg-light text-muted border px-2 py-1 x-small">
-                                            {{ $question->points }} pts
-                                        </span>
-                                        <div class="dropdown">
-                                            <button class="btn btn-link text-muted p-0" type="button" data-bs-toggle="dropdown">
-                                                <i class="bi bi-three-dots-vertical"></i>
-                                            </button>
-                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                                                <li>
-                                                    <button type="button" class="dropdown-item small" 
-                                                            data-bs-toggle="modal" 
-                                                            data-bs-target="#editQuestionModal" 
-                                                            data-question="{{ json_encode($question->only(['id', 'libelle', 'type', 'points'])) }}"
-                                                            data-options="{{ json_encode($question->options->map(fn($o) => $o->only(['libelle', 'is_correct']))) }}"
-                                                            data-action="{{ route('admin.questions.update', $question) }}">
-                                                        <i class="bi bi-pencil me-2"></i> Modifier
-                                                    </button>
-                                                </li>
-                                                <li>
-                                                    <form action="{{ route('admin.questions.destroy', $question) }}" method="POST" onsubmit="return confirm('Supprimer cette question ?')">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="dropdown-item text-danger small">
-                                                            <i class="bi bi-trash me-2"></i> Supprimer
-                                                        </button>
-                                                    </form>
-                                                </li>
-                                            </ul>
-                                        </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0">{{ $section->titre }}</h6>
+                                        @if($section->description)
+                                            <span class="text-muted small">{{ $section->description }}</span>
+                                        @endif
                                     </div>
                                 </div>
-
-                                <div class="row g-2 mt-1">
-                                    @foreach($question->options as $option)
-                                        <div class="col-md-6 col-xl-4">
-                                            <div class="p-2 rounded-3 border d-flex align-items-center gap-2 {{ $option->is_correct ? 'bg-success bg-opacity-10 border-success border-opacity-25' : 'bg-white' }}" style="font-size: 0.85rem;">
-                                                <i class="bi {{ $option->is_correct ? 'bi-check-circle-fill text-success' : 'bi-circle text-muted' }}" style="font-size: 0.75rem;"></i>
-                                                <span class="{{ $option->is_correct ? 'fw-bold text-success' : 'text-muted' }} text-truncate">{{ $option->libelle }}</span>
-                                            </div>
-                                        </div>
-                                    @endforeach
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle rounded-pill" type="button" data-bs-toggle="dropdown">
+                                        Options
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                        <li>
+                                            <button type="button" class="dropdown-item small" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#editSectionModal"
+                                                    data-section="{{ json_encode($section->only(['id', 'titre', 'description'])) }}"
+                                                    data-action="{{ route('admin.sections.update', $section) }}">
+                                                <i class="bi bi-pencil me-2"></i> Modifier la section
+                                            </button>
+                                        </li>
+                                        @if($section->questions->count() == 0)
+                                            <li>
+                                                <form action="{{ route('admin.sections.destroy', $section) }}" method="POST" onsubmit="return confirm('Supprimer cette section ?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="dropdown-item text-danger small">
+                                                        <i class="bi bi-trash me-2"></i> Supprimer
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        @endif
+                                    </ul>
                                 </div>
                             </div>
+
+                            {{-- Questions de la Section --}}
+                            @forelse($section->questions as $qIndex => $question)
+                                <div class="card border-0 shadow-sm rounded-4 mb-3 overflow-hidden border-start border-4 {{ $question->type == 'multiple' ? 'border-warning' : 'border-primary' }}">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <span class="badge bg-light text-dark fw-bold rounded-circle d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; font-size: 0.75rem;">
+                                                    {{ $qIndex + 1 }}
+                                                </span>
+                                                <h6 class="fw-bold mb-0 text-dark">{{ $question->libelle }}</h6>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="badge bg-light text-muted border px-2 py-1 x-small">
+                                                    <i class="bi {{ $question->type == 'multiple' ? 'bi-check2-all' : 'bi-check2-circle' }} me-1"></i>
+                                                    {{ $question->type == 'multiple' ? 'Multi' : 'Unique' }}
+                                                </span>
+                                                <span class="badge bg-light text-muted border px-2 py-1 x-small">
+                                                    {{ $question->points }} pts
+                                                </span>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-link text-muted p-0" type="button" data-bs-toggle="dropdown">
+                                                        <i class="bi bi-three-dots-vertical"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                                        <li>
+                                                            <button type="button" class="dropdown-item small" 
+                                                                    data-bs-toggle="modal" 
+                                                                    data-bs-target="#editQuestionModal" 
+                                                                    data-question="{{ json_encode($question->only(['id', 'libelle', 'type', 'points', 'section_id'])) }}"
+                                                                    data-options="{{ json_encode($question->options->map(fn($o) => $o->only(['libelle', 'is_correct']))) }}"
+                                                                    data-action="{{ route('admin.questions.update', $question) }}">
+                                                                <i class="bi bi-pencil me-2"></i> Modifier
+                                                            </button>
+                                                        </li>
+                                                        <li>
+                                                            <form action="{{ route('admin.questions.destroy', $question) }}" method="POST" onsubmit="return confirm('Supprimer cette question ?')">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="dropdown-item text-danger small">
+                                                                    <i class="bi bi-trash me-2"></i> Supprimer
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row g-2 mt-1">
+                                            @foreach($question->options as $option)
+                                                <div class="col-md-6 col-xl-4">
+                                                    <div class="p-2 rounded-3 border d-flex align-items-center gap-2 {{ $option->is_correct ? 'bg-success bg-opacity-10 border-success border-opacity-25' : 'bg-white' }}" style="font-size: 0.8rem;">
+                                                        <i class="bi {{ $option->is_correct ? 'bi-check-circle-fill text-success' : 'bi-circle text-muted' }}" style="font-size: 0.7rem;"></i>
+                                                        <span class="{{ $option->is_correct ? 'fw-bold text-success' : 'text-muted' }} text-truncate">{{ $option->libelle }}</span>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="text-center py-4 border border-dashed rounded-4 text-muted small">
+                                    Aucune question dans cette section.
+                                </div>
+                            @endforelse
                         </div>
                     @empty
-                <div class="card border-0 shadow-sm rounded-4 bg-light">
-                    <div class="card-body p-5 text-center">
-                        <i class="bi bi-plus-circle text-muted mb-3" style="font-size: 3rem;"></i>
-                        <h5 class="fw-bold">Aucune question ajoutée</h5>
-                        <p class="text-muted">Commencez par ajouter une question pour que ce quiz soit prêt pour la formation.</p>
-                        <button type="button" class="btn btn-primary rounded-pill px-4 mt-2" data-bs-toggle="modal" data-bs-target="#addQuestionModal">
-                            <i class="bi bi-plus-lg me-2"></i> Ajouter ma première question
-                        </button>
-                    </div>
+                        <div class="card border-0 shadow-sm rounded-4 bg-light">
+                            <div class="card-body p-5 text-center">
+                                <i class="bi bi-folder-plus text-muted mb-3" style="font-size: 3rem;"></i>
+                                <h5 class="fw-bold">Aucune section définie</h5>
+                                <p class="text-muted">Créez d'abord une section pour pouvoir y ajouter des questions.</p>
+                                <button type="button" class="btn btn-dark rounded-pill px-4 mt-2" data-bs-toggle="modal" data-bs-target="#addSectionModal">
+                                    <i class="bi bi-plus-lg me-2"></i> Créer ma première section
+                                </button>
+                            </div>
+                        </div>
+                    @endforelse
                 </div>
-            @endforelse
-            </div>
 
-            {{-- Onglet 2 : Participation --}}
-            <div class="tab-pane fade" id="participation-content" role="tabpanel">
+                {{-- Onglet 2 : Participation --}}
+                <div class="tab-pane fade" id="participation-content" role="tabpanel">
+                    {{-- ... (reste du contenu inchangé pour la participation) ... --}}
+
             <div class="row g-4 mb-4">
                 <div class="col-md-4">
                     <div class="card border-0 shadow-sm rounded-4 bg-primary text-white">
@@ -320,6 +388,15 @@
                 @method('PUT')
                 <div class="modal-body p-4">
                     <div class="mb-4">
+                        <label class="form-label fw-bold">Section de destination</label>
+                        <select name="section_id" id="edit-section_id" class="form-select" required>
+                            @foreach($quiz->sections as $sec)
+                                <option value="{{ $sec->id }}">{{ $sec->titre }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
                         <label class="form-label fw-bold">Intitulé de la question</label>
                         <input type="text" name="libelle" id="edit-libelle" class="form-control" required>
                     </div>
@@ -371,6 +448,15 @@
                 @csrf
                 <div class="modal-body p-4">
                     <div class="mb-4">
+                        <label class="form-label fw-bold">Section de destination</label>
+                        <select name="section_id" class="form-select" required>
+                            @foreach($quiz->sections as $sec)
+                                <option value="{{ $sec->id }}">{{ $sec->titre }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
                         <label class="form-label fw-bold">Intitulé de la question</label>
                         <input type="text" name="libelle" class="form-control" placeholder="Saisissez votre question..." required>
                     </div>
@@ -413,12 +499,70 @@
                                 <button type="button" class="btn btn-link text-danger remove-option p-0"><i class="bi bi-trash fs-5"></i></button>
                             </div>
                         </div>
-                        <div class="form-text mt-2"><i class="bi bi-info-circle me-1"></i> Cochez la case à gauche pour désigner la (ou les) bonne(s) réponse(s).</div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 pb-4 px-4">
                     <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Annuler</button>
                     <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">Enregistrer la question</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- Modal Ajout Section --}}
+<div class="modal fade" id="addSectionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold">Nouvelle section</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('admin.quizzes.sections.store', $quiz) }}" method="POST">
+                @csrf
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Titre de la section</label>
+                        <input type="text" name="titre" class="form-control" placeholder="Ex: Culture Générale" required>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label fw-bold">Description (optionnel)</label>
+                        <textarea name="description" class="form-control" rows="3" placeholder="Texte d'introduction..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pb-4 px-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-dark rounded-pill px-5 fw-bold shadow-sm">Créer la section</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- Modal Édition Section --}}
+<div class="modal fade" id="editSectionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold">Modifier la section</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="" method="POST" id="editSectionForm">
+                @csrf
+                @method('PUT')
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Titre de la section</label>
+                        <input type="text" name="titre" id="edit-section-titre" class="form-control" required>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label fw-bold">Description (optionnel)</label>
+                        <textarea name="description" id="edit-section-description" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pb-4 px-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">Mettre à jour</button>
                 </div>
             </form>
         </div>
@@ -444,6 +588,7 @@
     .table-hover tbody tr:hover { background-color: #f8fafc !important; }
     .x-small { font-size: 0.7rem; }
     .table-light-warning { background-color: #fffbeb !important; }
+    .text-truncate-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
 </style>
 @endpush
 
@@ -463,59 +608,67 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        // Gestion des options de question
         const container = document.getElementById('options-container');
         const addButton = document.getElementById('add-option');
         let optionCount = 2;
 
-        addButton.addEventListener('click', function() {
-            const row = document.createElement('div');
-            row.className = 'option-row mb-2 d-flex align-items-center gap-3 bg-light p-3 rounded-3';
-            row.innerHTML = `
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="options[${optionCount}][is_correct]" value="1">
-                </div>
-                <input type="text" name="options[${optionCount}][libelle]" class="form-control" placeholder="Option ${optionCount + 1}" required>
-                <button type="button" class="btn btn-link text-danger remove-option p-0"><i class="bi bi-trash fs-5"></i></button>
-            `;
-            container.appendChild(row);
-            optionCount++;
-        });
+        if (addButton) {
+            addButton.addEventListener('click', function() {
+                const row = document.createElement('div');
+                row.className = 'option-row mb-2 d-flex align-items-center gap-3 bg-light p-3 rounded-3';
+                row.innerHTML = `
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="options[${optionCount}][is_correct]" value="1">
+                    </div>
+                    <input type="text" name="options[${optionCount}][libelle]" class="form-control" placeholder="Option ${optionCount + 1}" required>
+                    <button type="button" class="btn btn-link text-danger remove-option p-0"><i class="bi bi-trash fs-5"></i></button>
+                `;
+                container.appendChild(row);
+                optionCount++;
+            });
+        }
 
-        container.addEventListener('click', function(e) {
-            if (e.target.closest('.remove-option')) {
-                const rows = container.querySelectorAll('.option-row');
-                if (rows.length > 2) {
-                    e.target.closest('.option-row').remove();
-                } else {
-                    alert('Une question doit avoir au moins 2 options.');
+        if (container) {
+            container.addEventListener('click', function(e) {
+                if (e.target.closest('.remove-option')) {
+                    const rows = container.querySelectorAll('.option-row');
+                    if (rows.length > 2) {
+                        e.target.closest('.option-row').remove();
+                    } else {
+                        alert('Une question doit avoir au moins 2 options.');
+                    }
                 }
-            }
-        });
+            });
+        }
 
-        // Gestion de l'édition
-        const editModal = document.getElementById('editQuestionModal');
+        // Gestion de l'édition Question
+        const editQuestionModal = document.getElementById('editQuestionModal');
         const editContainer = document.getElementById('options-container-edit');
         const addOptionEditBtn = document.getElementById('add-option-edit');
         let optionCountEdit = 0;
 
-        editModal.addEventListener('show.bs.modal', function(event) {
-            const button = event.relatedTarget;
-            const question = JSON.parse(button.getAttribute('data-question'));
-            const options = JSON.parse(button.getAttribute('data-options'));
-            const action = button.getAttribute('data-action');
+        if (editQuestionModal) {
+            editQuestionModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const question = JSON.parse(button.getAttribute('data-question'));
+                const options = JSON.parse(button.getAttribute('data-options'));
+                const action = button.getAttribute('data-action');
 
-            document.getElementById('editQuestionForm').action = action;
-            document.getElementById('edit-libelle').value = question.libelle;
-            document.getElementById('edit-type').value = question.type;
-            document.getElementById('edit-points').value = question.points;
+                document.getElementById('editQuestionForm').action = action;
+                document.getElementById('edit-libelle').value = question.libelle;
+                document.getElementById('edit-type').value = question.type;
+                document.getElementById('edit-points').value = question.points;
+                document.getElementById('edit-section_id').value = question.section_id;
 
-            editContainer.innerHTML = '';
-            optionCountEdit = 0;
+                editContainer.innerHTML = '';
+                optionCountEdit = 0;
 
-            options.forEach(opt => {
-                addOptionRowEdit(opt.libelle, opt.is_correct);
+                options.forEach(opt => {
+                    addOptionRowEdit(opt.libelle, opt.is_correct);
+                });
             });
-        });
+        }
 
         function addOptionRowEdit(libelle = '', isCorrect = false) {
             const row = document.createElement('div');
@@ -531,18 +684,36 @@
             optionCountEdit++;
         }
 
-        addOptionEditBtn.addEventListener('click', () => addOptionRowEdit());
+        if (addOptionEditBtn) {
+            addOptionEditBtn.addEventListener('click', () => addOptionRowEdit());
+        }
 
-        editContainer.addEventListener('click', function(e) {
-            if (e.target.closest('.remove-option-edit')) {
-                const rows = editContainer.querySelectorAll('.option-row');
-                if (rows.length > 2) {
-                    e.target.closest('.option-row').remove();
-                } else {
-                    alert('Une question doit avoir au moins 2 options.');
+        if (editContainer) {
+            editContainer.addEventListener('click', function(e) {
+                if (e.target.closest('.remove-option-edit')) {
+                    const rows = editContainer.querySelectorAll('.option-row');
+                    if (rows.length > 2) {
+                        e.target.closest('.option-row').remove();
+                    } else {
+                        alert('Une question doit avoir au moins 2 options.');
+                    }
                 }
-            }
-        });
+            });
+        }
+
+        // Gestion de l'édition Section
+        const editSectionModal = document.getElementById('editSectionModal');
+        if (editSectionModal) {
+            editSectionModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const section = JSON.parse(button.getAttribute('data-section'));
+                const action = button.getAttribute('data-action');
+
+                document.getElementById('editSectionForm').action = action;
+                document.getElementById('edit-section-titre').value = section.titre;
+                document.getElementById('edit-section-description').value = section.description || '';
+            });
+        }
 
         // Validation avant soumission
         const validateForm = (form) => {
@@ -554,13 +725,19 @@
             return true;
         };
 
-        document.getElementById('addQuestionModal').querySelector('form').onsubmit = function() {
-            return validateForm(this);
-        };
+        const addQModal = document.getElementById('addQuestionModal');
+        if (addQModal) {
+            addQModal.querySelector('form').onsubmit = function() {
+                return validateForm(this);
+            };
+        }
 
-        document.getElementById('editQuestionForm').onsubmit = function() {
-            return validateForm(this);
-        };
+        const editQForm = document.getElementById('editQuestionForm');
+        if (editQForm) {
+            editQForm.onsubmit = function() {
+                return validateForm(this);
+            };
+        }
 
         // Filtrage dynamique Participation
         const searchInput = document.getElementById('participationSearch');

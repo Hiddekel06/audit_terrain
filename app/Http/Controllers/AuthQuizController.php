@@ -83,7 +83,7 @@ class AuthQuizController extends Controller
      */
     public function showQuiz($slug)
     {
-        $quiz = Quiz::where('slug', $slug)->with('questions.options')->firstOrFail();
+        $quiz = Quiz::where('slug', $slug)->with(['sections.questions.options'])->firstOrFail();
         $user = User::findOrFail(Session::get('quiz_auth_user_id'));
 
         // Vérifier si l'agent a déjà passé ce test

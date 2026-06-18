@@ -159,7 +159,7 @@ class AdminQuizController extends Controller
      */
     public function show(Quiz $quiz)
     {
-        $quiz->load(['questions.options', 'profils']);
+        $quiz->load(['sections.questions.options', 'profils']);
 
         // 1. Récupérer les IDs des profils ciblés
         $targetProfilIds = $quiz->profils->pluck('id')->toArray();
@@ -196,6 +196,54 @@ class AdminQuizController extends Controller
     }
 
     /**
+     * Enregistre une nouvelle section dans le Quiz.
+     */
+    public function storeSection(Request $request, Quiz $quiz)
+    {
+        $validated = $request->validate([
+            'titre' => 'required|string|max:255',
+            'description' => 'nullable|string',
+        ]);
+
+        $quiz->sections()->create([
+            'titre' => $validated['titre'],
+            'description' => $validated['description'],
+            'ordre' => $quiz->sections()->count() + 1,
+        ]);
+
+        return back()->with('success', 'Section ajoutée avec succès.');
+    }
+
+    /**
+     * Met à jour une section.
+     */
+    public function updateSection(Request $request, \App\Models\QuizSection $section)
+    {
+        $validated = $request->validate([
+            'titre' => 'required|string|max:255',
+            'description' => 'nullable|string',
+        ]);
+
+        $section->update($validated);
+
+        return back()->with('success', 'Section mise à jour.');
+    }
+
+    /**
+     * Supprime une section.
+     */
+    public function destroySection(\App\Models\QuizSection $section)
+    {
+        // On ne peut supprimer une section que si elle est vide ou si on déplace les questions
+        if ($section->questions()->count() > 0) {
+            return back()->with('error', 'Impossible de supprimer une section qui contient des questions. Déplacez les questions d\'abord.');
+        }
+
+        $section->delete();
+        return back()->with('success', 'Section supprimée.');
+    }
+
+    /**
      * Activation / Désactivation d'un Quiz.
      */
     public function toggle(Quiz $quiz)
@@ -215,6 +263,7 @@ class AdminQuizController extends Controller
             'libelle' => 'required|string|max:500',
             'type' => 'required|in:unique,multiple',
             'points' => 'required|integer|min:0',
+            'section_id' => 'required|exists:quiz_sections,id',
             'options' => 'required|array|min:2',
             'options.*.libelle' => 'required|string|max:255',
             'options.*.is_correct' => 'nullable',
@@ -231,6 +280,7 @@ class AdminQuizController extends Controller
                 'libelle' => $validated['libelle'],
                 'type' => $validated['type'],
                 'points' => $validated['points'],
+                'section_id' => $validated['section_id'],
                 'ordre' => $quiz->questions()->count() + 1,
             ]);
 
@@ -254,6 +304,7 @@ class AdminQuizController extends Controller
             'libelle' => 'required|string|max:500',
             'type' => 'required|in:unique,multiple',
             'points' => 'required|integer|min:0',
+            'section_id' => 'required|exists:quiz_sections,id',
             'options' => 'required|array|min:2',
             'options.*.libelle' => 'required|string|max:255',
             'options.*.is_correct' => 'nullable',
@@ -270,6 +321,7 @@ class AdminQuizController extends Controller
                 'libelle' => $validated['libelle'],
                 'type' => $validated['type'],
                 'points' => $validated['points'],
+                'section_id' => $validated['section_id'],
             ]);
 
             // On supprime les anciennes options et on recrée

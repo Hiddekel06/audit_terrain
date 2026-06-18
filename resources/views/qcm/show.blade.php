@@ -9,7 +9,7 @@
     <style>
         body { background: #f0f4f8; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
         .quiz-header { background: #065f46; color: white; padding: 2rem 0; border-radius: 0 0 32px 32px; margin-bottom: 2rem; }
-        .question-card { border: 0; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 1.5rem; }
+        .question-card { border: 0; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 1.5rem; transition: all 0.3s ease; }
         .option-label { 
             display: block; 
             padding: 1rem 1.25rem; 
@@ -27,9 +27,10 @@
             font-weight: 600; 
         }
         .option-input { display: none; }
-        .sticky-footer { position: sticky; bottom: 0; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); padding: 1rem; border-top: 1px solid #edf2f7; z-index: 100; }
         .btn-submit { background: #065f46; border: 0; padding: 12px 30px; border-radius: 12px; font-weight: 700; width: 100%; }
         .btn-submit:hover { background: #064e3b; }
+        .quiz-step { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -52,41 +53,77 @@
     <form action="{{ route('qcm.submit', $quiz->slug) }}" method="POST" id="quizForm">
         @csrf
         
-        @foreach($quiz->questions as $index => $question)
-            <div class="card question-card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center gap-2 mb-3">
-                        <span class="badge bg-primary rounded-pill px-3">Question {{ $index + 1 }}</span>
-                        @if($question->type === 'multiple')
-                            <span class="badge bg-warning text-dark rounded-pill px-3">Plusieurs choix possibles</span>
-                        @endif
-                    </div>
-                    <h5 class="fw-bold mb-4">{{ $question->libelle }}</h5>
+        @php 
+            $globalQuestionIndex = 1;
+            $activeSections = $quiz->sections->filter(fn($s) => $s->questions->count() > 0);
+        @endphp
 
-                    <div class="options-list">
-                        @foreach($question->options as $option)
-                            <div class="option-item">
-                                <input class="option-input" 
-                                       type="{{ $question->type === 'multiple' ? 'checkbox' : 'radio' }}" 
-                                       name="answers[{{ $question->id }}]{{ $question->type === 'multiple' ? '[]' : '' }}" 
-                                       id="option_{{ $option->id }}" 
-                                       value="{{ $option->id }}">
-                                <label class="option-label" for="option_{{ $option->id }}">
-                                    {{ $option->libelle }}
-                                </label>
+        @foreach($activeSections as $sIndex => $section)
+            <div class="quiz-step" id="step-{{ $sIndex }}" style="{{ $sIndex > 0 ? 'display:none;' : '' }}">
+                <div class="section-header mb-4 mt-5">
+                    <h5 class="fw-bold text-dark d-flex align-items-center gap-2">
+                        <span class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 0.9rem;">
+                            {{ $sIndex + 1 }}
+                        </span>
+                        {{ $section->titre }}
+                    </h5>
+                    @if($section->description)
+                        <p class="text-muted small mb-0 ms-4 ps-2">{{ $section->description }}</p>
+                    @endif
+                    <hr class="mt-2 opacity-10">
+                </div>
+
+                @foreach($section->questions as $question)
+                    <div class="card question-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <span class="badge bg-primary rounded-pill px-3">Question {{ $globalQuestionIndex++ }}</span>
+                                @if($question->type === 'multiple')
+                                    <span class="badge bg-warning text-dark rounded-pill px-3">Plusieurs choix possibles</span>
+                                @endif
                             </div>
-                        @endforeach
+                            <h5 class="fw-bold mb-4">{{ $question->libelle }}</h5>
+
+                            <div class="options-list">
+                                @foreach($question->options as $option)
+                                    <div class="option-item">
+                                        <input class="option-input" 
+                                               type="{{ $question->type === 'multiple' ? 'checkbox' : 'radio' }}" 
+                                               name="answers[{{ $question->id }}]{{ $question->type === 'multiple' ? '[]' : '' }}" 
+                                               id="option_{{ $option->id }}" 
+                                               value="{{ $option->id }}">
+                                        <label class="option-label" for="option_{{ $option->id }}">
+                                            {{ $option->libelle }}
+                                        </label>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
                     </div>
+                @endforeach
+
+                <div class="step-navigation d-flex gap-3 mt-5">
+                    @if(!$loop->first)
+                        <button type="button" class="btn btn-outline-secondary btn-lg rounded-pill px-4 flex-grow-1 prev-step" data-current="{{ $sIndex }}">
+                            <i class="bi bi-arrow-left me-2"></i> Précédent
+                        </button>
+                    @endif
+
+                    @if(!$loop->last)
+                        <button type="button" class="btn btn-primary btn-lg rounded-pill px-4 flex-grow-1 next-step" data-current="{{ $sIndex }}">
+                            Suivant <i class="bi bi-arrow-right ms-2"></i>
+                        </button>
+                    @else
+                        <div class="flex-grow-1">
+                            <p class="text-muted small text-center mb-2">Assurez-vous d'avoir répondu à tout avant de valider.</p>
+                            <button type="button" class="btn btn-success btn-lg rounded-pill px-4 w-100 shadow-lg" id="btnPreSubmit">
+                                Terminer et envoyer <i class="bi bi-check-all ms-2"></i>
+                            </button>
+                        </div>
+                    @endif
                 </div>
             </div>
         @endforeach
-
-        <div class="mt-4 mb-5 text-center">
-            <p class="text-muted small">Assurez-vous d'avoir répondu à toutes les questions avant de valider.</p>
-            <button type="button" class="btn btn-primary btn-submit shadow-lg" id="btnPreSubmit">
-                Valider mes réponses <i class="bi bi-send-fill ms-2"></i>
-            </button>
-        </div>
     </form>
 </div>
 
@@ -121,36 +158,72 @@
         const btnFinalSubmit = document.getElementById('btnFinalSubmit');
         const confirmModal = new bootstrap.Modal(document.getElementById('confirmSubmitModal'));
 
-        btnPreSubmit.addEventListener('click', function() {
-            // 1. Vérifier si toutes les questions ont une réponse
-            const questions = document.querySelectorAll('.question-card');
+        // Navigation entre étapes
+        const nextBtns = document.querySelectorAll('.next-step');
+        const prevBtns = document.querySelectorAll('.prev-step');
+
+        function validateStep(stepId) {
+            const stepContainer = document.getElementById('step-' + stepId);
+            if (!stepContainer) return true;
+
+            const questions = stepContainer.querySelectorAll('.question-card');
             let allAnswered = true;
             let firstUnanswered = null;
 
-            questions.forEach((card, index) => {
+            questions.forEach((card) => {
                 const inputs = card.querySelectorAll('input');
                 const isAnswered = Array.from(inputs).some(input => input.checked);
                 
                 if (!isAnswered) {
                     allAnswered = false;
-                    card.classList.add('border', 'border-danger');
+                    card.style.border = '2px solid #dc3545';
                     if (!firstUnanswered) firstUnanswered = card;
                 } else {
-                    card.classList.remove('border', 'border-danger');
+                    card.style.border = '0';
                 }
             });
 
             if (!allAnswered) {
-                alert('Veuillez répondre à toutes les questions avant de soumettre.');
+                alert('Veuillez répondre à toutes les questions de cette section avant de continuer.');
                 if (firstUnanswered) {
                     firstUnanswered.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
-                return;
+                return false;
             }
+            return true;
+        }
 
-            // 2. Si tout est OK, ouvrir la modale
-            confirmModal.show();
+        nextBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const current = parseInt(this.getAttribute('data-current'));
+                if (validateStep(current)) {
+                    document.getElementById('step-' + current).style.display = 'none';
+                    document.getElementById('step-' + (current + 1)).style.display = 'block';
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            });
         });
+
+        prevBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const current = parseInt(this.getAttribute('data-current'));
+                document.getElementById('step-' + current).style.display = 'none';
+                document.getElementById('step-' + (current - 1)).style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+
+        if (btnPreSubmit) {
+            btnPreSubmit.addEventListener('click', function() {
+                // On récupère l'ID de la dernière section visible
+                const currentStepVisible = document.querySelector('.quiz-step[style*="display: block"]');
+                const lastStepId = currentStepVisible ? parseInt(currentStepVisible.id.replace('step-', '')) : 0;
+                
+                if (validateStep(lastStepId)) {
+                    confirmModal.show();
+                }
+            });
+        }
 
         btnFinalSubmit.addEventListener('click', function() {
             btnFinalSubmit.disabled = true;

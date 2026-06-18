@@ -8,6 +8,7 @@ class QuizQuestion extends Model
 {
     protected $fillable = [
         'quiz_id',
+        'section_id',
         'libelle',
         'type',
         'points',
@@ -17,6 +18,11 @@ class QuizQuestion extends Model
     public function quiz()
     {
         return $this->belongsTo(Quiz::class);
+    }
+
+    public function section()
+    {
+        return $this->belongsTo(QuizSection::class, 'section_id');
     }
 
     public function options()
