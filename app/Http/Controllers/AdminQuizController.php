@@ -164,14 +164,14 @@ class AdminQuizController extends Controller
         // 1. Récupérer les IDs des profils ciblés
         $targetProfilIds = $quiz->profils->pluck('id')->toArray();
 
-        // 2. Récupérer uniquement les agents OFFICIELS et INSCRITS correspondant à ces profils
+        // 2. Récupérer TOUS les agents inscrits correspondant à ces profils (indépendamment du statut officiel/réserve)
         $queryAgents = \App\Models\User::query();
         if (!empty($targetProfilIds)) {
             $queryAgents->whereIn('profil_id', $targetProfilIds);
         }
         
-        // On ne cible que ceux qui sont officiellement inscrits (liste maître + profil rempli)
-        $targetAgents = $queryAgents->where('validation_status', 'officiel_inscrit')->get();
+        // On récupère tous ceux qui ont un profil (donc inscrits/validés au sens large)
+        $targetAgents = $queryAgents->whereNotNull('profil_id')->get();
 
         // 3. Récupérer les IDs des agents ayant déjà répondu
         $respondedUserIds = $quiz->results->pluck('user_id')->toArray();
