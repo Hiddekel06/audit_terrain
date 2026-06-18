@@ -49,9 +49,9 @@ class AuthQuizController extends Controller
                          ->with('user_matricule', $request->identifier);
         }
 
-        // 3. Vérifier le statut d'inscription (Garde-fou pour officiel_attente)
-        if ($user->validation_status === 'officiel_attente' || is_null($user->validation_status)) {
-            // Cas 2 : Agent reconnu mais profil incomplet
+        // 3. Vérifier le statut d'inscription (Garde-fou UNIQUEMENT pour officiel_attente)
+        if ($user->validation_status === 'officiel_attente') {
+            // Cas 2 : Agent reconnu via import mais profil non complété
             return back()->with('show_registration_modal', true)
                          ->with('is_unknown', false)
                          ->with('user_matricule', $user->matricule);

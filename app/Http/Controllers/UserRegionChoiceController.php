@@ -194,6 +194,7 @@ class UserRegionChoiceController extends Controller
                 // Création classique (nouveau venu)
                 $data['profil_initial_id'] = $pendingUser['profil_id'] ?? null;
                 $data['source_type'] = 'manual';
+                $data['validation_status'] = 'reserve';
                 $user = User::create($data);
             }
 
