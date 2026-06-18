@@ -119,7 +119,8 @@ class AdminOperationsResearchController extends Controller
                 $query->orderBy('ordre');
             },
             'regionChoices.region',
-        ])->whereNull('team_id');
+        ])->whereNull('team_id')
+          ->whereIn('validation_status', ['officiel_inscrit', 'officiel_attente']);
 
         if ($selectedRegionId) {
             $unassignedUsersQuery->whereHas('regionChoices', function ($q) use ($selectedRegionId) {
@@ -212,14 +213,21 @@ class AdminOperationsResearchController extends Controller
     private function availablePools(): array
     {
         $usersByProfile = User::with(['profil', 'ministere', 'regionChoices.region'])
+            ->withMax('quizResults as best_score', 'score')
             ->whereNull('team_id')
+            ->whereIn('validation_status', ['officiel_inscrit', 'officiel_attente'])
             ->get()
             ->groupBy('profil_id');
 
         $pools = [];
 
         foreach ($this->deploymentProfiles() as $profile) {
-            $pools[$profile['id']] = $usersByProfile->get($profile['id'], collect())->values();
+            // On récupère le pool, on mélange pour l'équité des ex-æquo, 
+            // puis on trie par meilleure note de QCM.
+            $pools[$profile['id']] = $usersByProfile->get($profile['id'], collect())
+                ->shuffle()
+                ->sortByDesc('best_score')
+                ->values();
         }
 
         return $pools;
@@ -350,6 +358,7 @@ class AdminOperationsResearchController extends Controller
             'telephone' => $user->telephone ?? '',
             'ministere_id' => $user->ministere_id,
             'structure' => $user->ministere?->nom ?? '',
+            'score' => $user->best_score ?? 0,
         ];
     }
 
@@ -375,11 +384,6 @@ class AdminOperationsResearchController extends Controller
 
         $pools = $this->availablePools();
         
-        // On mélange les pools dès le départ pour garantir l'aléatoire total (Random)
-        foreach ($pools as $id => $collection) {
-            $pools[$id] = $collection->shuffle();
-        }
-
         $roleLabels = $this->deploymentRoleLabels();
         $simulationTeams = [];
         $teamIndex = 1;

@@ -15,7 +15,7 @@ class UserController extends Controller
     public function create(Request $request)
     {
         $profils = Profil::where('is_active', true)
-            ->where('code', '!=', 'chauffeur')
+            ->whereNotIn('code', ['chauffeur', 'superviseur'])
             ->orderBy('ordre')
             ->orderBy('id')
             ->get();

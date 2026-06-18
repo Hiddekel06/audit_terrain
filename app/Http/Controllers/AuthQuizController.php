@@ -37,18 +37,24 @@ class AuthQuizController extends Controller
             return back()->withErrors(['password' => 'Le mot de passe de formation est incorrect.'])->withInput();
         }
 
-        // 2. Vérifier si l'agent existe par Matricule ou CIN
+        // 2. Vérifier si l'agent existe par Matricule ou Téléphone
         $user = User::where('matricule', $request->identifier)
-                    ->orWhere('telephone', $request->identifier) // Parfois CIN est dans téléphone ou autre champ, à ajuster si besoin
+                    ->orWhere('telephone', $request->identifier)
                     ->first();
 
         if (!$user) {
-            return back()->withErrors(['identifier' => 'Cet identifiant n\'est pas reconnu sur la liste officielle.'])->withInput();
+            // Cas 1 : Agent inconnu (hors base)
+            return back()->with('show_registration_modal', true)
+                         ->with('is_unknown', true)
+                         ->with('user_matricule', $request->identifier);
         }
 
-        // 3. Vérifier le statut d'inscription (Garde-fou)
+        // 3. Vérifier le statut d'inscription (Garde-fou pour officiel_attente)
         if ($user->validation_status === 'officiel_attente' || is_null($user->validation_status)) {
-            return back()->with('show_registration_modal', true)->with('user_matricule', $user->matricule);
+            // Cas 2 : Agent reconnu mais profil incomplet
+            return back()->with('show_registration_modal', true)
+                         ->with('is_unknown', false)
+                         ->with('user_matricule', $user->matricule);
         }
 
         // 4. Vérifier si le profil de l'agent correspond au ciblage du quiz

@@ -93,14 +93,26 @@
             <div class="modal-content border-0 rounded-4 shadow-lg text-center p-4">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <i class="bi bi-person-check fs-1 text-success"></i>
+                        @if(session('is_unknown'))
+                            <i class="bi bi-person-plus fs-1 text-primary"></i>
+                        @else
+                            <i class="bi bi-person-check fs-1 text-success"></i>
+                        @endif
                     </div>
-                    <h5 class="fw-bold mb-3">Presque fini !</h5>
-                    <p class="text-muted">Votre matricule <strong>{{ session('user_matricule') }}</strong> est bien reconnu sur la liste officielle, mais vous n'avez pas encore finalisé votre inscription sur la plateforme.</p>
-                    <p class="small text-muted mb-4">Merci de remplir votre profil (2 minutes) pour débloquer l'accès à l'évaluation.</p>
+                    <h5 class="fw-bold mb-3">
+                        {{ session('is_unknown') ? 'Bienvenue !' : 'Presque fini !' }}
+                    </h5>
                     
-                    <a href="{{ route('utilisateur.form') }}?matricule={{ session('user_matricule') }}" class="btn btn-success w-100 rounded-pill py-2 fw-bold">
-                        Finaliser mon inscription <i class="bi bi-pencil-square ms-2"></i>
+                    @if(session('is_unknown'))
+                        <p class="text-muted">L'identifiant <strong>{{ session('user_matricule') }}</strong> n'est pas encore enregistré dans notre base.</p>
+                        <p class="small text-muted mb-4">Veuillez d'abord vous inscrire sur la plateforme pour pouvoir participer à cette évaluation.</p>
+                    @else
+                        <p class="text-muted">Votre matricule <strong>{{ session('user_matricule') }}</strong> est reconnu, mais vous n'avez pas encore finalisé votre inscription.</p>
+                        <p class="small text-muted mb-4">Merci de remplir votre profil (2 minutes) pour débloquer l'accès au QCM.</p>
+                    @endif
+                    
+                    <a href="{{ route('utilisateur.form') }}?matricule={{ session('user_matricule') }}" class="btn {{ session('is_unknown') ? 'btn-primary' : 'btn-success' }} w-100 rounded-pill py-2 fw-bold">
+                        {{ session('is_unknown') ? "M'inscrire maintenant" : 'Finaliser mon inscription' }} <i class="bi bi-pencil-square ms-2"></i>
                     </a>
                     <button type="button" class="btn btn-link text-muted mt-3 small text-decoration-none" data-bs-dismiss="modal">Plus tard</button>
                 </div>
