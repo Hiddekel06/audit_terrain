@@ -55,7 +55,7 @@
         
         @php 
             $globalQuestionIndex = 1;
-            $activeSections = $quiz->sections->filter(fn($s) => $s->questions->count() > 0);
+            $activeSections = $quiz->sections->filter(fn($s) => $s->questions->count() > 0)->values();
         @endphp
 
         @foreach($activeSections as $sIndex => $section)
