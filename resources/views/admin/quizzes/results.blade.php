@@ -5,6 +5,19 @@
 
 @section('content')
 <div class="container-fluid">
+    @if(session('success'))
+        <div class="alert alert-success border-0 shadow-sm mb-4 rounded-4 d-flex align-items-center">
+            <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+            <div>{{ session('success') }}</div>
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger border-0 shadow-sm mb-4 rounded-4 d-flex align-items-center">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+            <div>{{ session('error') }}</div>
+        </div>
+    @endif
+
     {{-- Barre de Filtres Smart --}}
     <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-body p-4">
@@ -133,7 +146,7 @@
                             @endif
                             <th class="py-3 border-0 text-center">Score Obtenu</th>
                             <th class="py-3 border-0">Date de passage</th>
-                            <th class="pe-4 py-3 border-0 text-end">Analyse</th>
+                            <th class="pe-4 py-3 border-0 text-end">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -146,9 +159,26 @@
                                         </div>
                                         <div>
                                             <div class="fw-bold text-dark">{{ $result->user->nom }} {{ $result->user->prenom }}</div>
-                                            <div class="d-flex align-items-center gap-2">
-                                                <span class="badge bg-light text-muted border px-2 py-1 x-small">{{ $result->user->matricule }}</span>
-                                                <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-10 x-small">{{ $result->user->profil->libelle ?? 'Non défini' }}</span>
+                                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                <span class="badge bg-light text-muted border px-2 py-1 x-small" title="Matricule">{{ $result->user->matricule }}</span>
+                                                <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-10 x-small" title="Profil">{{ $result->user->profil->libelle ?? 'Non défini' }}</span>
+                                                @if($result->user->validation_status === 'officiel_inscrit')
+                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-10 x-small" title="Statut de validation">
+                                                        <i class="bi bi-shield-check"></i> Officiel
+                                                    </span>
+                                                @elseif($result->user->validation_status === 'officiel_attente')
+                                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-10 x-small" title="Statut de validation">
+                                                        <i class="bi bi-shield-exclamation"></i> Officiel (Attente)
+                                                    </span>
+                                                @elseif($result->user->validation_status === 'reserve')
+                                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-10 x-small" title="Statut de validation">
+                                                        <i class="bi bi-archive"></i> Réserve
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-light text-muted border px-2 py-1 x-small" title="Statut de validation">
+                                                        Non sélectionné
+                                                    </span>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -252,9 +282,67 @@
                                     <div class="text-muted x-small">{{ $result->created_at->format('H:i') }}</div>
                                 </td>
                                 <td class="pe-4 text-end">
-                                    <button type="button" class="btn btn-sm btn-light border rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#resultModal{{ $result->id }}">
-                                        Détails <i class="bi bi-chevron-right ms-1"></i>
-                                    </button>
+                                    <div class="d-inline-flex gap-2">
+                                        @if(str_contains($result->user->validation_status ?? '', 'officiel'))
+                                            <button type="button" class="btn btn-sm btn-success rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#selectAgentModal{{ $result->id }}" title="Modifier la sélection de l'agent">
+                                                <i class="bi bi-shield-check me-1"></i> Sélectionné
+                                            </button>
+                                        @else
+                                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#selectAgentModal{{ $result->id }}" title="Sélectionner pour l'audit physique">
+                                                <i class="bi bi-shield me-1"></i> Sélectionner
+                                            </button>
+                                        @endif
+
+                                        <button type="button" class="btn btn-sm btn-light border rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#resultModal{{ $result->id }}">
+                                            Détails <i class="bi bi-chevron-right ms-1"></i>
+                                        </button>
+                                    </div>
+
+                                    {{-- Modal Sélection Agent --}}
+                                    <div class="modal fade" id="selectAgentModal{{ $result->id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content border-0 rounded-4 shadow-lg text-start">
+                                                <form action="{{ route('admin.candidates.update', $result->user->id) }}" method="POST">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <div class="modal-header border-0 pt-4 px-4 bg-light rounded-top-4">
+                                                        <div>
+                                                            <h5 class="fw-bold mb-0">Sélection de l'agent</h5>
+                                                            <div class="small text-muted">{{ $result->user->nom }} {{ $result->user->prenom }}</div>
+                                                        </div>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body p-4 text-center">
+                                                        @if(str_contains($result->user->validation_status ?? '', 'officiel'))
+                                                            <div class="mb-3">
+                                                                <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                                                            </div>
+                                                            <p class="mb-0 fs-6">
+                                                                Voulez-vous retirer l'agent <strong>{{ $result->user->nom }} {{ $result->user->prenom }}</strong> (Matricule: {{ $result->user->matricule ?? '—' }}) de la liste officielle pour l'audit physique ?
+                                                            </p>
+                                                            <input type="hidden" name="validation_status" value="reserve">
+                                                        @else
+                                                            <div class="mb-3">
+                                                                <i class="bi bi-question-circle text-primary" style="font-size: 3rem;"></i>
+                                                            </div>
+                                                            <p class="mb-0 fs-6">
+                                                                Voulez-vous sélectionner l'agent <strong>{{ $result->user->nom }} {{ $result->user->prenom }}</strong> (Matricule: {{ $result->user->matricule ?? '—' }}) et le garder pour l'audit physique ?
+                                                            </p>
+                                                            <input type="hidden" name="validation_status" value="officiel">
+                                                        @endif
+                                                    </div>
+                                                    <div class="modal-footer border-0 p-3 bg-light rounded-bottom-4 d-flex justify-content-end gap-2">
+                                                        <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Annuler</button>
+                                                        @if(str_contains($result->user->validation_status ?? '', 'officiel'))
+                                                            <button type="submit" class="btn btn-warning rounded-pill px-4 fw-bold">Retirer</button>
+                                                        @else
+                                                            <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Confirmer</button>
+                                                        @endif
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     {{-- Modal Détails --}}
                                     <div class="modal fade" id="resultModal{{ $result->id }}" tabindex="-1" aria-hidden="true">
