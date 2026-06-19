@@ -66,7 +66,7 @@
                     <label class="form-label small fw-bold text-muted">Matricule ou CIN</label>
                     <div class="input-group">
                         <span class="input-group-text bg-light border-0"><i class="bi bi-person text-muted"></i></span>
-                        <input type="text" name="identifier" class="form-control bg-light border-0" placeholder="Ex: 695130D" value="{{ old('identifier') }}" required>
+                        <input type="text" name="identifier" class="form-control bg-light border-0" placeholder="Ex: 695130D/1870199400092" value="{{ old('identifier') }}" required>
                     </div>
                 </div>
 

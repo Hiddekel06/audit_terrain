@@ -48,13 +48,60 @@ class AdminQuizController extends Controller
                 $q->where('profil_id', $request->profil_id);
             });
         }
+        
+        if ($request->filled('score_order')) {
+            $query->orderBy('score', $request->score_order);
+        } else {
+            $query->latest();
+        }
+
+        $selectedQuestion = null;
+        if ($request->filled('question_id')) {
+            $selectedQuestion = \App\Models\QuizQuestion::with('options')->find($request->question_id);
+            if ($selectedQuestion) {
+                $query->where('quiz_id', $selectedQuestion->quiz_id);
+            }
+        }
 
         $results = $query->orderBy('created_at', 'desc')->get();
+
+        // Filtre par Statut de réponse (Correct / Incorrect)
+        if ($selectedQuestion && $request->filled('question_status')) {
+            $status = $request->question_status;
+
+            $results = $results->filter(function($result) use ($selectedQuestion, $status) {
+                if ($result->quiz_id !== $selectedQuestion->quiz_id) {
+                    return false;
+                }
+
+                $correctOptionIds = $selectedQuestion->options->where('is_correct', true)->pluck('id')->toArray();
+                $userAns = $result->answers_json[$selectedQuestion->id] ?? null;
+                $userAnsIds = is_array($userAns) ? array_map('intval', $userAns) : ($userAns !== null ? [intval($userAns)] : []);
+
+                sort($correctOptionIds);
+                sort($userAnsIds);
+
+                $isCorrect = ($correctOptionIds === $userAnsIds);
+
+                if ($status === 'correct') {
+                    return $isCorrect;
+                } elseif ($status === 'incorrect') {
+                    return !$isCorrect;
+                }
+
+                return true;
+            });
+        }
+
+        if ($request->boolean('export')) {
+            $filename = 'resultats_evaluations_' . now()->format('Ymd_His') . '.xlsx';
+            return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\QuizResultsExport($results, $selectedQuestion), $filename);
+        }
         
-        $quizzes = Quiz::orderBy('titre')->get();
+        $quizzes = Quiz::with('questions.options')->orderBy('titre')->get();
         $profils = Profil::orderBy('libelle')->get();
 
-        return view('admin.quizzes.results', compact('results', 'quizzes', 'profils'));
+        return view('admin.quizzes.results', compact('results', 'quizzes', 'profils', 'selectedQuestion'));
     }
 
     /**

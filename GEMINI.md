@@ -10,7 +10,7 @@
 2. **ÉTATS DE VALIDATION** :
    - `officiel_inscrit` : Agent dans Excel + Profil déjà complété.
    - `officiel_attente` : Agent dans Excel + Profil vide (à compléter).
-   - `reserve` : Inscription libre non présente dans la liste officielle.
+   - `reserve` : Inscription libre finalisée (ou agent officieux).
 3. **LOGIQUE DE MATCHING & IDENTITÉ** :
    - **Pivot central** : Matricule (6 chiffres + 1 lettre) ou CIN (numérique long).
    - **Matching Nominal** : Algorithme intelligent par jetons (tokens) + Levenshtein (tolérance typos).
