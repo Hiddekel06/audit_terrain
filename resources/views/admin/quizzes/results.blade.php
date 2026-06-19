@@ -16,7 +16,7 @@
                         <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Nom, prénom ou matricule..." value="{{ request('search') }}">
                     </div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <label class="form-label small fw-bold text-muted">Trier par note</label>
                     <select name="score_order" class="form-select">
                         <option value="">Par défaut</option>
@@ -24,7 +24,7 @@
                         <option value="desc" {{ request('score_order') == 'desc' ? 'selected' : '' }}>Note décroissante</option>
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <label class="form-label small fw-bold text-muted">Filtrer par Quiz</label>
                     <select name="quiz_id" id="quiz_id_filter" class="form-select">
                         <option value="">Tous les Quiz</option>
@@ -34,21 +34,6 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label small fw-bold text-muted">Filtrer par Question (Affiche réponse)</label>
-                    <select name="question_id" id="question_id_filter" class="form-select">
-                        <option value="">Toutes les questions / Aucune</option>
-                        @foreach($quizzes as $q)
-                            <optgroup label="{{ $q->titre }}" data-quiz-id="{{ $q->id }}">
-                                @foreach($q->questions as $question)
-                                    <option value="{{ $question->id }}" {{ request('question_id') == $question->id ? 'selected' : '' }}>
-                                        {{ Str::limit($question->libelle, 50) }}
-                                    </option>
-                                @endforeach
-                            </optgroup>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-2">
                     <label class="form-label small fw-bold text-muted">Filtrer par Profil</label>
                     <select name="profil_id" class="form-select">
                         <option value="">Tous les Profils</option>
@@ -58,13 +43,52 @@
                     </select>
                 </div>
 
-                {{-- Filtre de statut de réponse (visible si question sélectionnée) --}}
-                <div class="col-md-3" id="status_filter_container" style="display: none;">
-                    <label class="form-label small fw-bold text-muted">Statut de la réponse</label>
-                    <select name="question_status" id="question_status_filter" class="form-select">
-                        <option value="">Tous les agents</option>
-                        <option value="correct" {{ request('question_status') == 'correct' ? 'selected' : '' }}>Correct (A trouvé)</option>
-                        <option value="incorrect" {{ request('question_status') == 'incorrect' ? 'selected' : '' }}>Incorrect / Échoué</option>
+                {{-- Row 2 --}}
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-muted">Question A</label>
+                    <select name="question_a_id" id="question_a_filter" class="form-select">
+                        <option value="">Aucune question sélectionnée</option>
+                        @foreach($quizzes as $q)
+                            <optgroup label="{{ $q->titre }}" data-quiz-id="{{ $q->id }}">
+                                @foreach($q->questions as $question)
+                                    <option value="{{ $question->id }}" {{ request('question_a_id') == $question->id ? 'selected' : '' }}>
+                                        {{ Str::limit($question->libelle, 50) }}
+                                    </option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2" id="status_a_container" style="display: none;">
+                    <label class="form-label small fw-bold text-muted">Statut Réponse A</label>
+                    <select name="status_a" id="status_a_filter" class="form-select">
+                        <option value="">Tous</option>
+                        <option value="correct" {{ request('status_a') == 'correct' ? 'selected' : '' }}>Correct</option>
+                        <option value="incorrect" {{ request('status_a') == 'incorrect' ? 'selected' : '' }}>Incorrect</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-muted">Question B</label>
+                    <select name="question_b_id" id="question_b_filter" class="form-select">
+                        <option value="">Aucune question sélectionnée</option>
+                        @foreach($quizzes as $q)
+                            <optgroup label="{{ $q->titre }}" data-quiz-id="{{ $q->id }}">
+                                @foreach($q->questions as $question)
+                                    <option value="{{ $question->id }}" {{ request('question_b_id') == $question->id ? 'selected' : '' }}>
+                                        {{ Str::limit($question->libelle, 50) }}
+                                    </option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2" id="status_b_container" style="display: none;">
+                    <label class="form-label small fw-bold text-muted">Statut Réponse B</label>
+                    <select name="status_b" id="status_b_filter" class="form-select">
+                        <option value="">Tous</option>
+                        <option value="correct" {{ request('status_b') == 'correct' ? 'selected' : '' }}>Correct</option>
+                        <option value="incorrect" {{ request('status_b') == 'incorrect' ? 'selected' : '' }}>Incorrect</option>
                     </select>
                 </div>
                 
@@ -93,10 +117,17 @@
                             <th class="ps-4 py-3 border-0">Agent & Profil</th>
                             <th class="py-3 border-0">Ministère</th>
                             <th class="py-3 border-0">Évaluation</th>
-                            @if(isset($selectedQuestion))
-                                <th class="py-3 border-0" style="max-width: 250px;">
-                                    <div class="text-truncate" title="{{ $selectedQuestion->libelle }}">
-                                        Q: {{ $selectedQuestion->libelle }}
+                            @if(isset($selectedQuestionA))
+                                <th class="py-3 border-0" style="max-width: 200px;">
+                                    <div class="text-truncate" title="{{ $selectedQuestionA->libelle }}">
+                                        QA: {{ $selectedQuestionA->libelle }}
+                                    </div>
+                                </th>
+                            @endif
+                            @if(isset($selectedQuestionB))
+                                <th class="py-3 border-0" style="max-width: 200px;">
+                                    <div class="text-truncate" title="{{ $selectedQuestionB->libelle }}">
+                                        QB: {{ $selectedQuestionB->libelle }}
                                     </div>
                                 </th>
                             @endif
@@ -135,22 +166,55 @@
                                     <div class="fw-medium text-dark">{{ $result->quiz->titre }}</div>
                                     <div class="x-small text-muted">{{ $result->quiz->questions_count ?? $result->quiz->questions->count() }} questions</div>
                                 </td>
-                                @if(isset($selectedQuestion))
-                                    <td style="max-width: 250px;">
-                                        @if($result->quiz_id !== $selectedQuestion->quiz_id)
+                                @if(isset($selectedQuestionA))
+                                    <td style="max-width: 200px;">
+                                        @if($result->quiz_id !== $selectedQuestionA->quiz_id)
                                             <span class="text-muted small italic">N/A (Quiz différent)</span>
                                         @else
                                             @php
-                                                $userAns = $result->answers_json[$selectedQuestion->id] ?? null;
-                                                $userAnsIds = is_array($userAns) ? array_map('intval', $userAns) : ($userAns !== null ? [intval($userAns)] : []);
+                                                $userAnsA = $result->answers_json[$selectedQuestionA->id] ?? null;
+                                                $userAnsIdsA = is_array($userAnsA) ? array_map('intval', $userAnsA) : ($userAnsA !== null ? [intval($userAnsA)] : []);
                                             @endphp
                                             
-                                            @if(empty($userAnsIds))
+                                            @if(empty($userAnsIdsA))
                                                 <span class="text-muted small italic">Non répondu</span>
                                             @else
                                                 <div class="d-flex flex-wrap gap-1">
-                                                    @foreach($selectedQuestion->options as $option)
-                                                        @if(in_array($option->id, $userAnsIds))
+                                                    @foreach($selectedQuestionA->options as $option)
+                                                        @if(in_array($option->id, $userAnsIdsA))
+                                                            @php
+                                                                $badgeClass = $option->is_correct 
+                                                                    ? 'bg-success bg-opacity-10 text-success border border-success border-opacity-10' 
+                                                                    : 'bg-danger bg-opacity-10 text-danger border border-danger border-opacity-10';
+                                                                $icon = $option->is_correct ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
+                                                            @endphp
+                                                            <div class="badge {{ $badgeClass }} d-flex align-items-center gap-1 x-small text-wrap text-start w-100" style="white-space: normal; line-height: 1.2;" title="{{ $option->is_correct ? 'Bonne réponse' : 'Mauvaise réponse' }}">
+                                                                <i class="bi {{ $icon }} flex-shrink-0"></i> 
+                                                                <span>{{ $option->libelle }}</span>
+                                                            </div>
+                                                        @endif
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        @endif
+                                    </td>
+                                @endif
+                                @if(isset($selectedQuestionB))
+                                    <td style="max-width: 200px;">
+                                        @if($result->quiz_id !== $selectedQuestionB->quiz_id)
+                                            <span class="text-muted small italic">N/A (Quiz différent)</span>
+                                        @else
+                                            @php
+                                                $userAnsB = $result->answers_json[$selectedQuestionB->id] ?? null;
+                                                $userAnsIdsB = is_array($userAnsB) ? array_map('intval', $userAnsB) : ($userAnsB !== null ? [intval($userAnsB)] : []);
+                                            @endphp
+                                            
+                                            @if(empty($userAnsIdsB))
+                                                <span class="text-muted small italic">Non répondu</span>
+                                            @else
+                                                <div class="d-flex flex-wrap gap-1">
+                                                    @foreach($selectedQuestionB->options as $option)
+                                                        @if(in_array($option->id, $userAnsIdsB))
                                                             @php
                                                                 $badgeClass = $option->is_correct 
                                                                     ? 'bg-success bg-opacity-10 text-success border border-success border-opacity-10' 
@@ -275,7 +339,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ isset($selectedQuestion) ? 7 : 6 }}" class="py-5 text-center text-muted">
+                                <td colspan="{{ 6 + (isset($selectedQuestionA) ? 1 : 0) + (isset($selectedQuestionB) ? 1 : 0) }}" class="py-5 text-center text-muted">
                                     <div class="mb-3">
                                         <i class="bi bi-clipboard-x fs-1 text-light-emphasis"></i>
                                     </div>
@@ -295,57 +359,65 @@
     .x-small { font-size: 0.75rem; }
 </style>
 
-<style>
-    .x-small { font-size: 0.75rem; }
-</style>
-
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const quizFilter = document.getElementById('quiz_id_filter');
-    const questionFilter = document.getElementById('question_id_filter');
-    const statusFilterContainer = document.getElementById('status_filter_container');
-    const statusFilter = document.getElementById('question_status_filter');
+    const questionAFilter = document.getElementById('question_a_filter');
+    const statusAContainer = document.getElementById('status_a_container');
+    const statusAFilter = document.getElementById('status_a_filter');
 
-    if (quizFilter && questionFilter) {
+    const questionBFilter = document.getElementById('question_b_filter');
+    const statusBContainer = document.getElementById('status_b_container');
+    const statusBFilter = document.getElementById('status_b_filter');
+
+    if (quizFilter && questionAFilter && questionBFilter) {
         function filterQuestionsAndToggleStatus(isInitialLoad = false) {
             const quizId = quizFilter.value;
-            const optgroups = questionFilter.querySelectorAll('optgroup');
-            let currentSelectedOption = questionFilter.options[questionFilter.selectedIndex];
-            let currentSelectedGroup = currentSelectedOption ? currentSelectedOption.closest('optgroup') : null;
 
-            // 1. Filtrer les questions selon le Quiz
-            optgroups.forEach(group => {
-                const groupQuizId = group.getAttribute('data-quiz-id');
-                if (!quizId || groupQuizId === quizId) {
-                    group.style.display = '';
-                    group.querySelectorAll('option').forEach(opt => {
-                        opt.disabled = false;
-                        opt.style.display = '';
-                    });
-                } else {
-                    group.style.display = 'none';
-                    group.querySelectorAll('option').forEach(opt => {
-                        opt.disabled = true;
-                        opt.style.display = 'none';
-                    });
+            // 1. Filtrer les questions selon le Quiz pour Question A et Question B
+            [questionAFilter, questionBFilter].forEach(filter => {
+                const optgroups = filter.querySelectorAll('optgroup');
+                let currentSelectedOption = filter.options[filter.selectedIndex];
+                let currentSelectedGroup = currentSelectedOption ? currentSelectedOption.closest('optgroup') : null;
+
+                optgroups.forEach(group => {
+                    const groupQuizId = group.getAttribute('data-quiz-id');
+                    if (!quizId || groupQuizId === quizId) {
+                        group.style.display = '';
+                        group.querySelectorAll('option').forEach(opt => {
+                            opt.disabled = false;
+                            opt.style.display = '';
+                        });
+                    } else {
+                        group.style.display = 'none';
+                        group.querySelectorAll('option').forEach(opt => {
+                            opt.disabled = true;
+                            opt.style.display = 'none';
+                        });
+                    }
+                });
+
+                // Si le filtre de quiz change et que la question sélectionnée appartient à un autre quiz, réinitialiser
+                if (!isInitialLoad && quizId && currentSelectedGroup && currentSelectedGroup.getAttribute('data-quiz-id') !== quizId) {
+                    filter.value = '';
                 }
             });
 
-            // Si le filtre de quiz change et que la question sélectionnée appartient à un autre quiz, réinitialiser
-            if (!isInitialLoad && quizId && currentSelectedGroup && currentSelectedGroup.getAttribute('data-quiz-id') !== quizId) {
-                questionFilter.value = '';
-                currentSelectedOption = null;
+            // 2. Afficher/Masquer le filtre de statut pour Question A
+            if (questionAFilter.value) {
+                statusAContainer.style.display = '';
+            } else {
+                statusAContainer.style.display = 'none';
+                statusAFilter.value = '';
             }
 
-            const questionId = questionFilter.value;
-
-            // 2. Afficher/Masquer le filtre de statut en fonction de la question sélectionnée
-            if (questionId) {
-                statusFilterContainer.style.display = '';
+            // 3. Afficher/Masquer le filtre de statut pour Question B
+            if (questionBFilter.value) {
+                statusBContainer.style.display = '';
             } else {
-                statusFilterContainer.style.display = 'none';
-                statusFilter.value = ''; // Réinitialiser le statut
+                statusBContainer.style.display = 'none';
+                statusBFilter.value = '';
             }
         }
 
@@ -353,7 +425,11 @@ document.addEventListener('DOMContentLoaded', function () {
             filterQuestionsAndToggleStatus(false);
         });
         
-        questionFilter.addEventListener('change', function() {
+        questionAFilter.addEventListener('change', function() {
+            filterQuestionsAndToggleStatus(false);
+        });
+
+        questionBFilter.addEventListener('change', function() {
             filterQuestionsAndToggleStatus(false);
         });
         

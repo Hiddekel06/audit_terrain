@@ -55,27 +55,35 @@ class AdminQuizController extends Controller
             $query->latest();
         }
 
-        $selectedQuestion = null;
-        if ($request->filled('question_id')) {
-            $selectedQuestion = \App\Models\QuizQuestion::with('options')->find($request->question_id);
-            if ($selectedQuestion) {
-                $query->where('quiz_id', $selectedQuestion->quiz_id);
+        $selectedQuestionA = null;
+        if ($request->filled('question_a_id')) {
+            $selectedQuestionA = \App\Models\QuizQuestion::with('options')->find($request->question_a_id);
+            if ($selectedQuestionA) {
+                $query->where('quiz_id', $selectedQuestionA->quiz_id);
+            }
+        }
+
+        $selectedQuestionB = null;
+        if ($request->filled('question_b_id')) {
+            $selectedQuestionB = \App\Models\QuizQuestion::with('options')->find($request->question_b_id);
+            if ($selectedQuestionB && !$selectedQuestionA) {
+                $query->where('quiz_id', $selectedQuestionB->quiz_id);
             }
         }
 
         $results = $query->orderBy('created_at', 'desc')->get();
 
-        // Filtre par Statut de réponse (Correct / Incorrect)
-        if ($selectedQuestion && $request->filled('question_status')) {
-            $status = $request->question_status;
+        // Filtre par Statut de réponse A
+        if ($selectedQuestionA && $request->filled('status_a')) {
+            $statusA = $request->status_a;
 
-            $results = $results->filter(function($result) use ($selectedQuestion, $status) {
-                if ($result->quiz_id !== $selectedQuestion->quiz_id) {
+            $results = $results->filter(function($result) use ($selectedQuestionA, $statusA) {
+                if ($result->quiz_id !== $selectedQuestionA->quiz_id) {
                     return false;
                 }
 
-                $correctOptionIds = $selectedQuestion->options->where('is_correct', true)->pluck('id')->toArray();
-                $userAns = $result->answers_json[$selectedQuestion->id] ?? null;
+                $correctOptionIds = $selectedQuestionA->options->where('is_correct', true)->pluck('id')->toArray();
+                $userAns = $result->answers_json[$selectedQuestionA->id] ?? null;
                 $userAnsIds = is_array($userAns) ? array_map('intval', $userAns) : ($userAns !== null ? [intval($userAns)] : []);
 
                 sort($correctOptionIds);
@@ -83,9 +91,37 @@ class AdminQuizController extends Controller
 
                 $isCorrect = ($correctOptionIds === $userAnsIds);
 
-                if ($status === 'correct') {
+                if ($statusA === 'correct') {
                     return $isCorrect;
-                } elseif ($status === 'incorrect') {
+                } elseif ($statusA === 'incorrect') {
+                    return !$isCorrect;
+                }
+
+                return true;
+            });
+        }
+
+        // Filtre par Statut de réponse B
+        if ($selectedQuestionB && $request->filled('status_b')) {
+            $statusB = $request->status_b;
+
+            $results = $results->filter(function($result) use ($selectedQuestionB, $statusB) {
+                if ($result->quiz_id !== $selectedQuestionB->quiz_id) {
+                    return false;
+                }
+
+                $correctOptionIds = $selectedQuestionB->options->where('is_correct', true)->pluck('id')->toArray();
+                $userAns = $result->answers_json[$selectedQuestionB->id] ?? null;
+                $userAnsIds = is_array($userAns) ? array_map('intval', $userAns) : ($userAns !== null ? [intval($userAns)] : []);
+
+                sort($correctOptionIds);
+                sort($userAnsIds);
+
+                $isCorrect = ($correctOptionIds === $userAnsIds);
+
+                if ($statusB === 'correct') {
+                    return $isCorrect;
+                } elseif ($statusB === 'incorrect') {
                     return !$isCorrect;
                 }
 
@@ -95,13 +131,13 @@ class AdminQuizController extends Controller
 
         if ($request->boolean('export')) {
             $filename = 'resultats_evaluations_' . now()->format('Ymd_His') . '.xlsx';
-            return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\QuizResultsExport($results, $selectedQuestion), $filename);
+            return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\QuizResultsExport($results, $selectedQuestionA, $selectedQuestionB), $filename);
         }
         
         $quizzes = Quiz::with('questions.options')->orderBy('titre')->get();
         $profils = Profil::orderBy('libelle')->get();
 
-        return view('admin.quizzes.results', compact('results', 'quizzes', 'profils', 'selectedQuestion'));
+        return view('admin.quizzes.results', compact('results', 'quizzes', 'profils', 'selectedQuestionA', 'selectedQuestionB'));
     }
 
     /**

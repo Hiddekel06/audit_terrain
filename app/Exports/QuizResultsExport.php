@@ -8,8 +8,11 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 
 class QuizResultsExport implements FromCollection, WithHeadings
 {
-    public function __construct(private Collection $results, private $selectedQuestion = null)
-    {
+    public function __construct(
+        private Collection $results, 
+        private $selectedQuestionA = null, 
+        private $selectedQuestionB = null
+    ) {
     }
 
     public function collection(): Collection
@@ -31,29 +34,38 @@ class QuizResultsExport implements FromCollection, WithHeadings
                 'date_passage' => $result->created_at->format('d/m/Y H:i'),
             ];
 
-            if ($this->selectedQuestion) {
-                if ($result->quiz_id !== $this->selectedQuestion->quiz_id) {
-                    $row['reponse_selected'] = 'N/A (Quiz différent)';
-                } else {
-                    $userAns = $result->answers_json[$this->selectedQuestion->id] ?? null;
-                    $userAnsIds = is_array($userAns) ? array_map('intval', $userAns) : ($userAns !== null ? [intval($userAns)] : []);
-                    
-                    if (empty($userAnsIds)) {
-                        $row['reponse_selected'] = 'Non répondu';
-                    } else {
-                        $selectedOptions = [];
-                        foreach ($this->selectedQuestion->options as $option) {
-                            if (in_array($option->id, $userAnsIds)) {
-                                $selectedOptions[] = $option->libelle . ($option->is_correct ? ' (Correct)' : ' (Incorrect)');
-                            }
-                        }
-                        $row['reponse_selected'] = implode(', ', $selectedOptions);
-                    }
-                }
+            if ($this->selectedQuestionA) {
+                $row['reponse_a'] = $this->getQuestionAnswerText($result, $this->selectedQuestionA);
+            }
+
+            if ($this->selectedQuestionB) {
+                $row['reponse_b'] = $this->getQuestionAnswerText($result, $this->selectedQuestionB);
             }
 
             return $row;
         });
+    }
+
+    private function getQuestionAnswerText($result, $question): string
+    {
+        if ($result->quiz_id !== $question->quiz_id) {
+            return 'N/A (Quiz différent)';
+        }
+        
+        $userAns = $result->answers_json[$question->id] ?? null;
+        $userAnsIds = is_array($userAns) ? array_map('intval', $userAns) : ($userAns !== null ? [intval($userAns)] : []);
+        
+        if (empty($userAnsIds)) {
+            return 'Non répondu';
+        }
+
+        $selectedOptions = [];
+        foreach ($question->options as $option) {
+            if (in_array($option->id, $userAnsIds)) {
+                $selectedOptions[] = $option->libelle . ($option->is_correct ? ' (Correct)' : ' (Incorrect)');
+            }
+        }
+        return implode(', ', $selectedOptions);
     }
 
     public function headings(): array
@@ -71,8 +83,12 @@ class QuizResultsExport implements FromCollection, WithHeadings
             'Date de passage',
         ];
 
-        if ($this->selectedQuestion) {
-            $headers[] = 'Réponse : ' . $this->selectedQuestion->libelle;
+        if ($this->selectedQuestionA) {
+            $headers[] = 'Réponse A : ' . $this->selectedQuestionA->libelle;
+        }
+
+        if ($this->selectedQuestionB) {
+            $headers[] = 'Réponse B : ' . $this->selectedQuestionB->libelle;
         }
 
         return $headers;
