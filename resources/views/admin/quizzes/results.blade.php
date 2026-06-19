@@ -120,6 +120,123 @@
         </div>
     </div>
 
+    {{-- Bloc Statistiques --}}
+    @php
+        $uniqueUsers = $results->pluck('user')->filter()->unique('id');
+        $totalAgents = $uniqueUsers->count();
+        $totalSelected = $uniqueUsers->filter(fn($u) => str_contains($u->validation_status ?? '', 'officiel'))->count();
+        $totalReserve = $uniqueUsers->where('validation_status', 'reserve')->count();
+
+        // Regroupement par profil pour les statistiques
+        $byProfile = [];
+        foreach($profils as $p) {
+            $usersInProfile = $uniqueUsers->where('profil_id', $p->id);
+            $byProfile[$p->libelle] = [
+                'total' => $usersInProfile->count(),
+                'selected' => $usersInProfile->filter(fn($u) => str_contains($u->validation_status ?? '', 'officiel'))->count(),
+                'reserve' => $usersInProfile->where('validation_status', 'reserve')->count(),
+            ];
+        }
+    @endphp
+    
+    <div class="row g-3 mb-4">
+        {{-- Card Global --}}
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="bg-primary bg-opacity-10 text-primary rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="bi bi-people-fill fs-5"></i>
+                        </div>
+                        <span class="badge bg-light text-muted border px-2 py-1 x-small">Global</span>
+                    </div>
+                    <h6 class="text-muted small fw-bold mb-1">Total Évalués</h6>
+                    <div class="h3 fw-bold text-dark mb-2">{{ $totalAgents }}</div>
+                    <div class="d-flex align-items-center gap-2 mt-1">
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-10 px-2 py-1 x-small" title="Sélectionnés pour l'audit physique">
+                            <i class="bi bi-shield-check"></i> {{ $totalSelected }} Off.
+                        </span>
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-10 px-2 py-1 x-small" title="En liste de réserve">
+                            <i class="bi bi-archive"></i> {{ $totalReserve }} Rés.
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Card Chefs d'équipe --}}
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="bg-warning bg-opacity-10 text-warning rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="bi bi-person-badge fs-5"></i>
+                        </div>
+                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-10 px-2 py-1 x-small">Chef d'Équipe</span>
+                    </div>
+                    <h6 class="text-muted small fw-bold mb-1">Chefs d'Équipe</h6>
+                    <div class="h3 fw-bold text-dark mb-2">{{ $byProfile["Chef d'équipe"]['total'] ?? 0 }}</div>
+                    <div class="d-flex align-items-center gap-2 mt-1">
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-10 px-2 py-1 x-small">
+                            <i class="bi bi-shield-check"></i> {{ $byProfile["Chef d'équipe"]['selected'] ?? 0 }} Off.
+                        </span>
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-10 px-2 py-1 x-small">
+                            <i class="bi bi-archive"></i> {{ $byProfile["Chef d'équipe"]['reserve'] ?? 0 }} Rés.
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Card Auditeurs IT --}}
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="bg-info bg-opacity-10 text-info rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="bi bi-laptop fs-5"></i>
+                        </div>
+                        <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-10 px-2 py-1 x-small">Auditeur IT</span>
+                    </div>
+                    <h6 class="text-muted small fw-bold mb-1">Auditeurs IT</h6>
+                    <div class="h3 fw-bold text-dark mb-2">{{ $byProfile["Auditeur IT"]['total'] ?? 0 }}</div>
+                    <div class="d-flex align-items-center gap-2 mt-1">
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-10 px-2 py-1 x-small">
+                            <i class="bi bi-shield-check"></i> {{ $byProfile["Auditeur IT"]['selected'] ?? 0 }} Off.
+                        </span>
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-10 px-2 py-1 x-small">
+                            <i class="bi bi-archive"></i> {{ $byProfile["Auditeur IT"]['reserve'] ?? 0 }} Rés.
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Card Auditeurs Administratifs --}}
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="bg-secondary bg-opacity-10 text-secondary rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="bi bi-file-earmark-person fs-5"></i>
+                        </div>
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-10 px-2 py-1 x-small">Auditeur Admin</span>
+                    </div>
+                    <h6 class="text-muted small fw-bold mb-1">Auditeurs Admin</h6>
+                    <div class="h3 fw-bold text-dark mb-2">{{ $byProfile["Auditeur Administratif"]['total'] ?? 0 }}</div>
+                    <div class="d-flex align-items-center gap-2 mt-1">
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-10 px-2 py-1 x-small">
+                            <i class="bi bi-shield-check"></i> {{ $byProfile["Auditeur Administratif"]['selected'] ?? 0 }} Off.
+                        </span>
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-10 px-2 py-1 x-small">
+                            <i class="bi bi-archive"></i> {{ $byProfile["Auditeur Administratif"]['reserve'] ?? 0 }} Rés.
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Liste des Résultats --}}
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="card-body p-0">
