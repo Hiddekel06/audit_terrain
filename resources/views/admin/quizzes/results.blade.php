@@ -128,7 +128,9 @@
                     <thead class="bg-light">
                         <tr>
                             <th class="ps-4 py-3 border-0">Agent & Profil</th>
-                            <th class="py-3 border-0">Ministère</th>
+                            <th class="py-3 border-0 d-none d-md-table-cell">Ministère</th>
+                            <th class="py-3 border-0 d-none d-md-table-cell">Hiérarchie</th>
+                            <th class="py-3 border-0 d-none d-md-table-cell">Métier</th>
                             <th class="py-3 border-0">Évaluation</th>
                             @if(isset($selectedQuestionA))
                                 <th class="py-3 border-0" style="max-width: 200px;">
@@ -183,13 +185,29 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td>
+                                <td class="d-none d-md-table-cell">
                                     @if($result->user->ministere)
                                         <div class="small fw-medium text-dark text-truncate" style="max-width: 150px;" title="{{ $result->user->ministere->nom }}">
                                             {{ $result->user->ministere->nom }}
                                         </div>
                                     @else
                                         <span class="text-muted small italic">Non renseigné</span>
+                                    @endif
+                                </td>
+                                <td class="d-none d-md-table-cell">
+                                    @if($result->user->hierarchie)
+                                        <span class="badge bg-light text-dark border px-2 py-1 x-small">{{ $result->user->hierarchie }}</span>
+                                    @else
+                                        <span class="text-muted small italic">—</span>
+                                    @endif
+                                </td>
+                                <td class="d-none d-md-table-cell">
+                                    @if($result->user->metier)
+                                        <div class="small fw-medium text-dark text-truncate" style="max-width: 150px;" title="{{ $result->user->metier }}">
+                                            {{ $result->user->metier }}
+                                        </div>
+                                    @else
+                                        <span class="text-muted small italic">—</span>
                                     @endif
                                 </td>
                                 <td>
@@ -427,7 +445,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ 6 + (isset($selectedQuestionA) ? 1 : 0) + (isset($selectedQuestionB) ? 1 : 0) }}" class="py-5 text-center text-muted">
+                                <td colspan="{{ 8 + (isset($selectedQuestionA) ? 1 : 0) + (isset($selectedQuestionB) ? 1 : 0) }}" class="py-5 text-center text-muted">
                                     <div class="mb-3">
                                         <i class="bi bi-clipboard-x fs-1 text-light-emphasis"></i>
                                     </div>
