@@ -48,6 +48,20 @@ class AdminQuizController extends Controller
                 $q->where('profil_id', $request->profil_id);
             });
         }
+
+        // Filtre par Statut de Sélection (validation_status)
+        if ($request->filled('validation_status')) {
+            $status = $request->validation_status;
+            $query->whereHas('user', function($q) use ($status) {
+                if ($status === 'officiel') {
+                    $q->where('validation_status', 'like', 'officiel%');
+                } elseif ($status === 'reserve') {
+                    $q->where('validation_status', 'reserve');
+                } elseif ($status === 'none') {
+                    $q->whereNull('validation_status');
+                }
+            });
+        }
         
         if ($request->filled('score_order')) {
             $query->orderBy('score', $request->score_order);

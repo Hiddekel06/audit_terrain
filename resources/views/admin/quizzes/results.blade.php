@@ -57,7 +57,7 @@
                 </div>
 
                 {{-- Row 2 --}}
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label small fw-bold text-muted">Question A</label>
                     <select name="question_a_id" id="question_a_filter" class="form-select">
                         <option value="">Aucune question sélectionnée</option>
@@ -81,7 +81,7 @@
                     </select>
                 </div>
 
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label small fw-bold text-muted">Question B</label>
                     <select name="question_b_id" id="question_b_filter" class="form-select">
                         <option value="">Aucune question sélectionnée</option>
@@ -102,6 +102,16 @@
                         <option value="">Tous</option>
                         <option value="correct" {{ request('status_b') == 'correct' ? 'selected' : '' }}>Correct</option>
                         <option value="incorrect" {{ request('status_b') == 'incorrect' ? 'selected' : '' }}>Incorrect</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-muted">Sélection Physique</label>
+                    <select name="validation_status" class="form-select">
+                        <option value="">Tous</option>
+                        <option value="officiel" {{ request('validation_status') == 'officiel' ? 'selected' : '' }}>Sélectionné (Officiel)</option>
+                        <option value="reserve" {{ request('validation_status') == 'reserve' ? 'selected' : '' }}>Réserve</option>
+                        <option value="none" {{ request('validation_status') == 'none' ? 'selected' : '' }}>Non sélectionné</option>
                     </select>
                 </div>
                 

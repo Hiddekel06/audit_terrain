@@ -21,11 +21,21 @@ class QuizResultsExport implements FromCollection, WithHeadings
             $totalPossible = $result->quiz->questions->sum('points');
             $percentage = $totalPossible > 0 ? round(($result->score / $totalPossible) * 100, 2) : 0;
             
+            $statusLabel = 'Non sélectionné';
+            if ($result->user->validation_status === 'officiel_inscrit') {
+                $statusLabel = 'Officiel (Inscrit)';
+            } elseif ($result->user->validation_status === 'officiel_attente') {
+                $statusLabel = 'Officiel (Attente)';
+            } elseif ($result->user->validation_status === 'reserve') {
+                $statusLabel = 'Liste de Réserve';
+            }
+
             $row = [
                 'nom' => $result->user->nom,
                 'prenom' => $result->user->prenom,
                 'matricule' => $result->user->matricule,
                 'profil' => $result->user->profil?->libelle ?? 'Non défini',
+                'selection' => $statusLabel,
                 'structure' => $result->user->ministere?->nom ?? 'Non renseigné',
                 'quiz' => $result->quiz->titre,
                 'score' => $result->score,
@@ -75,6 +85,7 @@ class QuizResultsExport implements FromCollection, WithHeadings
             'Prénom',
             'Matricule',
             'Profil',
+            'Sélectionné pour audit physique',
             'Structure',
             'Quiz',
             'Score obtenu',
