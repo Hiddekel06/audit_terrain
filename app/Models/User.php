@@ -29,6 +29,7 @@ class User extends Authenticatable
         'ministere_id',
         'direction',
         'metier',
+        'hierarchie',
         'source_type',
         'team_id',
         'validation_status',
