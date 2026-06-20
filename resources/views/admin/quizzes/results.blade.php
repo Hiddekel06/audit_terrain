@@ -29,12 +29,21 @@
                         <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Nom, prénom ou matricule..." value="{{ request('search') }}">
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label small fw-bold text-muted">Trier par note</label>
                     <select name="score_order" class="form-select">
                         <option value="">Par défaut</option>
                         <option value="asc" {{ request('score_order') == 'asc' ? 'selected' : '' }}>Note croissante</option>
                         <option value="desc" {{ request('score_order') == 'desc' ? 'selected' : '' }}>Note décroissante</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label small fw-bold text-muted">Affichage</label>
+                    <select name="per_page" class="form-select">
+                        <option value="10" {{ request('per_page') == '10' ? 'selected' : '' }}>10</option>
+                        <option value="25" {{ request('per_page') == '25' || !request('per_page') ? 'selected' : '' }}>25</option>
+                        <option value="50" {{ request('per_page') == '50' ? 'selected' : '' }}>50</option>
+                        <option value="100" {{ request('per_page') == '100' ? 'selected' : '' }}>100</option>
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -583,6 +592,16 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Pagination Modernisée -->
+            <div class="p-4 border-top border-light d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div class="text-muted small">
+                    Affichage de <strong>{{ $results->firstItem() ?? 0 }}</strong> à <strong>{{ $results->lastItem() ?? 0 }}</strong> sur <strong>{{ $results->total() }}</strong> résultats
+                </div>
+                <div>
+                    {{ $results->links('pagination::bootstrap-5') }}
+                </div>
             </div>
         </div>
     </div>

@@ -148,10 +148,32 @@ class AdminQuizController extends Controller
             return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\QuizResultsExport($results, $selectedQuestionA, $selectedQuestionB), $filename);
         }
         
+        $currentPage = \Illuminate\Pagination\Paginator::resolveCurrentPage() ?: 1;
+        $perPage = intval($request->input('per_page', 25));
+        if (!in_array($perPage, [10, 25, 50, 100])) {
+            $perPage = 25;
+        }
+        $resultsPaginated = new \Illuminate\Pagination\LengthAwarePaginator(
+            $results->forPage($currentPage, $perPage)->values(),
+            $results->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(),
+                'query' => $request->query()
+            ]
+        );
+
         $quizzes = Quiz::with('questions.options')->orderBy('titre')->get();
         $profils = Profil::orderBy('libelle')->get();
 
-        return view('admin.quizzes.results', compact('results', 'quizzes', 'profils', 'selectedQuestionA', 'selectedQuestionB'));
+        return view('admin.quizzes.results', [
+            'results' => $resultsPaginated,
+            'quizzes' => $quizzes,
+            'profils' => $profils,
+            'selectedQuestionA' => $selectedQuestionA,
+            'selectedQuestionB' => $selectedQuestionB
+        ]);
     }
 
     /**
