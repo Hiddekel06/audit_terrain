@@ -6,6 +6,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\QuizResult;
 
 class User extends Authenticatable
 {
@@ -105,5 +106,13 @@ class User extends Authenticatable
     public function team()
     {
         return $this->belongsTo(Team::class);
+    }
+
+    /**
+     * Résultats des quiz de l'utilisateur.
+     */
+    public function quizResults()
+    {
+        return $this->hasMany(QuizResult::class);
     }
 }
