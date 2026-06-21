@@ -459,6 +459,54 @@
         color: #64748b;
         margin-bottom: 0.25rem;
     }
+
+    /* Permutation agent libre : état de drop */
+    .pool-drop-target.drop-ready {
+        background: #ecfdf5 !important;
+        border-left: 3px solid #10b981 !important;
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) inset;
+        border-radius: 0.5rem;
+        transform: scale(1.01);
+        transition: all 0.15s ease;
+    }
+
+    .pool-drop-target {
+        transition: all 0.15s ease;
+        position: relative;
+    }
+
+    .pool-drop-target::after {
+        content: '';
+        pointer-events: none;
+    }
+
+    /* Poste vacant dynamique (après retrait depuis simulation) */
+    .sim-vacant-slot {
+        border: 2px dashed #cbd5e1 !important;
+        min-height: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 3px;
+        animation: fadeInVacant 0.3s ease;
+    }
+
+    @keyframes fadeInVacant {
+        from { opacity: 0; transform: scale(0.97); }
+        to   { opacity: 1; transform: scale(1); }
+    }
+
+    /* Bouton retrait : visible au hover de la ligne */
+    .sim-member .btn-sim-remove {
+        opacity: 0;
+        transition: opacity 0.15s ease;
+    }
+    .sim-member:hover .btn-sim-remove {
+        opacity: 0.75;
+    }
+    .sim-member .btn-sim-remove:hover {
+        opacity: 1 !important;
+    }
 </style>
 @endpush
 
@@ -705,6 +753,18 @@
                                                     title="Modifier le profil">
                                                 <i class="bi bi-pencil-square"></i>
                                             </button>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-link p-0 text-danger opacity-50 hover-opacity-100 btn-sim-remove"
+                                                    data-sim-user-id="{{ $member['id'] }}"
+                                                    data-sim-user-name="{{ $member['name'] }}"
+                                                    data-sim-user-role="{{ $member['role'] }}"
+                                                    data-sim-profil-id="{{ $member['profil_id'] }}"
+                                                    data-sim-ministere-id="{{ $member['ministere_id'] ?? '' }}"
+                                                    data-sim-structure="{{ $member['structure'] ?? '' }}"
+                                                    data-sim-profil-label="{{ $member['profil'] ?? '' }}"
+                                                    title="Retirer de l'équipe">
+                                                <i class="bi bi-person-dash"></i>
+                                            </button>
                                             <i class="bi bi-grip-vertical text-muted"></i>
                                         </div>
                                     </div>
@@ -889,7 +949,7 @@
                                     }
                                 @endphp
                                 <div
-                                    class="list-group-item p-3 border-0 border-bottom bg-transparent hover-bg-light transition-all drag-card {{ $isLibreHighlighted ? 'member-line--highlighted' : '' }}"
+                                    class="list-group-item p-3 border-0 border-bottom bg-transparent hover-bg-light transition-all drag-card pool-drop-target {{ $isLibreHighlighted ? 'member-line--highlighted' : '' }}"
                                     draggable="true"
                                     data-user-id="{{ $user->id }}"
                                     data-user-name="{{ $user->prenom }} {{ $user->nom }}"
@@ -1124,7 +1184,7 @@
                     <div class="d-flex gap-2 ms-auto">
                         <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Annuler</button>
                         <button type="submit" class="btn btn-deploy-neutral">Simuler</button>
-                        <button type="submit" class="btn btn-deploy-dark" formaction="{{ route('admin.operations.optimize') }}">Optimiser</button>
+                        <button type="button" class="btn btn-deploy-dark" id="btnOptimiser">Optimiser</button>
                     </div>
                 </div>
             </form>
@@ -1263,6 +1323,34 @@
     </div>
 </div>
 
+<!-- Modal Retrait Agent Simulation -->
+<div class="modal fade" id="simRemoveAgentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card border-0">
+            <div class="modal-header border-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold" style="color:#ef4444;">
+                    <i class="bi bi-person-dash me-2"></i>Retirer de la simulation
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="mb-1 fw-bold text-dark" id="simRemoveAgentName"></p>
+                <p class="text-muted small mb-0">
+                    <i class="bi bi-info-circle me-1 text-primary"></i>
+                    L'agent sera retourné dans le vivier des <strong>Agents Libres</strong>.<br>
+                    Son poste dans l'équipe deviendra <strong>vacant</strong>.
+                </p>
+            </div>
+            <div class="modal-footer border-0 pb-4 px-4 justify-content-between">
+                <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold" id="simRemoveAgentConfirm">
+                    <i class="bi bi-person-dash me-1"></i> Retirer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Transfert Simulation -->
 <div class="modal fade" id="confirmSimMoveModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -1308,6 +1396,32 @@
 
 @push('scripts')
 <script>
+    // Bouton Optimiser — change l'action du formulaire puis soumet après fermeture de la modale
+    (function () {
+        const btnOptimiser = document.getElementById('btnOptimiser');
+        if (!btnOptimiser) return;
+
+        btnOptimiser.addEventListener('click', function () {
+            const form = document.querySelector('#autoDeployModal form');
+            if (!form) return;
+
+            // Changer temporairement l'action vers la route optimize
+            const optimizeUrl = '{{ route('admin.operations.optimize') }}';
+            form.setAttribute('action', optimizeUrl);
+
+            const modalEl = document.getElementById('autoDeployModal');
+            const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+
+            // Fermer la modale, puis soumettre quand l'animation est terminée
+            modalEl.addEventListener('hidden.bs.modal', function onHidden() {
+                modalEl.removeEventListener('hidden.bs.modal', onHidden);
+                form.submit();
+            }, { once: true });
+
+            modalInstance.hide();
+        });
+    })();
+
     function showAgentQuickView(userId) {
         const modal = new bootstrap.Modal(document.getElementById('agentQuickViewModal'));
         const content = document.getElementById('agentQuickViewContent');
@@ -1460,9 +1574,13 @@
             card.addEventListener('dragstart', (e) => {
                 const ds = card.dataset;
                 draggedPayload = { 
-                    userId: ds.userId, 
-                    userName: ds.userName || card.textContent.trim(), 
-                    profilId: ds.profilId, 
+                    userId:      ds.userId, 
+                    userName:    ds.userName || card.textContent.trim(), 
+                    profilId:    ds.profilId, 
+                    profilLabel: ds.profilLabel || '',
+                    ministereId: ds.ministereId || '',
+                    direction:   ds.direction || '',
+                    structure:   ds.structure || '',
                     sourceTeamId: ds.sourceTeamId || '' 
                 };
                 card.classList.add('dragging');
@@ -1509,6 +1627,7 @@
                     const targetUserId = occupant.dataset.userId;
                     const targetUserName = occupant.dataset.userName || occupant.textContent.trim();
                     if (targetUserId === draggedPayload.userId) return;
+                    // Permutation équipe↔équipe ou libre↔équipe
                     openMoveConfirm(draggedPayload.userId, targetTeamId, draggedPayload.userName, targetTeamName, targetUserId, targetUserName);
                 } else {
                     if (draggedPayload.sourceTeamId !== targetTeamId) {
@@ -1522,8 +1641,157 @@
             zone.addEventListener('dragover', (e) => { if (draggedPayload?.sourceTeamId) e.preventDefault(); });
             zone.addEventListener('drop', (e) => {
                 e.preventDefault();
-                if (draggedPayload?.sourceTeamId) openMoveConfirm(draggedPayload.userId, '', draggedPayload.userName, '');
+                // Si on lâche directement sur la zone (pas sur un agent libre spécifique)
+                if (draggedPayload?.sourceTeamId) {
+                    // Vérifie si on est tombé sur un agent libre
+                    const targetFreeAgent = e.target.closest('.pool-drop-target');
+                    if (!targetFreeAgent || targetFreeAgent.dataset.userId === draggedPayload.userId) {
+                        // On retire juste l'agent de son équipe (retour au vivier)
+                        openMoveConfirm(draggedPayload.userId, '', draggedPayload.userName, '');
+                    }
+                }
             });
+        });
+
+        // Permutation : agent d'équipe droppé sur un agent libre spécifique
+        function attachPoolDropTargetListeners() {
+            document.querySelectorAll('.pool-drop-target').forEach(freeAgentEl => {
+                freeAgentEl.addEventListener('dragover', (e) => {
+                    // Accepter le drop si c'est un agent venant d'une équipe
+                    if (draggedPayload && draggedPayload.sourceTeamId) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.dataTransfer.dropEffect = 'move';
+                        freeAgentEl.classList.add('drop-ready');
+                    }
+                });
+                freeAgentEl.addEventListener('dragleave', (e) => {
+                    freeAgentEl.classList.remove('drop-ready');
+                });
+                freeAgentEl.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    freeAgentEl.classList.remove('drop-ready');
+                    if (!draggedPayload || !draggedPayload.sourceTeamId) return;
+
+                    const targetFreeUserId = freeAgentEl.dataset.userId;
+                    const targetFreeUserName = freeAgentEl.dataset.userName;
+
+                    if (!targetFreeUserId || targetFreeUserId === draggedPayload.userId) return;
+
+                    // Permutation : agent d'équipe ↔ agent libre
+                    openMoveConfirm(
+                        draggedPayload.userId,
+                        null,
+                        draggedPayload.userName,
+                        'Agents Libres',
+                        targetFreeUserId,
+                        targetFreeUserName
+                    );
+                });
+            });
+        }
+        attachPoolDropTargetListeners();
+
+        // ── Retrait d'agent de la simulation ──────────────────────────────────
+        const simRemoveModal = new bootstrap.Modal(document.getElementById('simRemoveAgentModal'));
+        const simRemoveNameEl = document.getElementById('simRemoveAgentName');
+        const simRemoveConfirmBtn = document.getElementById('simRemoveAgentConfirm');
+        let pendingRemoveMemberEl = null;
+
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.btn-sim-remove');
+            if (!btn) return;
+
+            pendingRemoveMemberEl = btn.closest('.sim-member');
+            if (!pendingRemoveMemberEl) return;
+
+            const ds = btn.dataset;
+            simRemoveNameEl.textContent = ds.simUserName || 'Cet agent';
+            simRemoveModal.show();
+        });
+
+        simRemoveConfirmBtn.addEventListener('click', function () {
+            if (!pendingRemoveMemberEl) return;
+
+            const btn = pendingRemoveMemberEl.querySelector('.btn-sim-remove');
+            const ds = btn ? btn.dataset : {};
+            const userId   = ds.simUserId || '';
+            const userName = ds.simUserName || '';
+            const roleLabel = ds.simUserRole || '';
+            const profilId  = ds.simProfilId || '';
+            const ministereId = ds.simMinistereId || '';
+            const structure   = ds.simStructure || '';
+            const profilLabel = ds.simProfilLabel || '';
+
+            // 1. Remplacer l'élément sim-member par un bloc "Poste vacant"
+            const vacantHtml = `
+                <div class="text-center py-4 border-dashed rounded-4 bg-light bg-opacity-50 sim-vacant-slot">
+                    <p class="text-muted small fw-bold mb-0"><i class="bi bi-person-x me-1"></i>Poste vacant</p>
+                </div>`;
+            pendingRemoveMemberEl.insertAdjacentHTML('afterend', vacantHtml);
+            pendingRemoveMemberEl.remove();
+
+            // 2. Réinsérer l'agent dans le pool des agents libres (sidebar)
+            const poolList = document.getElementById('unassignedPoolList');
+            if (poolList && userId) {
+                const newItem = document.createElement('div');
+                newItem.className = 'list-group-item p-3 border-0 border-bottom bg-transparent hover-bg-light transition-all drag-card pool-drop-target';
+                newItem.draggable = true;
+                newItem.dataset.userId = userId;
+                newItem.dataset.userName = userName;
+                newItem.dataset.profilId = profilId;
+                newItem.dataset.ministereId = ministereId;
+                newItem.dataset.structure = structure;
+                newItem.dataset.profilLabel = profilLabel;
+                newItem.dataset.sourceTeamId = '';
+                newItem.innerHTML = `
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="status-dot status-dot--filled" style="width:8px;height:8px;background:#2563eb;"></div>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="fw-bold text-dark small">${userName}</div>
+                            <div class="text-primary small fw-bold" style="font-size:0.6rem;text-transform:uppercase;">${profilLabel || roleLabel}</div>
+                        </div>
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="badge bg-warning text-dark rounded-pill" style="font-size:0.6rem;" title="Retiré de la simulation">
+                                <i class="bi bi-arrow-left-circle me-1"></i>Libéré
+                            </span>
+                        </div>
+                    </div>`;
+
+                // Attacher les événements drag
+                newItem.addEventListener('dragstart', (e) => {
+                    draggedPayload = {
+                        userId: newItem.dataset.userId,
+                        userName: newItem.dataset.userName,
+                        profilId: newItem.dataset.profilId,
+                        sourceTeamId: ''
+                    };
+                    newItem.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+                newItem.addEventListener('dragend', () => {
+                    newItem.classList.remove('dragging');
+                    clearDropStates();
+                });
+
+                poolList.prepend(newItem);
+
+                // Mettre à jour le compteur
+                const poolCountEl = document.getElementById('poolCount');
+                if (poolCountEl) {
+                    poolCountEl.textContent = parseInt(poolCountEl.textContent || '0', 10) + 1;
+                }
+
+                // Réattacher les listeners de drop sur le nouveau pool item
+                attachPoolDropTargetListeners();
+            }
+
+            // 3. Mettre à jour l'état de la simulation
+            syncSimulationState();
+
+            simRemoveModal.hide();
+            pendingRemoveMemberEl = null;
         });
 
         // Simulation logic
@@ -1646,40 +1914,176 @@
             container.addEventListener('dragover', e => e.preventDefault());
             container.addEventListener('drop', e => {
                 e.preventDefault();
+
+                // ── Cas 1 : un agent de SIMULATION est en cours de drag ──────────
                 const simDragged = document.querySelector('.sim-member.dragging');
-                if (!simDragged) return;
+                if (simDragged) {
+                    const simTarget = e.target.closest('.sim-member');
+                    if (simTarget && simTarget === simDragged) return;
+
+                    const draggedName = simDragged.querySelector('.member-name')?.textContent?.trim() || 'cet agent';
+                    if (!confirmSimMoveModal) return;
+                    const cModalTitle = confirmSimMoveModalElement.querySelector('.modal-title');
+
+                    if (simTarget) {
+                        const targetName = simTarget.querySelector('.member-name')?.textContent?.trim() || 'cet agent';
+                        if (cModalTitle) cModalTitle.textContent = "Permutation d'agent";
+                        document.getElementById('confirmSimMoveMessage').textContent = `Permuter ${draggedName} avec ${targetName} ?`;
+                    } else {
+                        if (simDragged.dataset.simTeamIndex === container.dataset.simTeamIndex) return;
+                        if (cModalTitle) cModalTitle.textContent = "Transfert d'agent";
+                        document.getElementById('confirmSimMoveMessage').textContent = `Transférer ${draggedName} ?`;
+                    }
+
+                    confirmSimMoveModal.show();
+                    document.getElementById('confirmSimMoveConfirm').onclick = () => {
+                        if (simTarget) {
+                            swapSimulationMembers(simDragged, simTarget);
+                            syncSimulationMemberTeam(simDragged);
+                            syncSimulationMemberTeam(simTarget);
+                        } else {
+                            container.appendChild(simDragged);
+                            syncSimulationMemberTeam(simDragged);
+                        }
+                        syncSimulationState();
+                        confirmSimMoveModal.hide();
+                    };
+                    return;
+                }
+
+                // ── Cas 2 : un agent LIBRE du pool est en cours de drag ─────────
+                if (!draggedPayload || draggedPayload.sourceTeamId !== '') return;
 
                 const simTarget = e.target.closest('.sim-member');
-                if (simTarget && simTarget === simDragged) return;
+                const vacantSlot = e.target.closest('.sim-vacant-slot');
+                const teamIndex = container.dataset.simTeamIndex;
 
-                const draggedName = simDragged.querySelector('.member-name')?.textContent?.trim() || 'cet agent';
+                const poolItemEl = document.querySelector(`.drag-card.dragging[data-user-id="${draggedPayload.userId}"]`);
+
+                const freeName = draggedPayload.userName;
 
                 if (!confirmSimMoveModal) return;
-
                 const cModalTitle = confirmSimMoveModalElement.querySelector('.modal-title');
 
                 if (simTarget) {
+                    // Permutation : agent libre ↔ agent simulation
                     const targetName = simTarget.querySelector('.member-name')?.textContent?.trim() || 'cet agent';
-                    if (cModalTitle) cModalTitle.textContent = "Permutation d'agent";
-                    document.getElementById('confirmSimMoveMessage').textContent = `Permuter ${draggedName} avec ${targetName} ?`;
+                    if (cModalTitle) cModalTitle.textContent = "Permutation libre ↔ équipe";
+                    document.getElementById('confirmSimMoveMessage').innerHTML =
+                        `Placer <strong>${freeName}</strong> à la place de <strong>${targetName}</strong> ?<br>
+                         <span class="text-muted small">${targetName} rejoindra les Agents Libres.</span>`;
                 } else {
-                    if (simDragged.dataset.simTeamIndex === container.dataset.simTeamIndex) return;
-                    if (cModalTitle) cModalTitle.textContent = "Transfert d'agent";
-                    document.getElementById('confirmSimMoveMessage').textContent = `Transférer ${draggedName} ?`;
+                    // Ajout sur poste vacant ou dans l'équipe
+                    if (cModalTitle) cModalTitle.textContent = "Ajout dans l'équipe";
+                    document.getElementById('confirmSimMoveMessage').innerHTML =
+                        `Ajouter <strong>${freeName}</strong> dans cette équipe ?`;
                 }
 
                 confirmSimMoveModal.show();
-
-                // On utilise une fonction nommée pour pouvoir la retirer ou l'écraser proprement
                 document.getElementById('confirmSimMoveConfirm').onclick = () => {
+                    // Construire un sim-member à partir des données du pool
+                    const newSimMember = document.createElement('div');
+                    newSimMember.className = 'member-line sim-member drag-card';
+                    newSimMember.draggable = true;
+                    newSimMember.dataset.simUserId = draggedPayload.userId;
+                    newSimMember.dataset.simTeamIndex = teamIndex;
+                    newSimMember.dataset.simMemberIndex = Date.now();
+                    newSimMember.innerHTML = `
+                        <span class="status-dot status-dot--filled"></span>
+                        <div class="role-label text-truncate">${draggedPayload.profilLabel || draggedPayload.profilId || ''}</div>
+                        <div class="member-name flex-grow-1 text-truncate">${freeName}</div>
+                        <div class="d-flex align-items-center gap-1">
+                            <button type="button"
+                                    class="btn btn-sm btn-link p-0 text-info opacity-50 hover-opacity-100"
+                                    onclick="showAgentQuickView(${draggedPayload.userId})"
+                                    title="Détails complets">
+                                <i class="bi bi-info-circle"></i>
+                            </button>
+                            <button type="button"
+                                    class="btn btn-sm btn-link p-0 text-primary opacity-50 hover-opacity-100"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#editAgentProfileModal"
+                                    data-user-id="${draggedPayload.userId}"
+                                    data-user-name="${freeName}"
+                                    data-profil-id="${draggedPayload.profilId || ''}"
+                                    data-ministere-id="${draggedPayload.ministereId || ''}"
+                                    data-direction="${draggedPayload.direction || ''}"
+                                    title="Modifier le profil">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+                            <button type="button"
+                                    class="btn btn-sm btn-link p-0 text-danger opacity-50 hover-opacity-100 btn-sim-remove"
+                                    data-sim-user-id="${draggedPayload.userId}"
+                                    data-sim-user-name="${freeName}"
+                                    data-sim-user-role="${draggedPayload.profilLabel || ''}"
+                                    data-sim-profil-id="${draggedPayload.profilId || ''}"
+                                    data-sim-ministere-id="${draggedPayload.ministereId || ''}"
+                                    data-sim-structure="${draggedPayload.structure || ''}"
+                                    data-sim-profil-label="${draggedPayload.profilLabel || ''}"
+                                    title="Retirer de l'équipe">
+                                <i class="bi bi-person-dash"></i>
+                            </button>
+                            <i class="bi bi-grip-vertical text-muted"></i>
+                        </div>`;
+
+                    // Attacher drag events au nouveau sim-member
+                    newSimMember.addEventListener('dragstart', ev => {
+                        newSimMember.classList.add('dragging');
+                        ev.dataTransfer.effectAllowed = 'move';
+                    });
+                    newSimMember.addEventListener('dragend', () => newSimMember.classList.remove('dragging'));
+
                     if (simTarget) {
-                        swapSimulationMembers(simDragged, simTarget);
-                        syncSimulationMemberTeam(simDragged);
-                        syncSimulationMemberTeam(simTarget);
+                        // Permutation : simTarget retourne dans le pool
+                        const ejectedName = simTarget.querySelector('.member-name')?.textContent?.trim() || '';
+                        const ejectedBtn  = simTarget.querySelector('.btn-sim-remove');
+                        const ejectedDs   = ejectedBtn ? ejectedBtn.dataset : {};
+
+                        // Insérer le nouveau membre à la place du sim-member éjecté
+                        simTarget.replaceWith(newSimMember);
+
+                        // Renvoyer l'ancien sim-member dans le pool
+                        const poolList = document.getElementById('unassignedPoolList');
+                        if (poolList) {
+                            const ejectedItem = document.createElement('div');
+                            ejectedItem.className = 'list-group-item p-3 border-0 border-bottom bg-transparent hover-bg-light transition-all drag-card pool-drop-target';
+                            ejectedItem.draggable = true;
+                            ejectedItem.dataset.userId = ejectedDs.simUserId || '';
+                            ejectedItem.dataset.userName = ejectedName;
+                            ejectedItem.dataset.profilId = ejectedDs.simProfilId || '';
+                            ejectedItem.dataset.sourceTeamId = '';
+                            ejectedItem.innerHTML = `
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="status-dot status-dot--filled" style="width:8px;height:8px;background:#2563eb;"></div>
+                                    <div class="flex-grow-1 overflow-hidden">
+                                        <div class="fw-bold text-dark small">${ejectedName}</div>
+                                    </div>
+                                    <span class="badge bg-secondary text-white rounded-pill" style="font-size:0.6rem;">Échangé</span>
+                                </div>`;
+                            ejectedItem.addEventListener('dragstart', ev => {
+                                draggedPayload = { userId: ejectedItem.dataset.userId, userName: ejectedName, profilId: ejectedItem.dataset.profilId, sourceTeamId: '' };
+                                ejectedItem.classList.add('dragging');
+                                ev.dataTransfer.effectAllowed = 'move';
+                            });
+                            ejectedItem.addEventListener('dragend', () => { ejectedItem.classList.remove('dragging'); clearDropStates(); });
+                            poolList.prepend(ejectedItem);
+                            attachPoolDropTargetListeners();
+                        }
+                    } else if (vacantSlot) {
+                        // Remplacer le slot vacant
+                        vacantSlot.replaceWith(newSimMember);
                     } else {
-                        container.appendChild(simDragged);
-                        syncSimulationMemberTeam(simDragged);
+                        // Ajouter à la fin de l'équipe
+                        container.appendChild(newSimMember);
                     }
+
+                    // Retirer l'agent du pool
+                    if (poolItemEl) {
+                        poolItemEl.remove();
+                        const poolCountEl = document.getElementById('poolCount');
+                        if (poolCountEl) poolCountEl.textContent = Math.max(0, parseInt(poolCountEl.textContent || '0', 10) - 1);
+                    }
+
                     syncSimulationState();
                     confirmSimMoveModal.hide();
                 };
