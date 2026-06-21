@@ -1523,6 +1523,51 @@
             document.querySelectorAll('.drop-zone-unassigned').forEach(z => z.classList.remove('drop-ready'));
         }
 
+        // ── Auto-scroll pendant le drag ─────────────────────────────────────────
+        // Quand la souris approche du bord haut/bas de l'écran, on scrolle automatiquement.
+        let autoScrollRaf = null;
+        const SCROLL_ZONE  = 120; // px depuis le bord pour déclencher le scroll
+        const SCROLL_SPEED = 18;  // px par frame max
+
+        function startAutoScroll(clientY) {
+            stopAutoScroll();
+            const vh = window.innerHeight;
+
+            function step() {
+                let delta = 0;
+                if (clientY < SCROLL_ZONE) {
+                    // Zone haute : scroller vers le haut
+                    const ratio = 1 - (clientY / SCROLL_ZONE);
+                    delta = -Math.round(SCROLL_SPEED * ratio);
+                } else if (clientY > vh - SCROLL_ZONE) {
+                    // Zone basse : scroller vers le bas
+                    const ratio = (clientY - (vh - SCROLL_ZONE)) / SCROLL_ZONE;
+                    delta = Math.round(SCROLL_SPEED * ratio);
+                }
+                if (delta !== 0) window.scrollBy(0, delta);
+                autoScrollRaf = requestAnimationFrame(step);
+            }
+            autoScrollRaf = requestAnimationFrame(step);
+        }
+
+        function stopAutoScroll() {
+            if (autoScrollRaf) {
+                cancelAnimationFrame(autoScrollRaf);
+                autoScrollRaf = null;
+            }
+        }
+
+        // Écoute globale du dragover pour mettre à jour la position Y
+        document.addEventListener('dragover', (e) => {
+            if (draggedPayload || document.querySelector('.sim-member.dragging') || document.querySelector('.simulation-team-wrapper.opacity-50')) {
+                startAutoScroll(e.clientY);
+            }
+        });
+
+        // Arrêt du scroll quand le drag se termine
+        document.addEventListener('dragend', stopAutoScroll);
+        document.addEventListener('drop', stopAutoScroll);
+
         function submitMove(userId, teamId) {
             dragUserId.value = userId;
             dragTeamId.value = teamId ?? '';
