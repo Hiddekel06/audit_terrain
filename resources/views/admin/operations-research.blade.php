@@ -707,7 +707,18 @@
                                         </div>
                                     </div>
                                 </div>
-                                <span class="badge bg-light text-dark rounded-pill px-2 py-1 small fw-bold border">SIM</span>
+                                <div class="d-flex align-items-center gap-2">
+                         <span class="badge bg-light text-dark rounded-pill px-2 py-1 small fw-bold border">
+                                                                         SIM
+                        </span>
+
+                            <button type="button"
+        class="btn btn-sm btn-success rounded-circle btn-add-slot"
+        data-sim-team-index="{{ $tIndex }}"
+        title="Ajouter un poste">
+    <i class="bi bi-plus"></i>
+</button>
+</div>
                             </div>
 
                             <div class="simulation-members flex-grow-1 d-flex flex-column" data-sim-team-index="{{ $tIndex }}">
@@ -2511,6 +2522,35 @@
                 if (poolCount) poolCount.textContent = visibleCount;
             });
         }
+      // Poste vide ajouté manuellement
+document.querySelectorAll('.btn-add-slot').forEach(btn => {
+    btn.addEventListener('click', () => {
+
+        const teamIndex = btn.dataset.simTeamIndex;
+        console.log(teamIndex);
+
+        const container = document.querySelector(
+            `.simulation-members[data-sim-team-index="${teamIndex}"]`
+        );
+
+        if (!container) return;
+
+        const slot = document.createElement('div');
+
+        slot.className = 'member-line sim-vacant-slot';
+
+        slot.innerHTML = `
+            <span class="status-dot status-dot--empty"></span>
+            <div class="role-label">Libre</div>
+            <div class="member-name member-name--empty flex-grow-1">
+                Déposer un agent ici
+            </div>
+        `;
+
+        container.appendChild(slot);
+
+    });
+});  
     })();
 </script>
 @endpush
