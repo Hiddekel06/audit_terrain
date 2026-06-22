@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AdminOperationsResearchController;
 
 Route::get('/', function () {
     return view('welcome_profiles');
@@ -71,6 +72,10 @@ Route::middleware('admin.auth')->group(function () {
         ->name('admin.operations.team.store');
     Route::post('/admin/recherche-operationnelle/assign', [App\Http\Controllers\AdminOperationsResearchController::class, 'assignMember'])
         ->name('admin.operations.assign');
+     Route::post('/admin/recherche-operationnelle/export-pool', [App\Http\Controllers\AdminOperationsResearchController::class, 'exportPool'])
+    ->name('admin.operations.export_pool'); 
+    Route::post('/admin/recherche-operationnelle/export-screen', [App\Http\Controllers\AdminOperationsResearchController::class, 'exportScreen'])
+    ->name('admin.operations.export_screen');
 
     Route::post('/admin/recherche-operationnelle/swap', [App\Http\Controllers\AdminOperationsResearchController::class, 'swapMembers'])
         ->name('admin.operations.swap');

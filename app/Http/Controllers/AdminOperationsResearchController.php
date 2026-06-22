@@ -13,6 +13,10 @@ use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\SimulationExport;
+use App\Exports\PoolExport;
+use App\Exports\ScreenExport;
+
+
 
 class AdminOperationsResearchController extends Controller
 {
@@ -1010,4 +1014,45 @@ class AdminOperationsResearchController extends Controller
 
         return back()->with('success', '↩️ Déploiement révoqué : tous les agents sont à nouveau sans équipe. Les équipes ont été supprimées.');
     }
+  public function exportScreen(Request $request)
+{
+    $data = $request->all();
+
+    return Excel::download(
+        new ScreenExport($data),
+        'simulation.xlsx'
+    );
+}  
+public function exportPool(Request $request)
+{
+    $visibleUsers = json_decode($request->input('visible_users', '[]'), true);
+
+    if (!is_array($visibleUsers)) {
+        $visibleUsers = [];
+    }
+
+    $rows = collect($visibleUsers)
+        ->filter(fn ($agent) => is_array($agent))
+        ->map(function (array $agent) {
+            return [
+                'id' => $agent['id'] ?? '',
+                'name' => $agent['name'] ?? '',
+                'profil' => $agent['profil'] ?? '',
+                'structure' => $agent['structure'] ?? '',
+                'telephone' => $agent['telephone'] ?? '',
+                'matricule' => $agent['matricule'] ?? '',
+            ];
+        })
+        ->values();
+
+    if ($rows->isEmpty()) {
+        return back()->with('error', 'Aucun agent libre visible à exporter.');
+    }
+
+    return Excel::download(
+        new PoolExport($rows),
+        'agents_libres.xlsx'
+    );
+
+}
 }

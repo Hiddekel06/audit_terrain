@@ -789,6 +789,8 @@
                                                     data-sim-user-name="{{ $member['name'] }}"
                                                     data-sim-user-role="{{ $member['role'] }}"
                                                     data-sim-profil-id="{{ $member['profil_id'] }}"
+                                                    data-sim-telephone="{{ $member['telephone'] ?? '' }}"
+                                                    data-sim-matricule="{{ $member['matricule'] ?? '' }}"
                                                     data-sim-ministere-id="{{ $member['ministere_id'] ?? '' }}"
                                                     data-sim-structure="{{ $member['structure'] ?? '' }}"
                                                     data-sim-profil-label="{{ $member['profil'] ?? '' }}"
@@ -932,12 +934,30 @@
         <div class="col-lg-4">
             <div class="sticky-pool-wrapper">
                 <div class="pool-search-container">
-                    <div class="d-flex align-items-center justify-content-between mb-3 px-2">
-                        <h3 class="h5 fw-bold mb-0">Agents Libres</h3>
-                        <span class="badge bg-white text-primary border rounded-pill px-3 py-1 fw-bold" style="font-size: 0.7rem;">
-                            <span id="poolCount">{{ $unassignedUsers->count() }}</span> disponible(s)
-                        </span>
-                    </div>
+                 <div class="pool-search-container">
+    <div class="d-flex align-items-center justify-content-between mb-3 px-2">
+
+        <h3 class="h5 fw-bold mb-0">Agents Libres</h3>
+
+     <div class="d-flex align-items-center gap-2">
+
+        <span class="badge bg-white text-primary border rounded-pill px-3 py-1 fw-bold">
+            <span id="poolCount">{{ $unassignedUsers->count() }}</span> disponible(s)
+        </span>
+
+        <form action="{{ route('admin.operations.export_pool') }}" method="POST" class="m-0" id="exportPoolForm">
+            @csrf
+
+            <input type="hidden" name="visible_users" id="visibleUsersInput">
+
+            <button type="submit" class="btn btn-sm btn-success">
+                <i class="bi bi-download"></i> Export
+            </button>
+
+        </form>
+
+    </div>
+</div>
                     
                     <div class="input-group input-group-sm mb-2 shadow-sm rounded-pill overflow-hidden border">
                         <span class="input-group-text bg-white border-0 ps-3">
@@ -984,6 +1004,8 @@
                                     data-user-id="{{ $user->id }}"
                                     data-user-name="{{ $user->prenom }} {{ $user->nom }}"
                                     data-profil-id="{{ $user->profil_id }}"
+                                    data-telephone="{{ $user->telephone }}"
+                                    data-matricule="{{ $user->matricule }}"
                                     data-ministere-id="{{ $user->ministere_id }}"
                                     data-structure="{{ $user->ministere?->nom }}"
                                     data-profil-label="{{ $user->profil?->libelle }}"
@@ -1786,6 +1808,8 @@
                     userName:    ds.userName || card.textContent.trim(), 
                     profilId:    ds.profilId, 
                     profilLabel: ds.profilLabel || '',
+                    telephone:   ds.telephone || '',
+                    matricule:   ds.matricule || '',
                     ministereId: ds.ministereId || '',
                     direction:   ds.direction || '',
                     structure:   ds.structure || '',
@@ -1931,6 +1955,8 @@
             const ministereId = ds.simMinistereId || '';
             const structure   = ds.simStructure || '';
             const profilLabel = ds.simProfilLabel || '';
+            const telephone   = ds.simTelephone || '';
+            const matricule   = ds.simMatricule || '';
 
             // 1. Remplacer l'élément sim-member par un bloc "Poste vacant"
             const vacantHtml = `
@@ -1952,6 +1978,8 @@
                 newItem.dataset.ministereId = ministereId;
                 newItem.dataset.structure = structure;
                 newItem.dataset.profilLabel = profilLabel;
+                newItem.dataset.telephone = telephone;
+                newItem.dataset.matricule = matricule;
                 newItem.dataset.sourceTeamId = '';
                 newItem.innerHTML = `
                     <div class="d-flex align-items-center gap-3">
@@ -2225,6 +2253,8 @@
                                     data-sim-user-name="${freeName}"
                                     data-sim-user-role="${draggedPayload.profilLabel || ''}"
                                     data-sim-profil-id="${draggedPayload.profilId || ''}"
+                                    data-sim-telephone="${draggedPayload.telephone || ''}"
+                                    data-sim-matricule="${draggedPayload.matricule || ''}"
                                     data-sim-ministere-id="${draggedPayload.ministereId || ''}"
                                     data-sim-structure="${draggedPayload.structure || ''}"
                                     data-sim-profil-label="${draggedPayload.profilLabel || ''}"
@@ -2259,17 +2289,33 @@
                             ejectedItem.dataset.userId = ejectedDs.simUserId || '';
                             ejectedItem.dataset.userName = ejectedName;
                             ejectedItem.dataset.profilId = ejectedDs.simProfilId || '';
+                            ejectedItem.dataset.profilLabel = ejectedDs.simProfilLabel || '';
+                            ejectedItem.dataset.structure = ejectedDs.simStructure || '';
+                            ejectedItem.dataset.telephone = ejectedDs.simTelephone || '';
+                            ejectedItem.dataset.matricule = ejectedDs.simMatricule || '';
+                            ejectedItem.dataset.ministereId = ejectedDs.simMinistereId || '';
                             ejectedItem.dataset.sourceTeamId = '';
                             ejectedItem.innerHTML = `
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="status-dot status-dot--filled" style="width:8px;height:8px;background:#2563eb;"></div>
                                     <div class="flex-grow-1 overflow-hidden">
                                         <div class="fw-bold text-dark small">${ejectedName}</div>
+                                        <div class="text-primary small fw-bold" style="font-size:0.6rem;text-transform:uppercase;">${ejectedDs.simProfilLabel || ''}</div>
                                     </div>
                                     <span class="badge bg-secondary text-white rounded-pill" style="font-size:0.6rem;">Échangé</span>
                                 </div>`;
                             ejectedItem.addEventListener('dragstart', ev => {
-                                draggedPayload = { userId: ejectedItem.dataset.userId, userName: ejectedName, profilId: ejectedItem.dataset.profilId, sourceTeamId: '' };
+                                draggedPayload = {
+                                    userId: ejectedItem.dataset.userId,
+                                    userName: ejectedName,
+                                    profilId: ejectedItem.dataset.profilId,
+                                    profilLabel: ejectedItem.dataset.profilLabel || '',
+                                    structure: ejectedItem.dataset.structure || '',
+                                    telephone: ejectedItem.dataset.telephone || '',
+                                    matricule: ejectedItem.dataset.matricule || '',
+                                    ministereId: ejectedItem.dataset.ministereId || '',
+                                    sourceTeamId: ''
+                                };
                                 ejectedItem.classList.add('dragging');
                                 ev.dataTransfer.effectAllowed = 'move';
                             });
@@ -2551,6 +2597,154 @@ document.querySelectorAll('.btn-add-slot').forEach(btn => {
 
     });
 });  
+const exportScreenBtn = document.getElementById('exportScreenBtn');
+if (exportScreenBtn) exportScreenBtn.addEventListener('click', () => {
+
+    // 1. Agents libres visibles
+    const freeAgents = [];
+
+    document.querySelectorAll('#unassignedPoolList .list-group-item').forEach(el => {
+
+        if (window.getComputedStyle(el).display === 'none') return;
+
+        freeAgents.push({
+            id: el.dataset.userId,
+            name: el.dataset.userName,
+            profil: el.dataset.profilLabel,
+            structure: el.dataset.structure,
+            telephone: el.dataset.telephone,
+            matricule: el.dataset.matricule
+        });
+    });
+
+    // 2. Équipes simulation
+    const teams = [];
+
+    document.querySelectorAll('.simulation-team').forEach(teamEl => {
+
+        const teamName = teamEl.querySelector('.team-title')?.innerText;
+
+        const members = [];
+
+        teamEl.querySelectorAll('.sim-member').forEach(m => {
+            members.push({
+                id: m.dataset.simUserId,
+                name: m.querySelector('.member-name')?.innerText
+            });
+        });
+
+        const vacantSlots = teamEl.querySelectorAll('.sim-vacant-slot').length;
+
+        teams.push({
+            name: teamName,
+            members,
+            vacantSlots
+        });
+    });
+
+    // 3. Payload final
+    const payload = {
+        freeAgents,
+        teams
+    };
+
+    // 4. Envoi vers backend
+    fetch("{{ route('admin.operations.export_screen') }}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.blob())
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "simulation_export.xlsx";
+        a.click();
+    });
+
+});
+document.addEventListener('DOMContentLoaded', function () {
+
+    const form = document.getElementById('exportPoolForm');
+
+    if (!form) return;
+
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+const items = document.querySelectorAll('#unassignedPoolList .list-group-item');
+
+const agents = [];
+
+items.forEach(item => {
+
+    const isVisible = window.getComputedStyle(item).display !== "none";
+
+    if (isVisible) {
+        agents.push({
+            id: item.dataset.userId || '',
+            name: item.dataset.userName || item.querySelector('.fw-bold')?.textContent?.trim() || '',
+            profil: item.dataset.profilLabel || '',
+            structure: item.dataset.structure || '',
+            telephone: item.dataset.telephone || '',
+            matricule: item.dataset.matricule || ''
+        });
+    }
+});
+
+        let input = document.getElementById('visibleUsersInput');
+
+        if (!input) {
+            input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'visible_users';
+            input.id = 'visibleUsersInput';
+            form.appendChild(input);
+        }
+
+        input.value = JSON.stringify(agents);
+
+        const submitButton = form.querySelector('button[type="submit"]');
+        if (submitButton) submitButton.disabled = true;
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': form.querySelector('input[name="_token"]')?.value || '{{ csrf_token() }}',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            },
+            body: new FormData(form)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Export impossible');
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'agents_libres.xlsx';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(() => {
+            alert("Impossible d'exporter les agents libres visibles.");
+        })
+        .finally(() => {
+            if (submitButton) submitButton.disabled = false;
+        });
+    });
+
+});
     })();
 </script>
 @endpush
