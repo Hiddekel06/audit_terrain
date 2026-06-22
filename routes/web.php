@@ -101,6 +101,10 @@ Route::middleware('admin.auth')->group(function () {
         ->name('admin.operations.auto');
     Route::post('/admin/recherche-operationnelle/reset', [App\Http\Controllers\AdminOperationsResearchController::class, 'resetDeployment'])
         ->name('admin.operations.reset');
+    Route::post('/admin/recherche-operationnelle/approve-draft', [App\Http\Controllers\AdminOperationsResearchController::class, 'approveDraft'])
+        ->name('admin.operations.approve_draft');
+    Route::post('/admin/recherche-operationnelle/revoke', [App\Http\Controllers\AdminOperationsResearchController::class, 'revokeDeployment'])
+        ->name('admin.operations.revoke');
     Route::delete('/admin/recherche-operationnelle/team/{team}', [App\Http\Controllers\AdminOperationsResearchController::class, 'destroyTeam'])
         ->name('admin.operations.team.destroy');
 

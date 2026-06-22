@@ -21,6 +21,7 @@ class AgentResource extends JsonResource
                 'prenom' => $this->prenom,
                 'matricule' => $this->matricule,
                 'photo_url' => $this->photo ? url('storage/photos/' . $this->photo) : null,
+                'equipe' => $this->team?->nom,
             ],
             'contact' => [
                 'telephone' => $this->telephone,
@@ -35,8 +36,22 @@ class AgentResource extends JsonResource
                 'ministere' => $this->ministere?->nom,
                 'direction' => $this->direction,
             ],
+            'quiz' => [
+            'total' => $this->quizResults->count(),
+            'notes' => $this->quizResults->map(function ($result) {
+                return [
+                    'note' => $result->score,
+                    'date' => $result->created_at,
+                ];
+            }),
+            'moyenne' => $this->quizResults->count()
+                ? round($this->quizResults->avg('score'), 2)
+                : 0,
+        ],
             'statut' => $this->validation_status,
             'date_actualisation' => $this->updated_at ? $this->updated_at->toIso8601String() : null,
+
+
         ];
     }
 }

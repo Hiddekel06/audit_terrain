@@ -545,10 +545,19 @@
                                     <i class="bi bi-plus-lg me-2 text-primary"></i> Nouvelle équipe
                                 </button>
                             </li>
+                            @if($teams->isNotEmpty())
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                {{-- ↩️ RÉVOQUER : remet team_id = null pour tous, supprime toutes les Team --}}
+                                <button type="button" class="dropdown-item rounded-3 py-2 text-warning fw-bold" data-bs-toggle="modal" data-bs-target="#revokeDeploymentModal">
+                                    <i class="bi bi-arrow-counterclockwise me-2"></i> Révoquer le déploiement
+                                </button>
+                            </li>
+                            @endif
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <button type="button" class="dropdown-item rounded-3 py-2 text-danger" data-bs-toggle="modal" data-bs-target="#resetDeploymentModal">
-                                    <i class="bi bi-arrow-counterclockwise me-2"></i> Réinitialiser tout
+                                    <i class="bi bi-trash me-2"></i> Réinitialiser tout
                                 </button>
                             </li>
                         </ul>
@@ -660,6 +669,16 @@
 
                         <button type="button" class="btn btn-sm btn-modern-primary" data-bs-toggle="modal" data-bs-target="#savePlanModal" title="Sauvegarder définitivement">
                             <i class="bi bi-bookmark-fill"></i>
+                        </button>
+
+                        {{-- ✅ BOUTON APPROUVER : matérialise le brouillon en vraies équipes --}}
+                        <button type="button"
+                                class="btn btn-sm fw-bold"
+                                style="background: linear-gradient(135deg, #16a34a, #15803d); color: #fff; border: none; border-radius: 0.75rem; padding: 0.5rem 1.1rem; box-shadow: 0 4px 12px rgba(22,163,74,0.25); transition: all 0.2s;"
+                                data-bs-toggle="modal"
+                                data-bs-target="#approveDraftModal"
+                                title="Approuver la simulation et créer les équipes en base">
+                            <i class="bi bi-check2-circle me-1"></i> Approuver
                         </button>
 
                         <form action="{{ route('admin.operations.discard_draft') }}" method="POST" class="d-inline" onsubmit="return confirm('Annuler la simulation et supprimer le brouillon ?')">
@@ -1307,16 +1326,89 @@
             <form action="{{ route('admin.operations.reset') }}" method="POST">
                 @csrf
                 <div class="modal-header border-0 pt-4 px-4">
-                    <h5 class="modal-title fw-bold text-danger">Réinitialisation</h5>
+                    <h5 class="modal-title fw-bold text-danger">Réinitialisation complète</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <p class="mb-0 fw-bold">Voulez-vous vraiment vider tout le déploiement ?</p>
-                    <p class="text-muted small mt-2">Cette action est irréversible.</p>
+                    <p class="mb-0 fw-bold">Voulez-vous vraiment tout réinitialiser ?</p>
+                    <p class="text-muted small mt-2">Cette action supprime toutes les équipes, remet tous les agents sans équipe <strong>et supprime le brouillon en cours</strong>.</p>
                 </div>
                 <div class="modal-footer border-0 pb-4 px-4 justify-content-between">
                     <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">Réinitialiser</button>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">Réinitialiser tout</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Approbation brouillon -->
+<div class="modal fade" id="approveDraftModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card border-0" style="border-top: 4px solid #16a34a !important;">
+            <form action="{{ route('admin.operations.approve_draft') }}" method="POST">
+                @csrf
+                <div class="modal-header border-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold" style="color: #16a34a;">
+                        <i class="bi bi-check2-circle me-2"></i>Approuver la simulation
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert border-0 rounded-4 mb-3" style="background: #f0fdf4; border-left: 4px solid #16a34a !important;">
+                        <strong class="d-block mb-1" style="color:#15803d;"><i class="bi bi-info-circle me-1"></i>Ce qui va se passer :</strong>
+                        <ul class="mb-0 small text-dark ps-3">
+                            <li>Les équipes de la simulation seront <strong>créées en base de données</strong></li>
+                            <li>Chaque agent recevra son <strong><code>team_id</code></strong> définitif</li>
+                            <li>Le brouillon sera <strong>supprimé</strong></li>
+                        </ul>
+                    </div>
+                    <p class="text-muted small mb-0">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>
+                        Vous pourrez toujours <strong>révoquer</strong> ce déploiement depuis le menu Actions pour remettre tout le monde sans équipe.
+                    </p>
+                </div>
+                <div class="modal-footer border-0 pb-4 px-4 justify-content-between">
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn fw-bold rounded-pill px-4" style="background: #16a34a; color: #fff;">
+                        <i class="bi bi-check2-circle me-1"></i> Confirmer l'approbation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Révocation déploiement -->
+<div class="modal fade" id="revokeDeploymentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card border-0" style="border-top: 4px solid #f59e0b !important;">
+            <form action="{{ route('admin.operations.revoke') }}" method="POST">
+                @csrf
+                <div class="modal-header border-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold text-warning">
+                        <i class="bi bi-arrow-counterclockwise me-2"></i>Révoquer le déploiement
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert border-0 rounded-4 mb-3" style="background: #fffbeb; border-left: 4px solid #f59e0b !important;">
+                        <strong class="d-block mb-1 text-warning"><i class="bi bi-exclamation-triangle me-1"></i>Ce qui va se passer :</strong>
+                        <ul class="mb-0 small text-dark ps-3">
+                            <li>Tous les agents retrouvent <strong><code>team_id = null</code></strong></li>
+                            <li>Toutes les équipes sont <strong>supprimées</strong></li>
+                            <li>Le brouillon en cours (s'il existe) est <strong>conservé</strong></li>
+                        </ul>
+                    </div>
+                    <p class="text-muted small mb-0">
+                        Vous pourrez relancer une simulation ou refaire une affectation manuelle à tout moment.
+                    </p>
+                </div>
+                <div class="modal-footer border-0 pb-4 px-4 justify-content-between">
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-warning fw-bold rounded-pill px-4">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Révoquer
+                    </button>
                 </div>
             </form>
         </div>
@@ -1436,46 +1528,106 @@
         fetch(`/admin/candidates/${userId}/json`)
             .then(response => response.json())
             .then(data => {
-                const experiences = data.experiences ? data.experiences.join(', ') : 'Aucune';
-                const competences = data.competences_techniques ? data.competences_techniques.join(', ') : 'Aucune';
-                
+                const experiences = Array.isArray(data.experiences) && data.experiences.length
+                    ? data.experiences.join(', ')
+                    : '<span class="text-muted fst-italic">Aucune</span>';
+                const competences = Array.isArray(data.competences_techniques) && data.competences_techniques.length
+                    ? data.competences_techniques.join(', ')
+                    : '<span class="text-muted fst-italic">Aucune</span>';
+
+                // Ministère — data.ministere est maintenant un objet {id, nom} ou null
+                const ministereNom = data.ministere?.nom || '<span class="text-muted fst-italic">Non renseigné</span>';
+
+                // Profil — data.profil est maintenant un objet {id, libelle} ou null
+                const profilLabel = data.profil?.libelle || 'Agent';
+
+                // Direction
+                const direction = data.direction || '<span class="text-muted fst-italic">Non renseignée</span>';
+
+                // Badge statut
+                const statusColorMap = {
+                    success:   { bg: '#dcfce7', text: '#15803d', border: '#86efac' },
+                    warning:   { bg: '#fef9c3', text: '#854d0e', border: '#fde047' },
+                    secondary: { bg: '#f1f5f9', text: '#475569', border: '#cbd5e1' },
+                    light:     { bg: '#f8fafc', text: '#64748b', border: '#e2e8f0' },
+                };
+                const sc = statusColorMap[data.status_color] || statusColorMap.light;
+                const statusBadge = `<span style="background:${sc.bg}; color:${sc.text}; border:1px solid ${sc.border}; border-radius:999px; padding:0.3rem 0.8rem; font-size:0.75rem; font-weight:700;">
+                    ${data.status_label || data.validation_status || '—'}
+                </span>`;
+
+                // Score quiz
+                let scoreHtml = '';
+                if (data.best_score !== null && data.best_score !== undefined) {
+                    const score = data.best_score;
+                    const scoreColor = score >= 70 ? '#16a34a' : score >= 50 ? '#f59e0b' : '#ef4444';
+                    const scoreTrack = score >= 70 ? '#dcfce7' : score >= 50 ? '#fef9c3' : '#fef2f2';
+                    scoreHtml = `
+                        <div class="col-12">
+                            <div class="p-3 border rounded-4" style="background: #f8fafc;">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Meilleur score Quiz</div>
+                                    <span class="fw-bold" style="color: ${scoreColor}; font-size: 1rem;">${score} / 100</span>
+                                </div>
+                                <div style="background: ${scoreTrack}; border-radius: 999px; height: 8px; overflow: hidden;">
+                                    <div style="width: ${score}%; height: 100%; background: ${scoreColor}; border-radius: 999px; transition: width 0.5s ease;"></div>
+                                </div>
+                            </div>
+                        </div>`;
+                } else {
+                    scoreHtml = `
+                        <div class="col-12">
+                            <div class="p-3 border rounded-4 bg-light">
+                                <div class="small text-muted text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Meilleur score Quiz</div>
+                                <span class="text-muted fst-italic small">Aucun quiz passé</span>
+                            </div>
+                        </div>`;
+                }
+
+                // Photo
+                const photoHtml = data.photo
+                    ? `<img src="/storage/${data.photo}" alt="Photo" class="rounded-circle mb-3 border shadow-sm" style="width:80px; height:80px; object-fit:cover;">`
+                    : `<div class="bg-primary bg-opacity-10 text-primary p-4 rounded-circle mb-3" style="width:80px; height:80px; display:flex; align-items:center; justify-content:center;">
+                           <i class="bi bi-person-fill fs-1"></i>
+                       </div>`;
+
                 content.innerHTML = `
                     <div class="row g-4">
                         <div class="col-md-5">
                             <div class="d-flex flex-column align-items-center p-4 bg-light rounded-4 h-100 text-center">
-                                <div class="bg-primary bg-opacity-10 text-primary p-4 rounded-circle mb-3">
-                                    <i class="bi bi-person-fill fs-1"></i>
-                                </div>
+                                ${photoHtml}
                                 <h4 class="h5 fw-bold mb-1">${data.prenom} ${data.nom}</h4>
-                                <span class="badge bg-primary rounded-pill mb-3">${data.profil?.libelle || 'Agent'}</span>
-                                <div class="w-100 border-top pt-3 mt-auto">
+                                <span class="badge bg-primary rounded-pill mb-2">${profilLabel}</span>
+                                ${statusBadge}
+                                <div class="w-100 border-top pt-3 mt-3">
                                     <div class="small text-muted text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Téléphone</div>
-                                    <div class="fw-bold text-dark">+221 ${data.telephone || 'N/A'}</div>
+                                    <div class="fw-bold text-dark">${data.telephone || 'N/A'}</div>
                                 </div>
+                                ${data.matricule ? `<div class="w-100 mt-2">
+                                    <div class="small text-muted text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Matricule / CIN</div>
+                                    <div class="fw-bold text-dark">${data.matricule}</div>
+                                </div>` : ''}
                             </div>
                         </div>
                         
                         <div class="col-md-7">
                             <div class="row g-3">
-                                <div class="col-6">
-                                    <div class="small text-muted text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Matricule / CIN</div>
-                                    <div class="fw-bold text-dark">${data.matricule || 'N/A'}</div>
-                                </div>
-                                <div class="col-6">
+                                <div class="col-12">
                                     <div class="small text-muted text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Email</div>
                                     <div class="fw-bold text-dark text-truncate" title="${data.email || ''}">${data.email || 'N/A'}</div>
                                 </div>
                                 <div class="col-12">
                                     <div class="small text-muted text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Structure (Ministère)</div>
-                                    <div class="fw-bold text-dark">${data.ministere?.nom || 'Non renseigné'}</div>
+                                    <div class="fw-bold text-dark">${ministereNom}</div>
                                 </div>
                                 <div class="col-12">
                                     <div class="small text-muted text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Direction / Service</div>
-                                    <div class="fw-bold text-dark">${data.direction || 'Non renseignée'}</div>
+                                    <div class="fw-bold text-dark">${direction}</div>
                                 </div>
+                                ${scoreHtml}
                                 <div class="col-12">
                                     <div class="p-3 border rounded-4 bg-light bg-opacity-50">
-                                        <div class="small text-muted text-uppercase fw-bold mb-2" style="font-size: 0.65rem;">Expériences & Projets</div>
+                                        <div class="small text-muted text-uppercase fw-bold mb-2" style="font-size: 0.65rem;">Expériences &amp; Projets</div>
                                         <div class="small text-dark" style="line-height: 1.4;">${experiences}</div>
                                     </div>
                                 </div>

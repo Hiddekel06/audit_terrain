@@ -937,4 +937,77 @@ class AdminOperationsResearchController extends Controller
         DeploymentPlan::where('is_draft', true)->delete();
         return back()->with('success', 'Simulation annulée et brouillon supprimé.');
     }
+
+    /**
+     * Approuve le brouillon courant :
+     * - Crée les Team en base de données
+     * - Assigne le team_id aux agents concernés
+     * - Supprime le brouillon (is_draft)
+     *
+     * Aucune migration nécessaire — utilise uniquement les colonnes existantes.
+     */
+    public function approveDraft(Request $request)
+    {
+        $draft = DeploymentPlan::where('is_draft', true)->first();
+
+        if (! $draft) {
+            return back()->with('error', 'Aucun brouillon à approuver.');
+        }
+
+        $decodedState = $draft->data;
+
+        if (empty($decodedState)) {
+            return back()->with('error', 'Le brouillon est vide.');
+        }
+
+        DB::transaction(function () use ($decodedState) {
+            foreach ($decodedState as $teamData) {
+                $teamName = $teamData['nom'] ?? 'Équipe';
+                $userIds  = $teamData['user_ids'] ?? [];
+
+                if (empty($userIds)) {
+                    continue;
+                }
+
+                // Créer la vraie équipe
+                $team = Team::create([
+                    'nom'       => $teamName,
+                    'region_id' => null, // pourra être précisé ultérieurement
+                ]);
+
+                // Assigner le team_id à chaque agent de cette équipe
+                User::whereIn('id', $userIds)->update(['team_id' => $team->id]);
+            }
+        });
+
+        // Supprimer le brouillon approuvé
+        $draft->delete();
+
+        $nbTeams = count($decodedState);
+
+        return redirect()
+            ->route('admin.operations.research')
+            ->with('success', sprintf(
+                '✅ Déploiement approuvé : %d équipe(s) créée(s) et agents affectés.',
+                $nbTeams
+            ));
+    }
+
+    /**
+     * Révoque le déploiement actuel :
+     * - Remet team_id à NULL pour tous les agents affectés
+     * - Supprime toutes les Team de la base
+     *
+     * Permet d'annuler à tout moment sans altérer les autres données.
+     * Le brouillon en cours (s'il existe) est conservé.
+     */
+    public function revokeDeployment()
+    {
+        DB::transaction(function () {
+            User::whereNotNull('team_id')->update(['team_id' => null]);
+            Team::query()->delete();
+        });
+
+        return back()->with('success', '↩️ Déploiement révoqué : tous les agents sont à nouveau sans équipe. Les équipes ont été supprimées.');
+    }
 }

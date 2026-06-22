@@ -14,7 +14,7 @@ class AgentApiController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::with(['profil', 'ministere']);
+        $query = User::with(['profil', 'ministere', 'team' , 'quizResults']);
 
         // Filtre par statut (ex: ?status=officiel_inscrit)
         if ($request->filled('status')) {

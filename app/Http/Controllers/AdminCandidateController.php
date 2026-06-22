@@ -606,28 +606,44 @@ class AdminCandidateController extends Controller
     {
         $user->load(['profil', 'ministere', 'regionChoices.region']);
 
+        // Meilleur score quiz (sur 100)
+        $bestScore = $user->quizResults()->max('score');
+
+        // Label lisible du statut
+        $statusLabels = [
+            'officiel_inscrit' => ['label' => 'Officiel — Inscrit',  'color' => 'success'],
+            'officiel_attente' => ['label' => 'Officiel — En attente', 'color' => 'warning'],
+            'reserve'          => ['label' => 'Réserve',               'color' => 'secondary'],
+        ];
+        $statusInfo = $statusLabels[$user->validation_status] ?? ['label' => $user->validation_status ?? 'Inconnu', 'color' => 'light'];
+
         return response()->json([
-            'id' => $user->id,
-            'nom' => $user->nom,
-            'prenom' => $user->prenom,
-            'matricule' => $user->matricule,
-            'telephone' => $user->telephone,
-            'email' => $user->email,
-            'photo' => $user->photo,
-            'ministere' => $user->ministere->nom ?? '—',
-            'direction' => $user->direction ?? '—',
-            'profil' => $user->profil->libelle ?? '—',
-            'profil_id' => $user->profil_id,
-            'experiences' => $user->experiences ?? [],
+            'id'                   => $user->id,
+            'nom'                  => $user->nom,
+            'prenom'               => $user->prenom,
+            'matricule'            => $user->matricule,
+            'telephone'            => $user->telephone,
+            'email'                => $user->email,
+            'photo'                => $user->photo,
+            'ministere'            => $user->ministere
+                                        ? ['id' => $user->ministere->id, 'nom' => $user->ministere->nom]
+                                        : null,
+            'direction'            => $user->direction ?? null,
+            'profil'               => $user->profil ? ['id' => $user->profil->id, 'libelle' => $user->profil->libelle] : null,
+            'profil_id'            => $user->profil_id,
+            'experiences'          => $user->experiences ?? [],
             'competences_techniques' => $user->competences_techniques ?? [],
-            'disponibilite' => $user->disponibilite,
-            'validation_status' => $user->validation_status,
-            'region_choices' => $user->regionChoices->map(function($choice) {
+            'disponibilite'        => $user->disponibilite,
+            'validation_status'    => $user->validation_status,
+            'status_label'         => $statusInfo['label'],
+            'status_color'         => $statusInfo['color'],
+            'best_score'           => $bestScore !== null ? (int) $bestScore : null,
+            'region_choices'       => $user->regionChoices->map(function ($choice) {
                 return [
-                    'ordre' => $choice->ordre,
-                    'region' => $choice->region->nom
+                    'ordre'  => $choice->ordre,
+                    'region' => $choice->region->nom,
                 ];
-            })
+            }),
         ]);
     }
 
