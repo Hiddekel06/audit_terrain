@@ -93,6 +93,11 @@ Route::middleware('admin.auth')->group(function () {
         ->name('admin.operations.discard_draft');
     Route::post('/admin/recherche-operationnelle/export-simulation', [App\Http\Controllers\AdminOperationsResearchController::class, 'exportSimulation'])
         ->name('admin.operations.export_simulation');
+    Route::post(
+    '/admin/recherche-operationnelle/export-deployment',
+    [App\Http\Controllers\AdminOperationsResearchController::class, 'exportDeployment']
+)->name('admin.operations.export_deployment');
+
     Route::post('/admin/recherche-operationnelle/save-plan', [App\Http\Controllers\AdminOperationsResearchController::class, 'storePlan'])
         ->name('admin.operations.save_plan');
     Route::get('/admin/recherche-operationnelle/optimize', function () {
@@ -140,6 +145,8 @@ Route::middleware('admin.auth')->group(function () {
         ->name('admin.deployment_plans.index');
     Route::get('/admin/deployment-plans/{plan}/download', [App\Http\Controllers\AdminDeploymentPlanController::class, 'download'])
         ->name('admin.deployment_plans.download');
+    Route::post('/admin/deployment-plans/{plan}/resume', [App\Http\Controllers\AdminDeploymentPlanController::class, 'resume'])
+        ->name('admin.deployment_plans.resume');
     Route::delete('/admin/deployment-plans/{plan}', [App\Http\Controllers\AdminDeploymentPlanController::class, 'destroy'])
         ->name('admin.deployment_plans.destroy');
 

@@ -16,8 +16,56 @@ class AdminDeploymentPlanController extends Controller
      */
     public function index()
     {
-        $plans = DeploymentPlan::orderBy('created_at', 'desc')->get();
+        $plans = DeploymentPlan::where(function ($query) {
+                $query->whereNull('is_draft')->orWhere('is_draft', false);
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return view('admin.deployment_plans.index', compact('plans'));
+    }
+
+    /**
+     * Recharge un plan sauvegarde comme brouillon de travail.
+     */
+    public function resume(DeploymentPlan $plan)
+    {
+        if ($plan->is_draft) {
+            return redirect()
+                ->route('admin.operations.research')
+                ->with('info', 'Ce brouillon est deja actif.');
+        }
+
+        $data = $plan->data ?? [];
+        $metadata = $plan->metadata ?? [];
+        $summary = $plan->summary ?? [];
+
+        $teamCount = count($data);
+        $memberCount = collect($data)->pluck('user_ids')->flatten()->count();
+
+        DeploymentPlan::updateOrCreate(
+            ['is_draft' => true],
+            [
+                'nom' => 'Brouillon - ' . $plan->nom,
+                'data' => $data,
+                'summary' => array_merge($summary, [
+                    'teams_count' => $teamCount,
+                    'members_count' => $memberCount,
+                    'updated_at_human' => now()->format('d/m/Y H:i'),
+                ]),
+                'metadata' => array_merge($metadata, [
+                    'source_plan_id' => $plan->id,
+                    'source_plan_name' => $plan->nom,
+                    'resumed_at' => now()->toDateTimeString(),
+                ]),
+            ]
+        );
+
+        return redirect()
+            ->route('admin.operations.research', [
+                'region_id' => $metadata['region_id'] ?? null,
+            ])
+            ->with('success', 'Plan "' . $plan->nom . '" repris comme brouillon de simulation.');
     }
 
     /**

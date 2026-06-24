@@ -10,6 +10,16 @@
             <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
         </div>
     @endif
+    @if(session('info'))
+        <div class="alert alert-info border-0 shadow-sm rounded-4 mb-4 ps-4">
+            <i class="bi bi-info-circle-fill me-2"></i> {{ session('info') }}
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4 ps-4">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
+        </div>
+    @endif
 
     <div class="glass-card p-0 overflow-hidden" style="border-radius: 1.5rem;">
         <div class="table-responsive">
@@ -38,7 +48,7 @@
                             </td>
                             <td class="text-center">
                                 <span class="badge bg-light text-primary border border-primary border-opacity-25 rounded-pill px-3">
-                                    {{ $plan->summary['teams_count'] ?? count($plan->data) }}
+                                    {{ $plan->summary['teams_count'] ?? count($plan->data ?? []) }}
                                 </span>
                             </td>
                             <td class="text-center">
@@ -48,6 +58,12 @@
                             </td>
                             <td class="text-end pe-4">
                                 <div class="d-flex justify-content-end gap-2">
+                                    <form action="{{ route('admin.deployment_plans.resume', $plan) }}" method="POST" onsubmit="return confirm('Reprendre ce plan comme brouillon de simulation ? Le brouillon courant sera remplacÃ©.')">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold">
+                                            <i class="bi bi-play-circle me-1"></i> Reprendre
+                                        </button>
+                                    </form>
                                     <a href="{{ route('admin.deployment_plans.download', $plan) }}" class="btn btn-sm btn-light border rounded-pill px-3 fw-bold">
                                         <i class="bi bi-file-earmark-excel text-success me-1"></i> Excel
                                     </a>

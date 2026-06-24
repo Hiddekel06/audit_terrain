@@ -1055,4 +1055,13 @@ public function exportPool(Request $request)
     );
 
 }
+public function exportDeployment()
+{
+    $teams = Team::with('members')->get();
+
+    return \Maatwebsite\Excel\Facades\Excel::download(
+        new \App\Exports\DeploymentExport($teams),
+        'deploiement_officiel.xlsx'
+    );
+}
 }

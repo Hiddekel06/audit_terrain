@@ -582,6 +582,11 @@
             <i class="bi bi-info-circle-fill me-2"></i> {{ session('info') }}
         </div>
     @endif
+    @if(session('error'))
+        <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4 ps-4">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
+        </div>
+    @endif
 
     @if($errors->any())
         <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4 ps-4">
@@ -605,7 +610,14 @@
                     @if($draftPlan)
                     <div class="d-flex align-items-center bg-light border rounded-pill px-3 py-1 me-2 shadow-sm">
                         <span class="status-dot status-dot--filled bg-warning me-2" style="width: 8px; height: 8px;"></span>
-                        <span class="small fw-bold text-muted">Brouillon auto-sauvegardé @if(isset($draftPlan->summary['updated_at_human'])) à {{ $draftPlan->summary['updated_at_human'] }} @endif</span>
+                        <span class="small fw-bold text-muted">
+                            @if(!empty($draftPlan->metadata['source_plan_name']))
+                                Plan repris : {{ $draftPlan->metadata['source_plan_name'] }}
+                            @else
+                                Brouillon auto-sauvegarde
+                            @endif
+                            @if(isset($draftPlan->summary['updated_at_human'])) a {{ $draftPlan->summary['updated_at_human'] }} @endif
+                        </span>
                     </div>
                     @endif
 
@@ -825,7 +837,23 @@
                     {{ $teams->count() }} Équipes
                 </span>
             </div>
-            
+            <div class="d-flex justify-content-end mb-3">
+
+    <form action="{{ route('admin.operations.export_deployment') }}"
+          method="POST">
+        @csrf
+
+        <button type="submit"
+                class="btn btn-success">
+            <i class="bi bi-file-earmark-excel"></i>
+            Exporter le déploiement
+        </button>
+
+    </form>
+
+</div>
+
+<div class="row g-4">
             <div class="row g-4">
                 @forelse($teams as $team)
                     <div class="col-md-6">
