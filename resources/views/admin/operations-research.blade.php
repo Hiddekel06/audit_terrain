@@ -884,73 +884,68 @@
                             </div>
 
                             <div class="members-list flex-grow-1">
-                                @php
-                                    $currentMembers = $team->members->groupBy('profil_id');
-                                @endphp
+                              
+                                            </div>
+                                           
+                                @foreach($team->members as $member)
 
-                                @foreach($deploymentProfiles as $profile)
-                                    @php
-                                        $id = $profile['id'];
-                                        $label = $profile['label'];
-                                        $icon = $profile['icon'];
-                                        $member = $currentMembers->get($id)?->first();
-                                    @endphp
-                                    <div
-                                        class="member-line drop-slot {{ !$member ? 'member-line--vacant' : '' }}"
-                                        data-team-id="{{ $team->id }}"
-                                        data-profil-id="{{ $id }}"
-                                        data-has-member="{{ $member ? '1' : '0' }}"
-                                    >
-                                        <span class="status-dot {{ $member ? 'status-dot--filled' : 'status-dot--empty' }}"></span>
-                                        <div class="role-label">{{ $label }}</div>
-                                        
-                                        @if($member)
-                                            <div
-                                                class="member-name drag-card flex-grow-1"
-                                                draggable="true"
-                                                data-user-id="{{ $member->id }}"
-                                                data-user-name="{{ $member->prenom }} {{ $member->nom }}"
-                                                data-profil-id="{{ $member->profil_id }}"
-                                                data-ministere-id="{{ $member->ministere_id }}"
-                                                data-direction="{{ $member->direction }}"
-                                                data-source-team-id="{{ $team->id }}"
-                                                title="Glisser pour déplacer"
-                                            >
-                                                {{ $member->prenom }} {{ $member->nom }}
-                                            </div>
-                                            <div class="d-flex align-items-center gap-1">
-                                                <button type="button" 
-                                                        class="btn btn-sm btn-link p-0 text-info opacity-50 hover-opacity-100"
-                                                        onclick="showAgentQuickView({{ $member->id }})"
-                                                        title="Détails complets">
-                                                    <i class="bi bi-info-circle"></i>
-                                                </button>
-                                                <button type="button" 
-                                                        class="btn btn-sm btn-link p-0 text-primary opacity-50 hover-opacity-100"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#editAgentProfileModal"
-                                                        data-user-id="{{ $member->id }}"
-                                                        data-user-name="{{ $member->prenom }} {{ $member->nom }}"
-                                                        data-profil-id="{{ $member->profil_id }}"
-                                                        data-ministere-id="{{ $member->ministere_id }}"
-                                                        data-direction="{{ $member->direction }}"
-                                                        title="Modifier le profil">
-                                                    <i class="bi bi-pencil-square"></i>
-                                                </button>
-                                                <form action="{{ route('admin.operations.assign') }}" method="POST" class="m-0">
-                                                    @csrf
-                                                    <input type="hidden" name="user_id" value="{{ $member->id }}">
-                                                    <input type="hidden" name="team_id" value="">
-                                                    <button type="submit" class="btn btn-sm btn-link p-0 text-muted opacity-50 hover-opacity-100" title="Retirer de l'équipe">
-                                                        <i class="bi bi-x"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        @else
-                                            <div class="member-name member-name--empty flex-grow-1">Poste vacant</div>
-                                        @endif
-                                    </div>
-                                @endforeach
+<div class="member-line drop-slot"
+     data-team-id="{{ $team->id }}"
+     data-profil-id="{{ $member->profil_id }}"
+     data-has-member="1">
+
+    <span class="status-dot status-dot--filled"></span>
+
+    <div class="role-label">
+        {{ $member->profil?->libelle }}
+    </div>
+
+    <div class="member-name drag-card flex-grow-1"
+         draggable="true"
+         data-user-id="{{ $member->id }}"
+         data-user-name="{{ $member->prenom }} {{ $member->nom }}"
+         data-profil-id="{{ $member->profil_id }}"
+         data-ministere-id="{{ $member->ministere_id }}"
+         data-direction="{{ $member->direction }}"
+         data-source-team-id="{{ $team->id }}">
+
+        {{ $member->prenom }} {{ $member->nom }}
+    </div>
+<div class="d-flex align-items-center gap-1">
+    <button type="button"
+            class="btn btn-sm btn-link p-0 text-info opacity-50 hover-opacity-100"
+            onclick="showAgentQuickView({{ $member->id }})"
+            title="Détails complets">
+        <i class="bi bi-info-circle"></i>
+    </button>
+
+    <button type="button"
+            class="btn btn-sm btn-link p-0 text-primary opacity-50 hover-opacity-100"
+            data-bs-toggle="modal"
+            data-bs-target="#editAgentProfileModal"
+            data-user-id="{{ $member->id }}"
+            data-user-name="{{ $member->prenom }} {{ $member->nom }}"
+            data-profil-id="{{ $member->profil_id }}"
+            data-ministere-id="{{ $member->ministere_id }}"
+            data-direction="{{ $member->direction }}"
+            title="Modifier le profil">
+        <i class="bi bi-pencil-square"></i>
+    </button>
+
+    <form action="{{ route('admin.operations.assign') }}" method="POST" class="m-0">
+        @csrf
+        <input type="hidden" name="user_id" value="{{ $member->id }}">
+        <input type="hidden" name="team_id" value="">
+        <button type="submit"
+                class="btn btn-sm btn-link p-0 text-muted opacity-50 hover-opacity-100"
+                title="Retirer de l'équipe">
+            <i class="bi bi-x"></i>
+        </button>
+    </form>
+</div>
+</div>
+
+@endforeach
                             </div>
                         </div>
                     </div>

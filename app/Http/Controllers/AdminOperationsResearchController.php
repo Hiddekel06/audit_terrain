@@ -769,22 +769,6 @@ class AdminOperationsResearchController extends Controller
 
         $user = User::findOrFail($validated['user_id']);
 
-        if (!empty($validated['team_id'])) {
-            $targetTeamId = (int) $validated['team_id'];
-
-            if ((int) $user->team_id !== $targetTeamId) {
-                $hasSameProfileInTeam = User::where('team_id', $targetTeamId)
-                    ->where('profil_id', $user->profil_id)
-                    ->where('id', '!=', $user->id)
-                    ->exists();
-
-                if ($hasSameProfileInTeam) {
-                    return back()->withErrors([
-                        'assign' => 'Cette équipe a déjà un agent avec ce profil.',
-                    ]);
-                }
-            }
-        }
 
         $user->team_id = $validated['team_id'];
         $user->save();
